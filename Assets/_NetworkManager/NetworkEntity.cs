@@ -9,6 +9,9 @@ public class NetworkEntity : MonoBehaviour {
 
     Queue<NetworkMessage> incomingQueue = new Queue<NetworkMessage>();
 
+    void Input()
+    {
+        Debug.Log("incoming Input");
+    }
 
-  
 }

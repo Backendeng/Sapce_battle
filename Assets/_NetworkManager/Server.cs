@@ -62,19 +62,31 @@ public class Server : MonoBehaviour {
             case NetworkEventType.ConnectEvent:    //2
                 Debug.Log("incoming connection event received");
 
-                GameObject newPlayer = Instantiate(player, playerSpawn.position, playerSpawn.rotation);
-                connectedPlayers.Add(recConnectionId, newPlayer);
-                netEntities.Add(lastEntityId++, newPlayer.GetComponent<NetworkEntity>());
+                if (!connectedPlayers.ContainsKey(recConnectionId))
+                {
+                    GameObject newPlayer = Instantiate(player, playerSpawn.position, playerSpawn.rotation);
+                    connectedPlayers.Add(recConnectionId, newPlayer);
+                    netEntities.Add(lastEntityId++, newPlayer.GetComponent<NetworkEntity>());
+                }
                 //broadcast new entity to all
                 break;
             case NetworkEventType.DataEvent:       //3
-               // Stream stream = new MemoryStream(recBuffer);
-                //BinaryFormatter formatter = new BinaryFormatter();
-                //string message = formatter.Deserialize(stream) as string;
-                //Debug.Log("incoming message event received: " + message);
+                Stream stream = new MemoryStream(recBuffer);
+                BinaryFormatter formatter = new BinaryFormatter();
+                string message = formatter.Deserialize(stream) as string;
+                Debug.Log("incoming message event received: " + message);
 
                 //process message and send input to playerObject on this server
-                connectedPlayers[recConnectionId].GetComponent<NetworkEntity>().Input();
+                string[] splitFloats = message.Split('|');
+                float linX = float.Parse(splitFloats[0]);
+                float linY = float.Parse(splitFloats[1]);
+                float linZ = float.Parse(splitFloats[2]);
+                float rotX = float.Parse(splitFloats[3]);
+                float rotY = float.Parse(splitFloats[4]);
+                float rotZ = float.Parse(splitFloats[5]);
+                Vector3 linear_in = new Vector3(linX, linY, linZ);
+                Vector3 rot_in = new Vector3(rotX, rotY, rotZ);
+                connectedPlayers[recConnectionId].GetComponent<NetworkEntity>().RemoteInput(linear_in, rot_in);
                 break;
             case NetworkEventType.DisconnectEvent: //4
                 Debug.Log("remote client event disconnected");

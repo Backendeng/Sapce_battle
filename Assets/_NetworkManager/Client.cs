@@ -23,6 +23,7 @@ public class Client : MonoBehaviour {
     void Start ()
     {
         NetworkTransport.Init();
+        Connect();
     }
 
     public void Connect()
@@ -46,18 +47,30 @@ public class Client : MonoBehaviour {
         NetworkTransport.Disconnect(hostId, connectionId, out error);
     }
 
-    public void SendHost()
+    public void SendHost(Vector3 linear_input, Vector3 angular_input)
     {
         //create movementMessage/... and send it to server
 
-       // byte[] buffer = new byte[1024];
-       // Stream stream = new MemoryStream(buffer);
+        // byte[] buffer = new byte[1024];
+        // Stream stream = new MemoryStream(buffer);
         //BinaryFormatter formatter = new BinaryFormatter();
-      //  formatter.Serialize(stream, "HelloServer");
+        //  formatter.Serialize(stream, "HelloServer");
 
-        //int bufferSize = 1024;
+        int bufferSize = 1024;
 
-       // NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, bufferSize, out error);
+        string msg = "";
+        msg += linear_input.x.ToString("#.00|");
+        msg += linear_input.y.ToString("#.00|");
+        msg += linear_input.z.ToString("#.00|");
+        msg += angular_input.x.ToString("#.00|");
+        msg += angular_input.y.ToString("#.00|");
+        msg += angular_input.z.ToString("#.00");
+        byte[] buffer = new byte[1024];
+        Stream stream = new MemoryStream(buffer);
+        BinaryFormatter formatter = new BinaryFormatter();
+        formatter.Serialize(stream, msg);
+
+        NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, bufferSize, out error);
     }
 
     // Update is called once per frame
@@ -87,7 +100,7 @@ public class Client : MonoBehaviour {
                 {
                     Debug.Log("Connected");
                 }
-                GameObject newPlayer = Instantiate(player, playerSpawn.position, playerSpawn.rotation); //spawn local player upon connection
+               // GameObject newPlayer = Instantiate(player, playerSpawn.position, playerSpawn.rotation); //spawn local player upon connection
                 break;
             case NetworkEventType.DataEvent:
                 //distribute messages to network entities

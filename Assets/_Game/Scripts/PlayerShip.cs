@@ -6,7 +6,8 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerShipPhysics))]
 [RequireComponent(typeof(PlayerShipInput))]
 
-public class PlayerShip : MonoBehaviour {
+public class PlayerShip : NetworkEntity
+{
 
     public bool isPlayer = true;
     private PlayerShipInput input;
@@ -53,7 +54,13 @@ public class PlayerShip : MonoBehaviour {
         // pass player input to the physics
         Vector3 linear_input = new Vector3(input.strafe, 0.0f, input.throttle);
         Vector3 angular_input = new Vector3(input.pitch, input.yaw, input.roll);
-        physics.SetPhysicsInput(linear_input, angular_input);
+        if (!isServer) {
+            physics.SetPhysicsInput(linear_input, angular_input);
+            network.GetComponent<Client>().SendHost(linear_input, angular_input);
+        } else {
+            physics.SetPhysicsInput(linear_input_sent, angular_input_sent);
+        }
+        
 
         if (isPlayer)
             activeShip = this;

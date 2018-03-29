@@ -16,7 +16,6 @@ public class Client : MonoBehaviour {
     Dictionary<int, NetworkEntity> netEntities = new Dictionary<int, NetworkEntity>();
 
     public GameObject player;         // player prefab
-    public Transform playerSpawn;     // player spawn location
 
 
     // Use this for initialization
@@ -28,7 +27,6 @@ public class Client : MonoBehaviour {
 
     public void Connect()
     {
-
         ConnectionConfig config = new ConnectionConfig();
         reliableChannelId = config.AddChannel(QosType.Reliable);
 
@@ -47,37 +45,18 @@ public class Client : MonoBehaviour {
         NetworkTransport.Disconnect(hostId, connectionId, out error);
     }
 
-    public void SendHost(Vector3 linear_input, Vector3 angular_input)
+    public void SendInputToHost(int selfEntityId, float throttle, Vector3 angular_input)
     {
         //create movementMessage/... and send it to server
-
-        // byte[] buffer = new byte[1024];
-        // Stream stream = new MemoryStream(buffer);
-        //BinaryFormatter formatter = new BinaryFormatter();
-        //  formatter.Serialize(stream, "HelloServer");
-
-        int bufferSize = 1024;
-
-        string msg = "";
-        msg += linear_input.x.ToString("#.00|");
-        msg += linear_input.y.ToString("#.00|");
-        msg += linear_input.z.ToString("#.00|");
-        msg += angular_input.x.ToString("#.00|");
-        msg += angular_input.y.ToString("#.00|");
-        msg += angular_input.z.ToString("#.00");
-        byte[] buffer = new byte[1024];
-        Stream stream = new MemoryStream(buffer);
-        BinaryFormatter formatter = new BinaryFormatter();
-        formatter.Serialize(stream, msg);
-
-        NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, bufferSize, out error);
+        CS_InputData msg = new CS_InputData(selfEntityId, Time.fixedTime, angular_input, throttle);
+        byte[] buffer = MessagesHandler.NetMsgPack(msg);
+        NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
     }
 
     // Update is called once per frame
     void Update ()
     {
         Listen();
-
     }
 
     private void Listen()
@@ -100,12 +79,12 @@ public class Client : MonoBehaviour {
                 {
                     Debug.Log("Connected");
                 }
-               // GameObject newPlayer = Instantiate(player, playerSpawn.position, playerSpawn.rotation); //spawn local player upon connection
+                // GameObject newPlayer = Instantiate(player, playerSpawn.position, playerSpawn.rotation); //spawn local player upon connection
+                //problem: how to pass entity id here?
                 break;
             case NetworkEventType.DataEvent:
                 //distribute messages to network entities
-                //if we got a createMessage then  Instantiate(player,  ...
-
+                ProcessMessage(recBuffer, recConnectionId);
                 break;
             case NetworkEventType.DisconnectEvent:
                 if (recHostId == hostId &&
@@ -113,6 +92,39 @@ public class Client : MonoBehaviour {
                 {
                     Debug.Log("Connected, error:" + error.ToString());
                 }
+                break;
+        }
+    }
+
+    private void ProcessMessage(byte[] buffer, int recConnectionId) {
+        NetMsg msg = MessagesHandler.NetMsgUnpack(buffer);
+        byte type = msg.Type;
+        GameObject newPlayer;
+        switch (type) {
+            case (byte)NetMsg.MsgType.SC_EntityCreated:
+                SC_EntityCreated createMsg = (SC_EntityCreated)msg;
+                if (createMsg.connectionID == recConnectionId) 
+                    newPlayer = Instantiate(player, createMsg.position, createMsg.rotation);//localPlayer TODO: change prefab
+                else
+                    newPlayer = Instantiate(player, createMsg.position, createMsg.rotation);//remotePlayer
+                newPlayer.GetComponent<NetworkEntity>().EntityID = createMsg.entityID;
+                netEntities.Add(createMsg.entityID, newPlayer.GetComponent<NetworkEntity>());
+                break;
+            case (byte)NetMsg.MsgType.SC_MovementData:
+                SC_MovementData moveMsg = (SC_MovementData)msg;
+                if (netEntities.ContainsKey(moveMsg.entityID))
+                    netEntities[moveMsg.entityID].AddRecMessage(moveMsg);
+                else
+                    Debug.Log("ERROR, update for netEntity that does not exist in client " + moveMsg.entityID);
+                break;
+            case (byte)NetMsg.MsgType.SC_EntityDestroyed:
+                SC_EntityDestroyed destroyMsg = (SC_EntityDestroyed)msg;
+                if (netEntities.ContainsKey(destroyMsg.entityID)) {
+                    netEntities[destroyMsg.entityID].AddRecMessage(destroyMsg);
+                    netEntities.Remove(destroyMsg.entityID);
+                }
+                else
+                    Debug.Log("ERROR, destroy for netEntity that does not exist in client " + destroyMsg.entityID);
                 break;
         }
     }

@@ -15,9 +15,9 @@ public class Server : MonoBehaviour {
     int lastEntityId;
     Dictionary<int, GameObject> connectedPlayers = new Dictionary<int, GameObject>();
     Dictionary<int, NetworkEntity> netEntities = new Dictionary<int, NetworkEntity>();
-    Queue<NetworkMessage> outgoingMessages = new Queue<NetworkMessage>();
+    Queue<NetMsg> outgoingMessages = new Queue<NetMsg>();
 
-    public GameObject player;         // player prefab
+    public GameObject player;         // player prefab                  TODO: spawner
     public Transform playerSpawn;     // player spawn location
 
     // Use this for initialization
@@ -40,8 +40,9 @@ public class Server : MonoBehaviour {
 	// Update is called once per frame
 	void Update ()
     {
-        Listen();
-    
+        Listen();//first listen
+        BroadcastState();//then broadcast
+
     }
 
     private void Listen()
@@ -60,38 +61,53 @@ public class Server : MonoBehaviour {
             case NetworkEventType.Nothing:         //1
                 break;
             case NetworkEventType.ConnectEvent:    //2
-                Debug.Log("incoming connection event received");
+                Debug.Log("incoming connection event received id: " + recConnectionId);
 
                 if (!connectedPlayers.ContainsKey(recConnectionId))
                 {
                     GameObject newPlayer = Instantiate(player, playerSpawn.position, playerSpawn.rotation);
+                    lastEntityId++;
+                    newPlayer.GetComponent<NetworkEntity>().EntityID = lastEntityId;
                     connectedPlayers.Add(recConnectionId, newPlayer);
-                    netEntities.Add(lastEntityId++, newPlayer.GetComponent<NetworkEntity>());
+                    netEntities.Add(lastEntityId, newPlayer.GetComponent<NetworkEntity>());
+
+                    //broadcast new entity to all
+                    SC_EntityCreated msg = new SC_EntityCreated(lastEntityId, Time.fixedTime, playerSpawn.position, playerSpawn.rotation, recConnectionId);
+                    outgoingMessages.Enqueue(msg);
                 }
-                //broadcast new entity to all
                 break;
             case NetworkEventType.DataEvent:       //3
-                Stream stream = new MemoryStream(recBuffer);
-                BinaryFormatter formatter = new BinaryFormatter();
-                string message = formatter.Deserialize(stream) as string;
-                Debug.Log("incoming message event received: " + message);
-
-                //process message and send input to playerObject on this server
-                string[] splitFloats = message.Split('|');
-                float linX = float.Parse(splitFloats[0]);
-                float linY = float.Parse(splitFloats[1]);
-                float linZ = float.Parse(splitFloats[2]);
-                float rotX = float.Parse(splitFloats[3]);
-                float rotY = float.Parse(splitFloats[4]);
-                float rotZ = float.Parse(splitFloats[5]);
-                Vector3 linear_in = new Vector3(linX, linY, linZ);
-                Vector3 rot_in = new Vector3(rotX, rotY, rotZ);
-                connectedPlayers[recConnectionId].GetComponent<NetworkEntity>().RemoteInput(linear_in, rot_in);
+                Debug.Log("incoming message event received from: " + recConnectionId);
+                //TODO: interpolation data will be sent as regular pos update, is this fast enough?
+                //process message and send input to playerObject on this server 
+                NetMsg mssg = MessagesHandler.NetMsgUnpack(recBuffer);
+                connectedPlayers[recConnectionId].GetComponent<NetworkEntity>().AddRecMessage(mssg);
                 break;
             case NetworkEventType.DisconnectEvent: //4
-                Debug.Log("remote client event disconnected");
+                Debug.Log("remote client event disconnected id: " + recConnectionId);
+                //send destroy to all 
+                int entityIdToDestroy = connectedPlayers[recConnectionId].GetComponent<NetworkEntity>().EntityID;
+                SC_EntityDestroyed destroyMsg = new SC_EntityDestroyed(entityIdToDestroy, Time.fixedTime);
+                outgoingMessages.Enqueue(destroyMsg);
+                connectedPlayers.Remove(recConnectionId);
+                netEntities.Remove(entityIdToDestroy);
                 break;
         }
     }
+
+    // send world state to all clients.
+    private void BroadcastState() {
+        if (outgoingMessages.Count == 0)
+            return;
+        byte error;
+        foreach (KeyValuePair<int, GameObject> client in connectedPlayers) {
+            foreach (NetMsg msg in outgoingMessages) {
+                byte[] buffer = MessagesHandler.NetMsgPack(msg);
+                NetworkTransport.Send(hostId, client.Key, reliableChannelId, buffer, buffer.Length, out error);
+            }
+        }
+        outgoingMessages.Clear();
+    }
+
 
 }

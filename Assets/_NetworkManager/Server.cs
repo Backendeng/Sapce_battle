@@ -85,13 +85,16 @@ public class Server : MonoBehaviour {
                     newPlayer.GetComponent<NetworkEntity>().EntityID = lastEntityId;
                     connectedPlayers.Add(recConnectionId, newPlayer);
                     netEntities.Add(lastEntityId, newPlayer.GetComponent<NetworkEntity>());
-                    //TODO: new player has to receive the state of the world (pass him all enteties)  
+                 
                     //send new player his ID and pos (the server's recConnectedID is used as the clientID)
                     SC_AllocClientID msg = new SC_AllocClientID(lastEntityId, Time.fixedTime, playerSpawn.position, playerSpawn.rotation, recConnectionId);
                     byte[] buffer = MessagesHandler.NetMsgPack(msg);
                     NetworkTransport.Send(hostId, recConnectionId, reliableChannelId, buffer, buffer.Length, out error);
                     if (error != 0)
                         Debug.LogError("Client ID alocation error: " + error.ToString());
+
+                    //send new player all networkEnteties
+                    SendAllEntitiesToClient(recConnectionId);
 
                     //broadcast new entity to all
                     SC_EntityCreated msg1 = new SC_EntityCreated(lastEntityId, Time.fixedTime, playerSpawn.position, playerSpawn.rotation, recConnectionId);
@@ -146,5 +149,18 @@ public class Server : MonoBehaviour {
             outgoingMessages.Enqueue(msg);
         }
 
+    }
+
+    private void SendAllEntitiesToClient(int connectionId) {
+        byte error;
+
+        foreach (KeyValuePair<int, NetworkEntity> entity in netEntities) {
+            Vector3 pos = entity.Value.gameObject.GetComponent<Transform>().position;
+            Quaternion rot = entity.Value.gameObject.GetComponent<Transform>().rotation;
+            SC_EntityCreated msg = new SC_EntityCreated(entity.Key, Time.fixedTime, pos, rot, connectionId);
+            byte[] buffer = MessagesHandler.NetMsgPack(msg);
+
+            NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
+        }
     }
 }

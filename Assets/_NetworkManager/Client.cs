@@ -115,12 +115,14 @@ public class Client : MonoBehaviour {
                 Debug.Log("Client got his ID: " + clientID);
                 newPlayer = Instantiate(localPlayer, allocIdMsg.Position, allocIdMsg.Rotation);//localPlayer
                 newPlayer.GetComponent<NetworkEntity>().EntityID = allocIdMsg.EntityID;
+                if (netEntities.ContainsKey(allocIdMsg.EntityID))// if this client already created players ship before got alloacted id
+                    netEntities.Remove(allocIdMsg.EntityID);
                 netEntities.Add(allocIdMsg.EntityID, newPlayer.GetComponent<NetworkEntity>());
                 break;
             case (byte)NetMsg.MsgType.SC_EntityCreated:
                 SC_EntityCreated createMsg = (SC_EntityCreated)msg;
-                if (clientID == createMsg.ClientID || clientID == -1) //when adding new types of objects, check this only for ship object.
-                    return;
+                if (clientID == createMsg.ClientID) //when adding new types of objects, check this only for ship object.
+                    return;                                           // we dont want to create local players ship twice
                 newPlayer = Instantiate(remotePlayer, createMsg.Position, createMsg.Rotation);//remotePlayer
                 newPlayer.GetComponent<NetworkEntity>().EntityID = createMsg.EntityID;
                 netEntities.Add(createMsg.EntityID, newPlayer.GetComponent<NetworkEntity>());

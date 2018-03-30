@@ -7,6 +7,10 @@ using UnityEngine.Networking;
 
 public class Server : MonoBehaviour {
 
+    public float sendRate = 0.05f;
+    private float nextStagingTime;
+
+
     int reliableChannelId;
     int hostId;
     int inPort = 8888;
@@ -23,6 +27,7 @@ public class Server : MonoBehaviour {
     // Use this for initialization
     void Start ()
     {
+        nextStagingTime = Time.time;
         NetworkTransport.Init();
 
         ConnectionConfig config = new ConnectionConfig();
@@ -41,7 +46,8 @@ public class Server : MonoBehaviour {
 	void Update ()
     {
         Listen();//first listen
-        BroadcastState();//then broadcast
+        StageAllEntities();// put all entity positions and rotations on queue
+        BroadcastAllMessages();//then broadcast
 
     }
 
@@ -79,7 +85,7 @@ public class Server : MonoBehaviour {
                     newPlayer.GetComponent<NetworkEntity>().EntityID = lastEntityId;
                     connectedPlayers.Add(recConnectionId, newPlayer);
                     netEntities.Add(lastEntityId, newPlayer.GetComponent<NetworkEntity>());
-
+                    //TODO: new player has to receive the state of the world (pass him all enteties)  
                     //send new player his ID and pos (the server's recConnectedID is used as the clientID)
                     SC_AllocClientID msg = new SC_AllocClientID(lastEntityId, Time.fixedTime, playerSpawn.position, playerSpawn.rotation, recConnectionId);
                     byte[] buffer = MessagesHandler.NetMsgPack(msg);
@@ -113,7 +119,7 @@ public class Server : MonoBehaviour {
     }
 
     // send world state to all clients.
-    private void BroadcastState() {
+    private void BroadcastAllMessages() {
         if (outgoingMessages.Count == 0)
             return;
         byte error;
@@ -126,5 +132,19 @@ public class Server : MonoBehaviour {
         outgoingMessages.Clear();
     }
 
+    private void StageAllEntities() {
+        if (Time.time < nextStagingTime)
+            return;
 
+        nextStagingTime = Time.time + sendRate;
+
+        foreach (KeyValuePair<int, NetworkEntity> entity in netEntities) {
+            Vector3 pos = entity.Value.gameObject.GetComponent<Transform>().position;
+            Quaternion rot = entity.Value.gameObject.GetComponent<Transform>().rotation;
+            SC_MovementData msg = new SC_MovementData(entity.Key, Time.fixedTime, pos, rot);
+
+            outgoingMessages.Enqueue(msg);
+        }
+
+    }
 }

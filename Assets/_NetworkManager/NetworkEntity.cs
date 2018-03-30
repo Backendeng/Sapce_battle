@@ -20,7 +20,7 @@ public class NetworkEntity : MonoBehaviour {
 
     public void AddRecMessage(NetMsg msg) {
         incomingQueue.Enqueue(msg);
-        Debug.Log("incoming message to NetworkEntity");
+       // Debug.Log("incoming message to NetworkEntity");
     }
 
     private void Start() {

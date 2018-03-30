@@ -65,7 +65,7 @@ public class SC_MovementData : MovementData {
 
     public SC_MovementData(int entityID, float timeStamp, Vector3 position, Quaternion rotation) : 
         base(entityID, timeStamp, position, rotation) {
-        msgType = (byte)MsgType.SC_EntityCreated;
+        msgType = (byte)MsgType.SC_MovementData;
     }
 }
 

@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class RemotePlayerShip : PlayerShip {
 
-    private void Update() {
+    private void FixedUpdate() {
         if (incomingQueue.Count == 0)
             return;
         NetMsg netMessage = incomingQueue.Dequeue();
-
+       
         if (isServer) {
             switch (netMessage.Type) {
                 case (byte)NetMsg.MsgType.CS_InputData:
@@ -43,6 +43,6 @@ public class RemotePlayerShip : PlayerShip {
     }
 
     private void MoveShipUsingReceivedServerData(SC_MovementData message) {
-        GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
+       GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
     }
 }

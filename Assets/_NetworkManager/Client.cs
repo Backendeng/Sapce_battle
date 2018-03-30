@@ -23,7 +23,6 @@ public class Client : MonoBehaviour {
     {
         NetworkTransport.Init();
         Connect();
-        Tests.test1_pack_unpack();
     }
 
     public void Connect()

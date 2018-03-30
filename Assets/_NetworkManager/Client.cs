@@ -29,6 +29,7 @@ public class Client : MonoBehaviour {
     {
         ConnectionConfig config = new ConnectionConfig();
         reliableChannelId = config.AddChannel(QosType.Reliable);
+        Debug.Log("Channel open id: " + reliableChannelId);
 
         int maxConnections = 10;
         HostTopology topology = new HostTopology(config, maxConnections);
@@ -51,6 +52,7 @@ public class Client : MonoBehaviour {
         CS_InputData msg = new CS_InputData(selfEntityId, Time.fixedTime, angular_input, throttle);
         byte[] buffer = MessagesHandler.NetMsgPack(msg);
         NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
+        Debug.Log("SendInputToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
     }
 
     // Update is called once per frame

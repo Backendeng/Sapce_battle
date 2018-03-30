@@ -76,6 +76,7 @@ public class CS_InputData : NetMsg {
     public float Throttle { get { return throttle; } }
 
     public CS_InputData(int entityID, float timeStamp, Vector3 angularInput, float throttle) : base(entityID, timeStamp) {
+        msgType = (byte)MsgType.CS_InputData;
         this.angularInput = angularInput;
         this.throttle = throttle;
     }

@@ -40,9 +40,17 @@ public abstract class MovementData : NetMsg {
 
 public class SC_EntityCreated : MovementData {
 
-    public SC_EntityCreated(int entityID, float timeStamp, Vector3 position, Quaternion rotation) : 
+    public SC_EntityCreated(int entityID, float timeStamp, Vector3 position, Quaternion rotation) :
         base(entityID, timeStamp, position, rotation) {
         msgType = (byte)MsgType.SC_EntityCreated;
+    }
+    protected int connectionID;
+    public int ConnectionID { get { return connectionID; } }
+
+    public SC_EntityCreated(int entityID, float timeStamp, Vector3 position, Quaternion rotation, int connId) : 
+        base(entityID, timeStamp, position, rotation) {
+        msgType = (byte)MsgType.SC_EntityCreated;
+        connectionID = connId;
     }
 }
 

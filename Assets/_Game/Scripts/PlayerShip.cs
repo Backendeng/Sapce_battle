@@ -48,6 +48,5 @@ public abstract class PlayerShip : NetworkEntity
 	private void Update ()
     {
 
-        
     }
 }

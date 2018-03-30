@@ -17,7 +17,7 @@ public class Server : MonoBehaviour {
     Dictionary<int, NetworkEntity> netEntities = new Dictionary<int, NetworkEntity>();
     Queue<NetMsg> outgoingMessages = new Queue<NetMsg>();
 
-    public GameObject player;         // player prefab                  TODO: spawner
+    public GameObject remotePlayer;         // player prefab                  TODO: spawner
     public Transform playerSpawn;     // player spawn location
 
     // Use this for initialization
@@ -65,7 +65,7 @@ public class Server : MonoBehaviour {
 
                 if (!connectedPlayers.ContainsKey(recConnectionId))
                 {
-                    GameObject newPlayer = Instantiate(player, playerSpawn.position, playerSpawn.rotation);
+                    GameObject newPlayer = Instantiate(remotePlayer, playerSpawn.position, playerSpawn.rotation);
                     lastEntityId++;
                     newPlayer.GetComponent<NetworkEntity>().EntityID = lastEntityId;
                     connectedPlayers.Add(recConnectionId, newPlayer);

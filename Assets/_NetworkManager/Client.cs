@@ -15,8 +15,8 @@ public class Client : MonoBehaviour {
 
     Dictionary<int, NetworkEntity> netEntities = new Dictionary<int, NetworkEntity>();
 
-    public GameObject player;         // player prefab
-
+    public GameObject localPlayer;         // player prefab
+    public GameObject remotePlayer;
 
     // Use this for initialization
     void Start ()
@@ -104,9 +104,9 @@ public class Client : MonoBehaviour {
             case (byte)NetMsg.MsgType.SC_EntityCreated:
                 SC_EntityCreated createMsg = (SC_EntityCreated)msg;
                 if (createMsg.ConnectionID == recConnectionId) 
-                    newPlayer = Instantiate(player, createMsg.position, createMsg.Rotation);//localPlayer TODO: change prefab
+                    newPlayer = Instantiate(localPlayer, createMsg.position, createMsg.Rotation);//localPlayer 
                 else
-                    newPlayer = Instantiate(player, createMsg.position, createMsg.Rotation);//remotePlayer
+                    newPlayer = Instantiate(remotePlayer, createMsg.position, createMsg.Rotation);//remotePlayer
                 newPlayer.GetComponent<NetworkEntity>().EntityID = createMsg.EntityID;
                 netEntities.Add(createMsg.EntityID, newPlayer.GetComponent<NetworkEntity>());
                 break;

@@ -49,4 +49,9 @@ public abstract class PlayerShip : NetworkEntity
     {
 
     }
+
+    private void Awake() {
+        input = GetComponent<PlayerShipInput>();
+        physics = GetComponent<PlayerShipPhysics>();
+    }
 }

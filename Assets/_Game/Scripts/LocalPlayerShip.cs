@@ -5,8 +5,7 @@ using UnityEngine;
 public class LocalPlayerShip : PlayerShip {
 
     private void Awake() {
-        input = GetComponent<PlayerShipInput>();
-        physics = GetComponent<PlayerShipPhysics>();
+
     }
 
     private void Update() {

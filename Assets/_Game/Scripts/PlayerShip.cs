@@ -6,15 +6,19 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerShipPhysics))]
 [RequireComponent(typeof(PlayerShipInput))]
 
-public class PlayerShip : MonoBehaviour {
+public abstract class PlayerShip : NetworkEntity
+{
 
     public bool isPlayer = true;
-    private PlayerShipInput input;
-    private PlayerShipPhysics physics;
+    protected static PlayerShip activeShip;
 
-    // shooting variables
+
+    protected PlayerShipInput input;
+    protected PlayerShipPhysics physics;
+
+    [Header("Shooting")]
     public float fireRate = 0.5f;
-    private float nextFire = 0.0f;
+    protected float nextFire = 0.0f;
     public GameObject shot;         // bullet prefab
     public Transform shotSpawn;     // bullet spawn location
 
@@ -23,7 +27,7 @@ public class PlayerShip : MonoBehaviour {
     {
         get { return activeShip; }
     }
-    private static PlayerShip activeShip;
+    
 
     // Getters for external objects
     public bool UsingMouseInput
@@ -40,30 +44,10 @@ public class PlayerShip : MonoBehaviour {
     {
         get { return input.throttle; }
     }
-
-
-    private void Awake()
-    {
-        input = GetComponent<PlayerShipInput>();
-        physics = GetComponent<PlayerShipPhysics>();
-    }
 	
 	private void Update ()
     {
-        // pass player input to the physics
-        Vector3 linear_input = new Vector3(input.strafe, 0.0f, input.throttle);
-        Vector3 angular_input = new Vector3(input.pitch, input.yaw, input.roll);
-        physics.SetPhysicsInput(linear_input, angular_input);
 
-        if (isPlayer)
-            activeShip = this;
-
-        // shooting
-        if ((Input.GetButton("RightTrigger") || Input.GetMouseButtonDown(0)) && Time.time > nextFire)
-        {
-            nextFire = Time.time + fireRate;
-            Instantiate(shot, shotSpawn.position, shotSpawn.rotation);
-            GetComponent<AudioSource>().Play();
-        }
+        
     }
 }

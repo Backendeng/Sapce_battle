@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class NetMsg {
-    public int entityID;
+    protected int entityID;
     protected byte msgType;
     protected float timeStamp;
 
     public byte Type { get { return msgType; } }
-    public int ID { get { return entityID; } }
+    public int EntityID { get { return entityID; } }
     public float TimeStamp { get { return timeStamp; } }
 
     public enum MsgType : byte {
@@ -29,7 +29,11 @@ public abstract class MovementData : NetMsg {
     public Quaternion rotation;
 
     public Vector3 Position { get { return position; } }
-    public Quaternion Rotation { get { return rotation; } }
+    public Quaternion Rotation {
+        get {
+            return rotation;
+        }
+    }
 
     public MovementData(int entityID, float timeStamp, Vector3 position, Quaternion rotation) :
         base (entityID, timeStamp) {

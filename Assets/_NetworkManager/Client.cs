@@ -23,6 +23,7 @@ public class Client : MonoBehaviour {
     {
         NetworkTransport.Init();
         Connect();
+        Tests.test1_pack_unpack();
     }
 
     public void Connect()
@@ -103,28 +104,28 @@ public class Client : MonoBehaviour {
         switch (type) {
             case (byte)NetMsg.MsgType.SC_EntityCreated:
                 SC_EntityCreated createMsg = (SC_EntityCreated)msg;
-                if (createMsg.connectionID == recConnectionId) 
-                    newPlayer = Instantiate(player, createMsg.position, createMsg.rotation);//localPlayer TODO: change prefab
+                if (createMsg.ConnectionID == recConnectionId) 
+                    newPlayer = Instantiate(player, createMsg.position, createMsg.Rotation);//localPlayer TODO: change prefab
                 else
-                    newPlayer = Instantiate(player, createMsg.position, createMsg.rotation);//remotePlayer
-                newPlayer.GetComponent<NetworkEntity>().EntityID = createMsg.entityID;
-                netEntities.Add(createMsg.entityID, newPlayer.GetComponent<NetworkEntity>());
+                    newPlayer = Instantiate(player, createMsg.position, createMsg.Rotation);//remotePlayer
+                newPlayer.GetComponent<NetworkEntity>().EntityID = createMsg.EntityID;
+                netEntities.Add(createMsg.EntityID, newPlayer.GetComponent<NetworkEntity>());
                 break;
             case (byte)NetMsg.MsgType.SC_MovementData:
                 SC_MovementData moveMsg = (SC_MovementData)msg;
-                if (netEntities.ContainsKey(moveMsg.entityID))
-                    netEntities[moveMsg.entityID].AddRecMessage(moveMsg);
+                if (netEntities.ContainsKey(moveMsg.EntityID))
+                    netEntities[moveMsg.EntityID].AddRecMessage(moveMsg);
                 else
-                    Debug.Log("ERROR, update for netEntity that does not exist in client " + moveMsg.entityID);
+                    Debug.Log("ERROR, update for netEntity that does not exist in client " + moveMsg.EntityID);
                 break;
             case (byte)NetMsg.MsgType.SC_EntityDestroyed:
                 SC_EntityDestroyed destroyMsg = (SC_EntityDestroyed)msg;
-                if (netEntities.ContainsKey(destroyMsg.entityID)) {
-                    netEntities[destroyMsg.entityID].AddRecMessage(destroyMsg);
-                    netEntities.Remove(destroyMsg.entityID);
+                if (netEntities.ContainsKey(destroyMsg.EntityID)) {
+                    netEntities[destroyMsg.EntityID].AddRecMessage(destroyMsg);
+                    netEntities.Remove(destroyMsg.EntityID);
                 }
                 else
-                    Debug.Log("ERROR, destroy for netEntity that does not exist in client " + destroyMsg.entityID);
+                    Debug.Log("ERROR, destroy for netEntity that does not exist in client " + destroyMsg.EntityID);
                 break;
         }
     }

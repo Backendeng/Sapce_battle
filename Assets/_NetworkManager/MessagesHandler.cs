@@ -24,6 +24,9 @@ public class MessagesHandler {
             case (byte)NetMsg.MsgType.CS_InputData:
                 jsonMsg = JsonConvert.SerializeObject( (CS_InputData)message );
                 break;
+            case (byte)NetMsg.MsgType.SC_AllocClientID:
+                jsonMsg = JsonConvert.SerializeObject((SC_AllocClientID)message);
+                break;
             default:
                 jsonMsg = "";
                 break;
@@ -56,6 +59,9 @@ public class MessagesHandler {
                 break;
             case (byte)NetMsg.MsgType.CS_InputData:
                 unpackedMessage = JsonConvert.DeserializeObject<CS_InputData>(jsonMsg);
+                break;
+            case (byte)NetMsg.MsgType.SC_AllocClientID:
+                unpackedMessage = JsonConvert.DeserializeObject<SC_AllocClientID>(jsonMsg);
                 break;
             default:
                 unpackedMessage = null;

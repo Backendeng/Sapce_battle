@@ -12,6 +12,7 @@ public class Client : MonoBehaviour {
     int hostId;
     int outPort = 8888;
     int connectionId;
+    int clientID = -1;
 
     Dictionary<int, NetworkEntity> netEntities = new Dictionary<int, NetworkEntity>();
 
@@ -46,13 +47,18 @@ public class Client : MonoBehaviour {
         NetworkTransport.Disconnect(hostId, connectionId, out error);
     }
 
+    void OnDestroy() {
+        Disconnect();
+    }
+
     public void SendInputToHost(int selfEntityId, float throttle, Vector3 angular_input)
     {
         //create movementMessage/... and send it to server
         CS_InputData msg = new CS_InputData(selfEntityId, Time.fixedTime, angular_input, throttle);
         byte[] buffer = MessagesHandler.NetMsgPack(msg);
         NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
-        Debug.Log("SendInputToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
+        if (error != 0)
+            Debug.LogError("SendInputToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
     }
 
     // Update is called once per frame
@@ -103,12 +109,19 @@ public class Client : MonoBehaviour {
         byte type = msg.Type;
         GameObject newPlayer;
         switch (type) {
+            case (byte)NetMsg.MsgType.SC_AllocClientID:
+                SC_AllocClientID allocIdMsg = (SC_AllocClientID)msg;
+                clientID = allocIdMsg.ClientID;
+                Debug.Log("Client got his ID: " + clientID);
+                newPlayer = Instantiate(localPlayer, allocIdMsg.Position, allocIdMsg.Rotation);//localPlayer
+                newPlayer.GetComponent<NetworkEntity>().EntityID = allocIdMsg.EntityID;
+                netEntities.Add(allocIdMsg.EntityID, newPlayer.GetComponent<NetworkEntity>());
+                break;
             case (byte)NetMsg.MsgType.SC_EntityCreated:
                 SC_EntityCreated createMsg = (SC_EntityCreated)msg;
-                if (createMsg.ConnectionID == recConnectionId) 
-                    newPlayer = Instantiate(localPlayer, createMsg.Position, createMsg.Rotation);//localPlayer 
-                else
-                    newPlayer = Instantiate(remotePlayer, createMsg.Position, createMsg.Rotation);//remotePlayer
+                if (clientID == createMsg.ClientID || clientID == -1) //when adding new types of objects, check this only for ship object.
+                    return;
+                newPlayer = Instantiate(remotePlayer, createMsg.Position, createMsg.Rotation);//remotePlayer
                 newPlayer.GetComponent<NetworkEntity>().EntityID = createMsg.EntityID;
                 netEntities.Add(createMsg.EntityID, newPlayer.GetComponent<NetworkEntity>());
                 break;

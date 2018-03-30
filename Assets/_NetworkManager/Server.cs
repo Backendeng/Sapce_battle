@@ -9,7 +9,7 @@ public class Server : MonoBehaviour {
 
     int reliableChannelId;
     int hostId;
-    int outPort = 8888;
+    int inPort = 8888;
     int connectionId;
 
     int lastEntityId;
@@ -31,7 +31,7 @@ public class Server : MonoBehaviour {
         int maxConnections = 10;
         HostTopology topology = new HostTopology(config, maxConnections);
 
-        hostId = NetworkTransport.AddHost(topology, outPort);
+        hostId = NetworkTransport.AddHost(topology, inPort);
         Debug.Log("Socket Open. SocketId is: " + hostId);
 
         lastEntityId = 1;
@@ -43,6 +43,15 @@ public class Server : MonoBehaviour {
         Listen();//first listen
         BroadcastState();//then broadcast
 
+    }
+
+    void OnDestroy() {
+        Disconnect();
+    }
+
+    public void Disconnect() {
+        byte error;
+        NetworkTransport.Disconnect(hostId, connectionId, out error);
     }
 
     private void Listen()
@@ -71,9 +80,16 @@ public class Server : MonoBehaviour {
                     connectedPlayers.Add(recConnectionId, newPlayer);
                     netEntities.Add(lastEntityId, newPlayer.GetComponent<NetworkEntity>());
 
+                    //send new player his ID and pos (the server's recConnectedID is used as the clientID)
+                    SC_AllocClientID msg = new SC_AllocClientID(lastEntityId, Time.fixedTime, playerSpawn.position, playerSpawn.rotation, recConnectionId);
+                    byte[] buffer = MessagesHandler.NetMsgPack(msg);
+                    NetworkTransport.Send(hostId, recConnectionId, reliableChannelId, buffer, buffer.Length, out error);
+                    if (error != 0)
+                        Debug.LogError("Client ID alocation error: " + error.ToString());
+
                     //broadcast new entity to all
-                    SC_EntityCreated msg = new SC_EntityCreated(lastEntityId, Time.fixedTime, playerSpawn.position, playerSpawn.rotation, recConnectionId);
-                    outgoingMessages.Enqueue(msg);
+                    SC_EntityCreated msg1 = new SC_EntityCreated(lastEntityId, Time.fixedTime, playerSpawn.position, playerSpawn.rotation, recConnectionId);
+                    outgoingMessages.Enqueue(msg1);
                 }
                 break;
             case NetworkEventType.DataEvent:       //3
@@ -85,10 +101,11 @@ public class Server : MonoBehaviour {
                 break;
             case NetworkEventType.DisconnectEvent: //4
                 Debug.Log("remote client event disconnected id: " + recConnectionId);
-                //send destroy to all 
+                
                 int entityIdToDestroy = connectedPlayers[recConnectionId].GetComponent<NetworkEntity>().EntityID;
                 SC_EntityDestroyed destroyMsg = new SC_EntityDestroyed(entityIdToDestroy, Time.fixedTime);
-                outgoingMessages.Enqueue(destroyMsg);
+                outgoingMessages.Enqueue(destroyMsg); //send destroy to all 
+                netEntities[entityIdToDestroy].AddRecMessage(destroyMsg);
                 connectedPlayers.Remove(recConnectionId);
                 netEntities.Remove(entityIdToDestroy);
                 break;

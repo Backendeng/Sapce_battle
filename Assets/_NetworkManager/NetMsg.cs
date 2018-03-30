@@ -15,6 +15,7 @@ public abstract class NetMsg {
         SC_EntityCreated,
         SC_EntityDestroyed,
         SC_MovementData,
+        SC_AllocClientID, 
         CS_InputData,
     }
 
@@ -82,8 +83,14 @@ public class CS_InputData : NetMsg {
     }
 }
 
-public class SC_AllocClientID : SC_EntityCreated {
+public class SC_AllocClientID : MovementData {
+    protected int clientID;
+    public int ClientID { get { return clientID; } }
+
     public SC_AllocClientID(int entityID, float timeStamp, Vector3 position, Quaternion rotation, int clientID) :
-        base(entityID, timeStamp, position, rotation, clientID) { }
+        base(entityID, timeStamp, position, rotation) {
+        this.clientID = clientID;
+        msgType = (byte)MsgType.SC_AllocClientID;
+    }
 }
 

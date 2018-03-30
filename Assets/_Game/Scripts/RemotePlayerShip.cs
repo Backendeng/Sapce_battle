@@ -14,6 +14,9 @@ public class RemotePlayerShip : PlayerShip {
                 case (byte)NetMsg.MsgType.CS_InputData:
                     MoveShipUsingClientInput((CS_InputData)netMessage);
                     break;
+                case (byte)NetMsg.MsgType.SC_EntityDestroyed:
+                    Destroy(gameObject);
+                    break;
                 default:
                     Debug.Log("ERROR! RemotePlayerShip on Server reveived an invalid NetMsg message. NetMsg Type: " + netMessage.Type);
                     break;

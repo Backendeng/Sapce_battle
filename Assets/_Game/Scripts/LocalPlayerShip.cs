@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class LocalPlayerShip : PlayerShip {
 
-
     private void Update() {
         // pass player input to the physics
         Vector3 linear_input = new Vector3(0.0f, 0.0f, input.throttle);

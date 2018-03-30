@@ -12,7 +12,6 @@ public abstract class PlayerShip : NetworkEntity
     public bool isPlayer = true;
     protected static PlayerShip activeShip;
 
-
     protected PlayerShipInput input;
     protected PlayerShipPhysics physics;
 

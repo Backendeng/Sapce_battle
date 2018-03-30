@@ -25,8 +25,8 @@ public abstract class NetMsg {
 }
 
 public abstract class MovementData : NetMsg {
-    public Vector3 position;
-    public Quaternion rotation;
+    protected Vector3 position;
+    protected Quaternion rotation;
 
     public Vector3 Position { get { return position; } }
     public Quaternion Rotation {
@@ -36,7 +36,7 @@ public abstract class MovementData : NetMsg {
     }
 
     public MovementData(int entityID, float timeStamp, Vector3 position, Quaternion rotation) :
-        base (entityID, timeStamp) {
+        base(entityID, timeStamp) {
         this.position = position;
         this.rotation = rotation;
     }
@@ -46,10 +46,10 @@ public class SC_EntityCreated : MovementData {
     protected int connectionID;
     public int ConnectionID { get { return connectionID; } }
 
-    public SC_EntityCreated(int entityID, float timeStamp, Vector3 position, Quaternion rotation, int connId) : 
+    public SC_EntityCreated(int entityID, float timeStamp, Vector3 position, Quaternion rotation, int connectionID) : 
         base(entityID, timeStamp, position, rotation) {
         msgType = (byte)MsgType.SC_EntityCreated;
-        connectionID = connId;
+        this.connectionID = connectionID;
     }
 }
 

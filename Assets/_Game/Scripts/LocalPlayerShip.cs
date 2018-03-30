@@ -4,13 +4,10 @@ using UnityEngine;
 
 public class LocalPlayerShip : PlayerShip {
 
-    private void Awake() {
-
-    }
 
     private void Update() {
         // pass player input to the physics
-        Vector3 linear_input = new Vector3(input.strafe, 0.0f, input.throttle);
+        Vector3 linear_input = new Vector3(0.0f, 0.0f, input.throttle);
         Vector3 angular_input = new Vector3(input.pitch, input.yaw, input.roll);
 
         physics.SetPhysicsInput(linear_input, angular_input);

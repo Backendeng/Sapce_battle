@@ -5,13 +5,41 @@ using UnityEngine;
 public class RemotePlayerShip : PlayerShip {
 
     private void Update() {
+        if (incomingQueue.Count == 0)
+            return;
+        NetMsg netMessage = incomingQueue.Dequeue();
 
-        if (!isServer) {
+        if (isServer) {
+            switch (netMessage.Type) {
+                case (byte)NetMsg.MsgType.CS_InputData:
+                    MoveShipUsingClientInput((CS_InputData)netMessage);
+                    break;
+                default:
+                    Debug.Log("ERROR! RemotePlayerShip on Server reveived an invalid NetMsg message. NetMsg Type: " + netMessage.Type);
+                    break;
+            }
 
-            //networkController.GetComponent<Client>().SendHost(linear_input, angular_input);
         }
         else {
-            physics.SetPhysicsInput(linear_input_sent, angular_input_sent);
+            switch (netMessage.Type) {
+                case (byte)NetMsg.MsgType.SC_MovementData:
+                    MoveShipUsingReceivedServerData((SC_MovementData)netMessage);
+                    break;
+                case (byte)NetMsg.MsgType.SC_EntityDestroyed:
+                    Destroy(gameObject);
+                    break;
+                default:
+                    Debug.Log("ERROR! RemotePlayerShip on Client reveived an invalid NetMsg message. NetMsg Type: " + netMessage.Type);
+                    break;
+            }
         }
+    }
+
+    private void MoveShipUsingClientInput(CS_InputData message) {
+        physics.SetPhysicsInput( new Vector3(0f, 0f, message.Throttle), message.AngularInput);
+    }
+
+    private void MoveShipUsingReceivedServerData(SC_MovementData message) {
+        GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
     }
 }

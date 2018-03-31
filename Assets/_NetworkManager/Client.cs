@@ -87,12 +87,26 @@ public class Client : MonoBehaviour {
                 {
                     Debug.Log("Connected");
                 }
-                // GameObject newPlayer = Instantiate(player, playerSpawn.position, playerSpawn.rotation); //spawn local player upon connection
                 //problem: how to pass entity id here?
                 break;
             case NetworkEventType.DataEvent:
                 //distribute messages to network entities
-                ProcessMessage(recBuffer, recConnectionId);
+                NetMsg msg = MessagesHandler.NetMsgUnpack(recBuffer);
+                byte type = msg.Type;
+                switch (type) {
+                    case (byte)NetMsg.MsgType.SC_AllocClientID:
+                        ProccessAllocClientID(msg);
+                        break;
+                    case (byte)NetMsg.MsgType.SC_EntityCreated://BUG: 2nd player gets ERROR, update for netEntity that does not exist in client 
+                        ProccessEntityCreated(msg);
+                        break;
+                    case (byte)NetMsg.MsgType.SC_MovementData:
+                        ProccessMovementData(msg);
+                        break;
+                    case (byte)NetMsg.MsgType.SC_EntityDestroyed:
+                        ProccessEntityDestroyed(msg);
+                        break;
+                }
                 break;
             case NetworkEventType.DisconnectEvent:
                 if (recHostId == hostId &&
@@ -104,45 +118,51 @@ public class Client : MonoBehaviour {
         }
     }
 
-    private void ProcessMessage(byte[] buffer, int recConnectionId) {
-        NetMsg msg = MessagesHandler.NetMsgUnpack(buffer);
-        byte type = msg.Type;
-        GameObject newPlayer;
-        switch (type) {
-            case (byte)NetMsg.MsgType.SC_AllocClientID:
-                SC_AllocClientID allocIdMsg = (SC_AllocClientID)msg;
-                clientID = allocIdMsg.ClientID;
-                Debug.Log("Client got his ID: " + clientID);
-                newPlayer = Instantiate(localPlayer, allocIdMsg.Position, allocIdMsg.Rotation);//localPlayer
-                newPlayer.GetComponent<NetworkEntity>().EntityID = allocIdMsg.EntityID;
-                if (netEntities.ContainsKey(allocIdMsg.EntityID))// if this client already created players ship before got alloacted id
-                    netEntities.Remove(allocIdMsg.EntityID);
-                netEntities.Add(allocIdMsg.EntityID, newPlayer.GetComponent<NetworkEntity>());
-                break;
-            case (byte)NetMsg.MsgType.SC_EntityCreated:
-                SC_EntityCreated createMsg = (SC_EntityCreated)msg;
-                if (clientID == createMsg.ClientID) //when adding new types of objects, check this only for ship object.
-                    return;                                           // we dont want to create local players ship twice
-                newPlayer = Instantiate(remotePlayer, createMsg.Position, createMsg.Rotation);//remotePlayer
-                newPlayer.GetComponent<NetworkEntity>().EntityID = createMsg.EntityID;
-                netEntities.Add(createMsg.EntityID, newPlayer.GetComponent<NetworkEntity>());
-                break;
-            case (byte)NetMsg.MsgType.SC_MovementData:
-                SC_MovementData moveMsg = (SC_MovementData)msg;
-                if (netEntities.ContainsKey(moveMsg.EntityID))
-                    netEntities[moveMsg.EntityID].AddRecMessage(moveMsg);
-                else
-                    Debug.Log("ERROR, update for netEntity that does not exist in client " + moveMsg.EntityID);
-                break;
-            case (byte)NetMsg.MsgType.SC_EntityDestroyed:
-                SC_EntityDestroyed destroyMsg = (SC_EntityDestroyed)msg;
-                if (netEntities.ContainsKey(destroyMsg.EntityID)) {
-                    netEntities[destroyMsg.EntityID].AddRecMessage(destroyMsg);
-                    netEntities.Remove(destroyMsg.EntityID);
-                }
-                else
-                    Debug.Log("ERROR, destroy for netEntity that does not exist in client " + destroyMsg.EntityID);
-                break;
-        }
+    private void ProccessAllocClientID(NetMsg msg) {
+        SC_AllocClientID allocIdMsg = (SC_AllocClientID)msg;
+
+        clientID = allocIdMsg.ClientID;
+        Debug.Log("Client got his ID: " + clientID);
+
+        SC_AllocClientID ack = new SC_AllocClientID(-1, Time.fixedTime, clientID);
+        byte[] buffer = MessagesHandler.NetMsgPack(ack);
+        NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
+        if (error != 0)
+            Debug.LogError("SendInputToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
+
     }
-}
+
+    private void ProccessEntityCreated(NetMsg msg) {
+        GameObject newPlayer;
+        SC_EntityCreated createMsg = (SC_EntityCreated)msg;
+        if (clientID == createMsg.ClientID) { //when adding new types of objects, check this only for ship object.
+            newPlayer = Instantiate(localPlayer, createMsg.Position, createMsg.Rotation);//localPlayer
+        } else {
+            newPlayer = Instantiate(remotePlayer, createMsg.Position, createMsg.Rotation);//remotePlayer
+        }
+       
+        newPlayer.GetComponent<NetworkEntity>().EntityID = createMsg.EntityID;
+        netEntities.Add(createMsg.EntityID, newPlayer.GetComponent<NetworkEntity>());
+        Debug.Log("Entity Created, id: " + createMsg.EntityID);
+    }
+
+    private void ProccessMovementData(NetMsg msg) {
+        SC_MovementData moveMsg = (SC_MovementData)msg;
+        if (netEntities.ContainsKey(moveMsg.EntityID))
+            netEntities[moveMsg.EntityID].AddRecMessage(moveMsg);
+        else
+            Debug.Log("ERROR, update for netEntity that does not exist in client with entityId:" + moveMsg.EntityID);
+    }
+
+    private void ProccessEntityDestroyed(NetMsg msg) {
+        SC_EntityDestroyed destroyMsg = (SC_EntityDestroyed)msg;
+        if (netEntities.ContainsKey(destroyMsg.EntityID)) {
+            netEntities[destroyMsg.EntityID].AddRecMessage(destroyMsg);
+            netEntities.Remove(destroyMsg.EntityID);
+            Debug.Log("Entity Destroyed, id: " + destroyMsg.EntityID);
+        }
+        else
+            Debug.Log("ERROR, destroy for netEntity that does not exist in client with entityId:" + destroyMsg.EntityID);
+    }
+
+    }

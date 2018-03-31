@@ -83,12 +83,12 @@ public class CS_InputData : NetMsg {
     }
 }
 
-public class SC_AllocClientID : MovementData {
+public class SC_AllocClientID : NetMsg {
     protected int clientID;
     public int ClientID { get { return clientID; } }
 
-    public SC_AllocClientID(int entityID, float timeStamp, Vector3 position, Quaternion rotation, int clientID) :
-        base(entityID, timeStamp, position, rotation) {
+    public SC_AllocClientID(int entityID, float timeStamp, int clientID) :
+        base(entityID, timeStamp) {
         this.clientID = clientID;
         msgType = (byte)MsgType.SC_AllocClientID;
     }

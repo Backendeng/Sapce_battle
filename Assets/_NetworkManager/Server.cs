@@ -77,51 +77,77 @@ public class Server : MonoBehaviour {
                 break;
             case NetworkEventType.ConnectEvent:    //2
                 Debug.Log("incoming connection event received id: " + recConnectionId);
-
-                if (!connectedPlayers.ContainsKey(recConnectionId))
-                {
-                    GameObject newPlayer = Instantiate(remotePlayer, playerSpawn.position, playerSpawn.rotation);
-                    lastEntityId++;
-                    newPlayer.GetComponent<NetworkEntity>().EntityID = lastEntityId;
-                    connectedPlayers.Add(recConnectionId, newPlayer);
-                    netEntities.Add(lastEntityId, newPlayer.GetComponent<NetworkEntity>());
-                 
-                    //send new player his ID and pos (the server's recConnectedID is used as the clientID)
-                    SC_AllocClientID msg = new SC_AllocClientID(lastEntityId, Time.fixedTime, playerSpawn.position, playerSpawn.rotation, recConnectionId);
-                    byte[] buffer = MessagesHandler.NetMsgPack(msg);
-                    NetworkTransport.Send(hostId, recConnectionId, reliableChannelId, buffer, buffer.Length, out error);
-                    if (error != 0)
-                        Debug.LogError("Client ID alocation error: " + error.ToString());
-
-                    //send new player all networkEnteties
-                    SendAllEntitiesToClient(recConnectionId);
-
-                    //broadcast new entity to all
-                    SC_EntityCreated msg1 = new SC_EntityCreated(lastEntityId, Time.fixedTime, playerSpawn.position, playerSpawn.rotation, recConnectionId);
-                    outgoingMessages.Enqueue(msg1);
-                }
+                ProccessConnectionRequest(recConnectionId);
                 break;
             case NetworkEventType.DataEvent:       //3
                 Debug.Log("incoming message event received from: " + recConnectionId);
                 //TODO: interpolation data will be sent as regular pos update, is this fast enough?
-                //process message and send input to playerObject on this server 
-                NetMsg mssg = MessagesHandler.NetMsgUnpack(recBuffer);
-                connectedPlayers[recConnectionId].GetComponent<NetworkEntity>().AddRecMessage(mssg);
+                NetMsg msg = MessagesHandler.NetMsgUnpack(recBuffer);
+                switch (msg.Type) {
+                    case (byte)NetMsg.MsgType.SC_AllocClientID:
+                        ProccessAllocClientID((SC_AllocClientID)msg, recConnectionId);
+                    break;
+                    case (byte)NetMsg.MsgType.CS_InputData:
+                        ProccessInputMessage(msg, recConnectionId);
+                    break;
+                }
+
                 break;
             case NetworkEventType.DisconnectEvent: //4
                 Debug.Log("remote client event disconnected id: " + recConnectionId);
                 
-                int entityIdToDestroy = connectedPlayers[recConnectionId].GetComponent<NetworkEntity>().EntityID;
-                SC_EntityDestroyed destroyMsg = new SC_EntityDestroyed(entityIdToDestroy, Time.fixedTime);
-                outgoingMessages.Enqueue(destroyMsg); //send destroy to all 
-                netEntities[entityIdToDestroy].AddRecMessage(destroyMsg);
-                connectedPlayers.Remove(recConnectionId);
-                netEntities.Remove(entityIdToDestroy);
+               
                 break;
         }
     }
 
-    // send world state to all clients.
+    private void ProccessConnectionRequest(int recConnectionId) {
+        byte error;
+        if (!connectedPlayers.ContainsKey(recConnectionId)) {
+
+            connectedPlayers.Add(recConnectionId, null);
+            
+            //send new player his ID (the server's recConnectedID is used as the clientID)
+            SC_AllocClientID msg = new SC_AllocClientID(-1, Time.fixedTime, recConnectionId);
+            byte[] buffer = MessagesHandler.NetMsgPack(msg);
+            NetworkTransport.Send(hostId, recConnectionId, reliableChannelId, buffer, buffer.Length, out error);
+            if (error != 0)
+                Debug.LogError("Client ID alocation error: " + error.ToString());
+
+        }
+    }
+
+    private void ProccessInputMessage(NetMsg mssg, int recConnectionId) {
+        //process message and send input to playerObject on this server 
+       
+        connectedPlayers[recConnectionId].GetComponent<NetworkEntity>().AddRecMessage(mssg);
+    }
+
+    private void ProccessAllocClientID(SC_AllocClientID msg, int recConnectionId) {
+
+        //send all netEntites to new player 
+        SendAllEntitiesToClient(recConnectionId);
+
+        lastEntityId++;
+        GameObject newPlayer = Instantiate(remotePlayer, playerSpawn.position, playerSpawn.rotation);
+        newPlayer.GetComponent<NetworkEntity>().EntityID = lastEntityId;
+        connectedPlayers[recConnectionId] = newPlayer;
+        netEntities.Add(lastEntityId, newPlayer.GetComponent<NetworkEntity>());
+
+        //broadcast new entity to all
+        SC_EntityCreated msg1 = new SC_EntityCreated(lastEntityId, Time.fixedTime, playerSpawn.position, playerSpawn.rotation, recConnectionId);
+        outgoingMessages.Enqueue(msg1);
+    }
+
+    private void ProccessDisconnection(int recConnectionId) {
+        int entityIdToDestroy = connectedPlayers[recConnectionId].GetComponent<NetworkEntity>().EntityID;
+        SC_EntityDestroyed destroyMsg = new SC_EntityDestroyed(entityIdToDestroy, Time.fixedTime);
+        outgoingMessages.Enqueue(destroyMsg); //send destroy to all 
+        netEntities[entityIdToDestroy].AddRecMessage(destroyMsg);
+        connectedPlayers.Remove(recConnectionId);
+        netEntities.Remove(entityIdToDestroy);
+    }
+
     private void BroadcastAllMessages() {
         if (outgoingMessages.Count == 0)
             return;
@@ -135,6 +161,8 @@ public class Server : MonoBehaviour {
         outgoingMessages.Clear();
     }
 
+
+    //this is called once every sendRate time and puts the positions of all entities on the queue
     private void StageAllEntities() {
         if (Time.time < nextStagingTime)
             return;
@@ -157,7 +185,7 @@ public class Server : MonoBehaviour {
         foreach (KeyValuePair<int, NetworkEntity> entity in netEntities) {
             Vector3 pos = entity.Value.gameObject.GetComponent<Transform>().position;
             Quaternion rot = entity.Value.gameObject.GetComponent<Transform>().rotation;
-            SC_EntityCreated msg = new SC_EntityCreated(entity.Key, Time.fixedTime, pos, rot, connectionId);
+            SC_EntityCreated msg = new SC_EntityCreated(entity.Key, Time.fixedTime, pos, rot, -1);
             byte[] buffer = MessagesHandler.NetMsgPack(msg);
 
             NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);

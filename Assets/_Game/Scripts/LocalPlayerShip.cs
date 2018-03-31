@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class LocalPlayerShip : PlayerShip {
 
+    public float positionThreshold = 0.5f;
+    public float rotationThreshold = 0.05f;
+
     public float sendInputRate = 0.05f;
     private float nextInputSendTime;
 
@@ -22,11 +25,26 @@ public class LocalPlayerShip : PlayerShip {
 
         physics.SetPhysicsInput(linear_input, angular_input);
 
-        if (Time.time > nextInputSendTime && (linear_input != lastLinearInput || lastAngularInput != angular_input) ) {
+        if (incomingQueue.Count != 0) {
+            NetMsg netMessage = incomingQueue.Dequeue();
+            switch (netMessage.Type) {
+                case (byte)NetMsg.MsgType.SC_MovementData:
+                    SyncPositionWithServer((SC_MovementData)netMessage);
+                    break;
+                case (byte)NetMsg.MsgType.SC_EntityDestroyed:
+                    Destroy(gameObject);
+                    break;
+                default:
+                    Debug.Log("ERROR! LocalPlayerShip on Client reveived an invalid NetMsg message. NetMsg Type: " + netMessage.Type);
+                    break;
+            }
+        }
+
+        if (/*Time.time > nextInputSendTime &&*/ (linear_input != lastLinearInput || lastAngularInput != angular_input) ) {
             networkController.GetComponent<Client>().SendInputToHost(entityID, input.throttle, angular_input);
             lastLinearInput = linear_input;
             lastAngularInput = angular_input;
-            nextInputSendTime = Time.time + sendInputRate;
+            //nextInputSendTime = Time.time + sendInputRate;
         }
         
 
@@ -39,5 +57,24 @@ public class LocalPlayerShip : PlayerShip {
 
         if (isPlayer)
             activeShip = this;
+    }
+
+    private void SyncPositionWithServer(SC_MovementData message) {
+        Vector3 pos = this.gameObject.GetComponent<Transform>().position;
+        Quaternion rot = this.gameObject.GetComponent<Transform>().rotation;
+
+        Vector3 newPos = pos;
+        Quaternion newRot = rot;
+
+        if (Vector3.Distance(message.Position, pos) > positionThreshold ) {
+            newPos = message.Position;
+        }
+
+        if (Quaternion.Angle(message.Rotation, rot) > rotationThreshold) {
+            newRot = message.Rotation;
+        }
+
+        if (newPos != pos || newRot != rot)
+            GetComponent<Transform>().SetPositionAndRotation(newPos, newRot);
     }
 }

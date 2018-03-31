@@ -23,15 +23,6 @@ public class NetworkEntity : MonoBehaviour {
        // Debug.Log("incoming message to NetworkEntity");
     }
 
-    private void Start() {
-        if (isServer) {
-            networkController = GameObject.Find("ServerNetworkController");
-        }
-        else {
-            networkController = GameObject.Find("ClientNetworkController");
-        }
-        if (networkController == null)
-            Debug.Log("ERROR! networkController not found");
-    }
+
 
 }

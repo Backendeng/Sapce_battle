@@ -15,6 +15,9 @@ public class LocalPlayerShip : PlayerShip {
 
     private void Start() {
         nextInputSendTime = Time.time;
+        networkController = GameObject.Find("ClientNetworkController");
+        if (networkController == null)
+            Debug.LogError("ERROR! networkController not found");
     }
 
     private void Update() {
@@ -40,11 +43,11 @@ public class LocalPlayerShip : PlayerShip {
             }
         }
 
-        if (/*Time.time > nextInputSendTime &&*/ (linear_input != lastLinearInput || lastAngularInput != angular_input) ) {
+        if (Time.time > nextInputSendTime && (linear_input != lastLinearInput || lastAngularInput != angular_input) ) {
             networkController.GetComponent<Client>().SendInputToHost(entityID, input.throttle, angular_input);
             lastLinearInput = linear_input;
             lastAngularInput = angular_input;
-            //nextInputSendTime = Time.time + sendInputRate;
+            nextInputSendTime = Time.time + sendInputRate;
         }
         
 

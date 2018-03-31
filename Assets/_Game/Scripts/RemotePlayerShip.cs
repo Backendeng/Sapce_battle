@@ -4,6 +4,17 @@ using UnityEngine;
 
 public class RemotePlayerShip : PlayerShip {
 
+    private void Start() {
+        if (isServer) {
+            networkController = GameObject.Find("ServerNetworkController");
+        }
+        else {
+            networkController = GameObject.Find("ClientNetworkController");
+        }
+        if (networkController == null)
+            Debug.LogError("ERROR! networkController not found");
+    }
+
     private void FixedUpdate() {
         if (incomingQueue.Count == 0)
             return;

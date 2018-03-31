@@ -95,8 +95,7 @@ public class Server : MonoBehaviour {
                 break;
             case NetworkEventType.DisconnectEvent: //4
                 Debug.Log("remote client event disconnected id: " + recConnectionId);
-                
-               
+                ProccessDisconnection(recConnectionId);
                 break;
         }
     }

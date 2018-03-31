@@ -76,7 +76,7 @@ public class LocalPlayerShip : PlayerShip {
         if (Quaternion.Angle(message.Rotation, rot) > rotationThreshold) {
             newRot = message.Rotation;
         }
-
+        
         if (newPos != pos || newRot != rot)
             GetComponent<Transform>().SetPositionAndRotation(newPos, newRot);
     }

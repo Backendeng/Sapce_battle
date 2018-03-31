@@ -32,9 +32,7 @@ public class RemotePlayerShip : PlayerShip {
                     Debug.Log("ERROR! RemotePlayerShip on Server reveived an invalid NetMsg message. NetMsg Type: " + netMessage.Type);
                     break;
             }
-
-        }
-        else {
+        } else {
             switch (netMessage.Type) {
                 case (byte)NetMsg.MsgType.SC_MovementData:
                     MoveShipUsingReceivedServerData((SC_MovementData)netMessage);

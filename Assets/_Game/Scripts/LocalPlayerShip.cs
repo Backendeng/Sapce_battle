@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class LocalPlayerShip : PlayerShip {
 
-    public float positionThreshold = 1f;
+    public float positionThreshold = 0.2f;
     public float rotationThreshold = 0.5f;
 
     public float sendInputRate = 0.05f;
@@ -95,7 +95,7 @@ public class LocalPlayerShip : PlayerShip {
             lastAngularInput = angularInput;
             nextInputSendTime = Time.time + sendInputRate;
 
-            Debug.Log("Input send time = " + Time.time);
+            //Debug.Log("Input send time = " + Time.time);
         }
         
     }
@@ -165,21 +165,23 @@ public class LocalPlayerShip : PlayerShip {
         }
 
         //Debug.Log("Server Message: Time = " + Time.time + " inputTime = " + message.TimeStamp + " delta = " + (Time.time - message.TimeStamp) + " position = " + message.Position + " rotation = " + message.Rotation);
-
-        // 
-        /*
-        Vector3 historyPosition; // = history[time - L]
-        Quaternion historyRotation;
+        if (History.Count == 0) {
+            return;
+        }
+        Vector3 historyPosition = History[0].position;
+        Quaternion historyRotation = History[0].rotation;
+        Vector3 historyVelocity = History[0].velocity;
 
         if ((Vector3.Distance(message.Position, historyPosition) > positionThreshold) ||
             (Quaternion.Angle(message.Rotation, historyRotation) > rotationThreshold) ) {
-            CorrectPositionUsingSnapshot(message);
+            
+            Vector3 deltaPosition = transform.position - historyPosition;
+            Vector3 predictedPosition = message.Position + deltaPosition;
+            Vector3 extrapolatedPosition = predictedPosition + physics.Rigidbody.velocity * latency;
 
-
-
-
+            transform.position = Vector3.Lerp(transform.position, extrapolatedPosition, Time.deltaTime);
+            Debug.Log("Correcting... lat = " + latency);
         }
-        */
     }
 
     private void CorrectPositionUsingSnapshot(SC_MovementData message) {

@@ -13,11 +13,17 @@ public class LocalPlayerShip : PlayerShip {
     private Vector3 lastLinearInput = new Vector3();
     private Vector3 lastAngularInput = new Vector3();
 
+
+    public GameObject shadowPrefab;
+    private Transform shadow;
+
     private void Start() {
         nextInputSendTime = Time.time;
         networkController = GameObject.Find("ClientNetworkController");
         if (networkController == null)
             Debug.LogError("ERROR! networkController not found");
+        if (shadowPrefab != null)
+            shadow = Instantiate(shadowPrefab, new Vector3(), new Quaternion()).transform;
     }
 
     private void Update() {
@@ -32,7 +38,8 @@ public class LocalPlayerShip : PlayerShip {
             NetMsg netMessage = incomingQueue.Dequeue();
             switch (netMessage.Type) {
                 case (byte)NetMsg.MsgType.SC_MovementData:
-                    SyncPositionWithServer((SC_MovementData)netMessage);
+                    //   SyncPositionWithServer((SC_MovementData)netMessage);
+                    MoveShadow((SC_MovementData)netMessage);
                     break;
                 case (byte)NetMsg.MsgType.SC_EntityDestroyed:
                     Destroy(gameObject);
@@ -80,4 +87,14 @@ public class LocalPlayerShip : PlayerShip {
         if (newPos != pos || newRot != rot)
             GetComponent<Transform>().SetPositionAndRotation(newPos, newRot);
     }
+
+    private void MoveShadow(SC_MovementData message) {
+        Vector3 pos = this.gameObject.GetComponent<Transform>().position;
+        Quaternion rot = this.gameObject.GetComponent<Transform>().rotation;
+
+        shadow.GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
+
+    }
+
+
 }

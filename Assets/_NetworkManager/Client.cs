@@ -55,7 +55,7 @@ public class Client : MonoBehaviour {
     public void SendInputToHost(int selfEntityId, float throttle, Vector3 angular_input)
     {
         //create movementMessage/... and send it to server
-        CS_InputData msg = new CS_InputData(selfEntityId, Time.fixedTime, angular_input, throttle);
+        CS_InputData msg = new CS_InputData(selfEntityId, Time.time, angular_input, throttle);
         byte[] buffer = MessagesHandler.NetMsgPack(msg);
         NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
         if (error != 0)

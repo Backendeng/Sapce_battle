@@ -12,12 +12,14 @@ public class LocalPlayerShip : PlayerShip {
 
     
     private class ShipSnapshot {
+        public float time;
         public float deltaTime;
         public Vector3 position;
         public Quaternion rotation;
         public Vector3 velocity;
 
-        public ShipSnapshot(float deltaTime, Vector3 position, Quaternion rotation, Vector3 velocity) {
+        public ShipSnapshot(float time, float deltaTime, Vector3 position, Quaternion rotation, Vector3 velocity) {
+            this.time = time;
             this.deltaTime = deltaTime;
             this.position = position;
             this.rotation = rotation;
@@ -33,9 +35,12 @@ public class LocalPlayerShip : PlayerShip {
     public GameObject shadowPrefab;
     private Transform shadow;
 
+    private float lastReturnedInputTime;
+    private float latency;
+
     private void Start() {
         nextInputSendTime = Time.time;
-        historyDuration = 0f;
+
 
         networkController = GameObject.Find("ClientNetworkController");
         if (networkController == null)
@@ -46,12 +51,23 @@ public class LocalPlayerShip : PlayerShip {
     }
 
     private void Update() {
+        /*
+        if (Input.GetButton("Jump")) {
+            Debug.Log("History: " + History);
+            foreach (ShipSnapshot snapshot in History) {
+                Debug.Log("time = " + snapshot.time + " timeDelta = " + snapshot.deltaTime + " position = " + snapshot.position + " rotation = " + snapshot.rotation);
+            }
+            
+        }*/
+
         // get player input for movement
-        Vector3 linear_input = new Vector3(0.0f, 0.0f, input.throttle);
-        Vector3 angular_input = new Vector3(input.pitch, input.yaw, input.roll);
+        Vector3 linearInput = new Vector3(0.0f, 0.0f, input.throttle);
+        Vector3 angularInput = new Vector3(input.pitch, input.yaw, input.roll);
 
         // apply movement physics using player input
-        physics.SetPhysicsInput(linear_input, angular_input);
+        physics.SetPhysicsInput(linearInput, angularInput);
+
+        SendInputToServer(linearInput, angularInput);
 
         HandleMessagesFromServer();
 
@@ -70,6 +86,18 @@ public class LocalPlayerShip : PlayerShip {
             Instantiate(shot, shotSpawn.position, shotSpawn.rotation);
             GetComponent<AudioSource>().Play();
         }
+    }
+
+    private void SendInputToServer(Vector3 linearInput, Vector3 angularInput) {
+        if (Time.time > nextInputSendTime /*&& (linearInput != lastLinearInput || lastAngularInput != angularInput)*/) {
+            networkController.GetComponent<Client>().SendInputToHost(entityID, input.throttle, angularInput);
+            lastLinearInput = linearInput;
+            lastAngularInput = angularInput;
+            nextInputSendTime = Time.time + sendInputRate;
+
+            Debug.Log("Input send time = " + Time.time);
+        }
+        
     }
 
     private void HandleMessagesFromServer() {
@@ -98,7 +126,7 @@ public class LocalPlayerShip : PlayerShip {
             History[History.Count - 1].deltaTime = Time.deltaTime;
         }
         
-        History.Add(new ShipSnapshot(Time.deltaTime, transform.position, transform.rotation, physics.Rigidbody.velocity));
+        History.Add(new ShipSnapshot(Time.time, Time.deltaTime, transform.position, transform.rotation, physics.Rigidbody.velocity));
         historyDuration += Time.deltaTime;
 
         // shouldn't be executed, but just in case - let's limit the History list to 200 snapshots.
@@ -106,14 +134,17 @@ public class LocalPlayerShip : PlayerShip {
         if (History.Count > 200) {
             History.RemoveAt(0);
         }
-        if (History.Count > 1) {
-            Debug.Log("Added To History: timeDelta = " + History[History.Count - 1].deltaTime + " position = " + History[History.Count - 1].position + " rotation = " + History[History.Count - 1].rotation);
+        if (History.Count > 0) {
+            //Debug.Log("Added To History: Time = " +Time.time + " timeDelta = " + History[History.Count - 1].deltaTime + " position = " + History[History.Count - 1].position + " rotation = " + History[History.Count - 1].rotation);
         }
         
     }
 
     private void SyncPositionWithServer(SC_MovementData message) {
-        float latency = Time.time - message.TimeStamp;
+        if (message.TimeStamp > lastReturnedInputTime) {
+            latency = Time.time - message.TimeStamp;
+        }
+        lastReturnedInputTime = message.TimeStamp;
         float dt = Mathf.Max(0, historyDuration - latency);
         float ratio = 0f;
         // remove time from History untill it's duration equals to the latency
@@ -132,7 +163,8 @@ public class LocalPlayerShip : PlayerShip {
                 }
             }
         }
-        Debug.Log("Server Message: inputTime = " + message.TimeStamp + " position = " + message.Position + " rotation = " + message.Rotation);
+
+        //Debug.Log("Server Message: Time = " + Time.time + " inputTime = " + message.TimeStamp + " delta = " + (Time.time - message.TimeStamp) + " position = " + message.Position + " rotation = " + message.Rotation);
 
         // 
         /*
@@ -164,6 +196,5 @@ public class LocalPlayerShip : PlayerShip {
         shadow.GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
 
     }
-
 
 }

@@ -7,6 +7,7 @@ using UnityEngine.Networking;
 
 public class Client : MonoBehaviour {
 
+    public string serverIP = "127.0.0.1";
     byte error;
     int reliableChannelId;
     int hostId;
@@ -38,7 +39,7 @@ public class Client : MonoBehaviour {
         hostId = NetworkTransport.AddHost(topology, 0);
         Debug.Log("Socket Open. HostId is: " + hostId);
 
-        connectionId = NetworkTransport.Connect(hostId, "127.0.0.1", outPort, 0, out error);
+        connectionId = NetworkTransport.Connect(hostId, serverIP, outPort, 0, out error);
         Debug.Log("Connected to server. ConnectionId: " + connectionId);
     }
 

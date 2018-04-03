@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class LocalPlayerShip : PlayerShip {
 
-    public float positionThreshold = 0.2f;
-    public float rotationThreshold = 0.5f;
+    public float positionThreshold = 0.3f;
+    public float rotationThreshold = 5f;
 
     public float sendInputRate = 0.05f;
     private float nextInputSendTime;
@@ -17,13 +17,15 @@ public class LocalPlayerShip : PlayerShip {
         public Vector3 position;
         public Quaternion rotation;
         public Vector3 velocity;
+        public Vector3 deltaPosition;
 
-        public ShipSnapshot(float time, float deltaTime, Vector3 position, Quaternion rotation, Vector3 velocity) {
+        public ShipSnapshot(float time, float deltaTime, Vector3 position, Quaternion rotation, Vector3 velocity, Vector3 dp) {
             this.time = time;
             this.deltaTime = deltaTime;
             this.position = position;
             this.rotation = rotation;
             this.velocity = velocity;
+            this.deltaPosition = dp;
         }
     }
     private List<ShipSnapshot> History = new List<ShipSnapshot>();
@@ -67,13 +69,13 @@ public class LocalPlayerShip : PlayerShip {
         // apply movement physics using player input
         physics.SetPhysicsInput(linearInput, angularInput);
 
-        SendInputToServer(linearInput, angularInput);
+       
 
         HandleMessagesFromServer();
 
         // shooting
         HandleShooting();
-
+        SendInputToServer(linearInput, angularInput);
         AddSnapshotToHistory();
 
         if (isPlayer)
@@ -125,8 +127,12 @@ public class LocalPlayerShip : PlayerShip {
             historyDuration += Time.deltaTime;
             History[History.Count - 1].deltaTime = Time.deltaTime;
         }
-        
-        History.Add(new ShipSnapshot(Time.time, Time.deltaTime, transform.position, transform.rotation, physics.Rigidbody.velocity));
+
+        Vector3 dp = new Vector3();
+        if (History.Count > 0) {
+            dp = transform.position - History[History.Count - 1].position;
+        } 
+        History.Add(new ShipSnapshot(Time.time, Time.deltaTime, transform.position, transform.rotation, physics.Rigidbody.velocity, dp));
         historyDuration += Time.deltaTime;
 
         // shouldn't be executed, but just in case - let's limit the History list to 200 snapshots.
@@ -144,11 +150,12 @@ public class LocalPlayerShip : PlayerShip {
         if (message.TimeStamp > lastReturnedInputTime) {
             latency = Time.time - message.TimeStamp;
         }
+        
         lastReturnedInputTime = message.TimeStamp;
         float dt = Mathf.Max(0, historyDuration - latency);
         float ratio = 0f;
         // remove time from History untill it's duration equals to the latency
-        while (History.Count > 0 && dt > 0) {
+        while (History.Count > 1 && dt > 0) {
             if (dt >= History[0].deltaTime) {
                 dt -= History[0].deltaTime;
                 History.RemoveAt(0);
@@ -174,13 +181,17 @@ public class LocalPlayerShip : PlayerShip {
 
         if ((Vector3.Distance(message.Position, historyPosition) > positionThreshold) ||
             (Quaternion.Angle(message.Rotation, historyRotation) > rotationThreshold) ) {
-            
-            Vector3 deltaPosition = transform.position - historyPosition;
-            Vector3 predictedPosition = message.Position + deltaPosition;
-            Vector3 extrapolatedPosition = predictedPosition + physics.Rigidbody.velocity * latency;
 
-            transform.position = Vector3.Lerp(transform.position, extrapolatedPosition, Time.deltaTime);
-            Debug.Log("Correcting... lat = " + latency);
+            //  Vector3 deltaPosition = transform.position - historyPosition;
+          Vector3 deltaPosition = new Vector3();
+          foreach (ShipSnapshot ss in History) {
+                deltaPosition += ss.deltaPosition;
+           }
+           Vector3 predictedPosition = message.Position + deltaPosition;
+           Vector3 extrapolatedPosition = predictedPosition + physics.Rigidbody.velocity * latency;
+
+           transform.position = Vector3.Lerp(transform.position, extrapolatedPosition, Time.deltaTime);
+           Debug.Log("Correcting... lat = " + latency);
         }
     }
 

@@ -95,7 +95,7 @@ public class Server : MonoBehaviour {
                 break;
             case NetworkEventType.DisconnectEvent: //4
                 Debug.Log("remote client event disconnected id: " + recConnectionId);
-                ProccessDisconnection(recConnectionId);
+                ProccessDisconnection(recConnectionId); //BUG: servers sends data for a non existing entity after cliend disconnects
                 break;
         }
     }
@@ -127,9 +127,8 @@ public class Server : MonoBehaviour {
         //send all netEntites to new player 
         SendAllEntitiesToClient(recConnectionId);
 
-        lastEntityId++;
         GameObject newPlayer = Instantiate(remotePlayer, playerSpawn.position, playerSpawn.rotation);
-        newPlayer.GetComponent<NetworkEntity>().EntityID = lastEntityId;
+        newPlayer.GetComponent<NetworkEntity>().EntityID = lastEntityId++;
         connectedPlayers[recConnectionId] = newPlayer;
         netEntities.Add(lastEntityId, newPlayer.GetComponent<NetworkEntity>());
 
@@ -171,7 +170,8 @@ public class Server : MonoBehaviour {
         foreach (KeyValuePair<int, NetworkEntity> entity in netEntities) {
             Vector3 pos = entity.Value.gameObject.GetComponent<Transform>().position;
             Quaternion rot = entity.Value.gameObject.GetComponent<Transform>().rotation;
-            SC_MovementData msg = new SC_MovementData(entity.Key, Time.fixedTime, pos, rot);
+            float lastInputTime = entity.Value.gameObject.GetComponent<RemotePlayerShip>().LastRecievedInputTime;
+            SC_MovementData msg = new SC_MovementData(entity.Key, lastInputTime, pos, rot);
 
             outgoingMessages.Enqueue(msg);
         }

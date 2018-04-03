@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class LocalPlayerShip : PlayerShip {
 
-    public float positionThreshold = 0.3f;
-    public float rotationThreshold = 5f;
+    private float positionThreshold = 0.2f;
+    private float rotationThreshold = 0.3f;
 
-    public float sendInputRate = 0.05f;
+    public float sendInputRate = 0.02f;
     private float nextInputSendTime;
 
     
@@ -165,6 +165,7 @@ public class LocalPlayerShip : PlayerShip {
                 History[0].deltaTime -= dt;
                 if (History.Count > 1) {
                     History[0].position = (History[0].position + History[1].position) * ratio;
+                    History[0].deltaPosition *= ratio;
                     //History[0].rotation =
                     break;
                 }
@@ -182,17 +183,43 @@ public class LocalPlayerShip : PlayerShip {
         if ((Vector3.Distance(message.Position, historyPosition) > positionThreshold) ||
             (Quaternion.Angle(message.Rotation, historyRotation) > rotationThreshold) ) {
 
-            //  Vector3 deltaPosition = transform.position - historyPosition;
-          Vector3 deltaPosition = new Vector3();
-          foreach (ShipSnapshot ss in History) {
+        //  Vector3 deltaPosition = transform.position - historyPosition;
+            Vector3 deltaPosition = new Vector3();
+            foreach (ShipSnapshot ss in History) {
                 deltaPosition += ss.deltaPosition;
-           }
-           Vector3 predictedPosition = message.Position + deltaPosition;
-           Vector3 extrapolatedPosition = predictedPosition + physics.Rigidbody.velocity * latency;
+            }
+            Vector3 predictedPosition = message.Position + deltaPosition;
+            Vector3 extrapolatedPosition = predictedPosition + physics.Rigidbody.velocity * latency * (1.05f);
 
-           transform.position = Vector3.Lerp(transform.position, extrapolatedPosition, Time.deltaTime);
-           Debug.Log("Correcting... lat = " + latency);
-        }
+            //Quaternion predictedRotation = message.Rotation * Quaternion.Inverse(historyRotation);
+            //  Quaternion extrapolatedRotation = predictedRotation * Quaternion.Euler(physics.Rigidbody.angularVelocity * latency);
+            /* Quaternion r = transform.rotation * Quaternion.Inverse(message.Rotation);
+             double t1 = message.TimeStamp;
+             double t2 = Time.time;
+             double t3 = latency;
+             double ddt = (t3 - t1) / (t2 - t1);
+
+             float ang = 0.0f;
+
+             Vector3 axis = Vector3.zero;
+
+             r.ToAngleAxis(out ang, out axis);
+
+             if (ang > 180) {
+                 ang -= 360;
+             }
+
+             ang = ang * (float)ddt % 360;
+
+             Quaternion extrapolatedRotation = Quaternion.AngleAxis(ang, axis) * message.Rotation;*/
+            var angularVelocity = physics.Rigidbody.angularVelocity;
+            Quaternion extrapolatedRotation = Quaternion.AngleAxis(angularVelocity.magnitude * Time.deltaTime, angularVelocity) * transform.rotation;
+
+            //transform.rotation.SetLookRotation(physics.Rigidbody.velocity);
+            transform.position = Vector3.Lerp(transform.position, extrapolatedPosition, Time.deltaTime*5);
+            transform.rotation = Quaternion.Slerp(transform.rotation, extrapolatedRotation, Time.deltaTime*5);
+            Debug.Log("Correcting... lat = " + latency);
+    }
     }
 
     private void CorrectPositionUsingSnapshot(SC_MovementData message) {

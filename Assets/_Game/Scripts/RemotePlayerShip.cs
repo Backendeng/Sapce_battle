@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class RemotePlayerShip : PlayerShip {
 
+    private float lastRecievedInputTime;
+
+    public float LastRecievedInputTime { get { return lastRecievedInputTime; } }
+
     private void Start() {
         if (isServer) {
             networkController = GameObject.Find("ServerNetworkController");
@@ -13,6 +17,8 @@ public class RemotePlayerShip : PlayerShip {
         }
         if (networkController == null)
             Debug.LogError("ERROR! networkController not found");
+
+        lastRecievedInputTime = Time.time;
     }
 
     private void FixedUpdate() {
@@ -49,6 +55,7 @@ public class RemotePlayerShip : PlayerShip {
 
     private void MoveShipUsingClientInput(CS_InputData message) {
         physics.SetPhysicsInput( new Vector3(0f, 0f, message.Throttle), message.AngularInput);
+        lastRecievedInputTime = message.TimeStamp;
     }
 
     private void MoveShipUsingReceivedServerData(SC_MovementData message) {

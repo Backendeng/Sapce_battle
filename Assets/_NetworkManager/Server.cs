@@ -25,6 +25,8 @@ public class Server : MonoBehaviour {
     public Transform playerSpawn;     // player spawn location
     public GameObject missile;
 
+    private float lastSendTime; 
+
     // Use this for initialization
     void Start ()
     {
@@ -32,7 +34,8 @@ public class Server : MonoBehaviour {
         NetworkTransport.Init();
 
         ConnectionConfig config = new ConnectionConfig();
-        reliableChannelId = config.AddChannel(QosType.Reliable);
+        // reliableChannelId = config.AddChannel(QosType.Reliable);
+        reliableChannelId = config.AddChannel(QosType.Unreliable);
 
         int maxConnections = 10;
         HostTopology topology = new HostTopology(config, maxConnections);
@@ -81,7 +84,7 @@ public class Server : MonoBehaviour {
                 ProccessConnectionRequest(recConnectionId);
                 break;
             case NetworkEventType.DataEvent:       //3
-                Debug.Log("incoming message event received from: " + recConnectionId);
+               // Debug.Log("incoming message event received from: " + recConnectionId);
                 //TODO: interpolation data will be sent as regular pos update, is this fast enough?
                 NetMsg msg = MessagesHandler.NetMsgUnpack(recBuffer);
                 switch (msg.Type) {
@@ -141,6 +144,7 @@ public class Server : MonoBehaviour {
         //broadcast new entity to all
         SC_EntityCreated msg1 = new SC_EntityCreated(lastEntityId, Time.fixedTime, playerSpawn.position, playerSpawn.rotation, recConnectionId, (int)NetworkEntity.ObjType.Player);
         outgoingMessages.Enqueue(msg1);
+   
     }
 
     private void ProccessDisconnection(int recConnectionId) {
@@ -175,7 +179,7 @@ public class Server : MonoBehaviour {
         netEntities.Add(lastEntityId, newObject.GetComponent<NetworkEntity>());
 
         SC_EntityCreated mssg = new SC_EntityCreated(lastEntityId, createMsg.TimeStamp, createMsg.Position, createMsg.Rotation, -1 ,type);
-        outgoingMessages.Enqueue(msg);
+        outgoingMessages.Enqueue(mssg);
 
         Debug.Log("Entity Created, id: " + lastEntityId);
     }
@@ -184,13 +188,21 @@ public class Server : MonoBehaviour {
         if (outgoingMessages.Count == 0)
             return;
         byte error;
+
+        float start = Time.realtimeSinceStartup;
+        int size = 0;
         foreach (KeyValuePair<int, GameObject> client in connectedPlayers) {
             foreach (NetMsg msg in outgoingMessages) {
                 byte[] buffer = MessagesHandler.NetMsgPack(msg);
+                if (buffer.Length > size)
+                    size = buffer.Length;
                 NetworkTransport.Send(hostId, client.Key, reliableChannelId, buffer, buffer.Length, out error);
             }
         }
         outgoingMessages.Clear();
+        
+        Debug.Log("Queue cleared, time: " + Time.time + " duration " + (Time.realtimeSinceStartup - start) + " dt: " + (Time.time - lastSendTime) + " size "+ size);
+        lastSendTime = Time.time;
     }
 
 
@@ -207,7 +219,8 @@ public class Server : MonoBehaviour {
           //  float lastRecStateTime = entity.Value.gameObject.GetComponent<RemotePlayerShip>().LastReceivedStateTime;
             SC_MovementData msg = new SC_MovementData(entity.Key, -1/*lastRecStateTime*/, pos, rot);
 
-            outgoingMessages.Enqueue(msg);
+              outgoingMessages.Enqueue(msg);
+
         }
 
     }

@@ -31,6 +31,9 @@ public class RemotePlayerShip : PlayerShip {
                 case (byte)NetMsg.MsgType.CS_InputData:
                     MoveShipUsingClientInput((CS_InputData)netMessage);
                     break;
+                case (byte)NetMsg.MsgType.SC_MovementData:
+                    MoveShipUsingReceivedServerData((SC_MovementData)netMessage);//this is recieved client data not server
+                    break;
                 case (byte)NetMsg.MsgType.SC_EntityDestroyed:
                     Destroy(gameObject);
                     break;

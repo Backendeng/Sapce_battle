@@ -75,13 +75,13 @@ public class LocalPlayerShip : PlayerShip {
 
         // shooting
         HandleShooting();
-        SendInputToServer(linearInput, angularInput);
+        SendPosToServer(transform.position, transform.rotation);
         AddSnapshotToHistory();
 
         if (isPlayer)
             activeShip = this;
     }
-
+  
     private void HandleShooting() {
         if ((Input.GetButton("RightTrigger") || Input.GetMouseButtonDown(0)) && Time.time > nextFire) {
             nextFire = Time.time + fireRate;
@@ -102,12 +102,23 @@ public class LocalPlayerShip : PlayerShip {
         
     }
 
+    private void SendPosToServer(Vector3 pos, Quaternion rot) {
+        if (Time.time > nextInputSendTime) {
+            networkController.GetComponent<Client>().SendStateToHost(entityID, pos, rot);
+            nextInputSendTime = Time.time + sendInputRate;
+
+            //Debug.Log("Input send time = " + Time.time);
+        }
+
+    }
+
+
     private void HandleMessagesFromServer() {
         if (!isServer && incomingQueue.Count != 0) {
             NetMsg netMessage = incomingQueue.Dequeue();
             switch (netMessage.Type) {
                 case (byte)NetMsg.MsgType.SC_MovementData:
-                    SyncPositionWithServer((SC_MovementData)netMessage);
+                 //   SyncPositionWithServer((SC_MovementData)netMessage);
                     MoveShadow((SC_MovementData)netMessage);
                     break;
                 case (byte)NetMsg.MsgType.SC_EntityDestroyed:
@@ -216,8 +227,8 @@ public class LocalPlayerShip : PlayerShip {
             Quaternion extrapolatedRotation = Quaternion.AngleAxis(angularVelocity.magnitude * Time.deltaTime, angularVelocity) * transform.rotation;
 
             //transform.rotation.SetLookRotation(physics.Rigidbody.velocity);
-            transform.position = Vector3.Lerp(transform.position, extrapolatedPosition, Time.deltaTime*5);
-            transform.rotation = Quaternion.Slerp(transform.rotation, extrapolatedRotation, Time.deltaTime*5);
+            transform.position = Vector3.Lerp(transform.position, extrapolatedPosition, Time.deltaTime);
+            transform.rotation = Quaternion.Slerp(transform.rotation, extrapolatedRotation, Time.deltaTime);
             Debug.Log("Correcting... lat = " + latency);
     }
     }

@@ -86,10 +86,13 @@ public class Server : MonoBehaviour {
                 switch (msg.Type) {
                     case (byte)NetMsg.MsgType.SC_AllocClientID:
                         ProccessAllocClientID((SC_AllocClientID)msg, recConnectionId);
-                    break;
+                        break;
                     case (byte)NetMsg.MsgType.CS_InputData:
                         ProccessInputMessage(msg, recConnectionId);
-                    break;
+                        break;
+                    case (byte)NetMsg.MsgType.SC_MovementData:
+                        ProccessStateMessage(msg, recConnectionId);
+                        break;
                 }
 
                 break;
@@ -119,6 +122,12 @@ public class Server : MonoBehaviour {
     private void ProccessInputMessage(NetMsg mssg, int recConnectionId) {
         //process message and send input to playerObject on this server 
        
+        connectedPlayers[recConnectionId].GetComponent<NetworkEntity>().AddRecMessage(mssg);
+    }
+
+    private void ProccessStateMessage(NetMsg mssg, int recConnectionId) {
+        //process message and send input to playerObject on this server 
+
         connectedPlayers[recConnectionId].GetComponent<NetworkEntity>().AddRecMessage(mssg);
     }
 

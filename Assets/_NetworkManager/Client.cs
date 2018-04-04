@@ -62,6 +62,15 @@ public class Client : MonoBehaviour {
             Debug.LogError("SendInputToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
     }
 
+    public void SendStateToHost(int selfEntityId, Vector3 pos, Quaternion rot) {
+        //create movementMessage/... and send it to server
+        SC_MovementData msg = new SC_MovementData(selfEntityId, Time.time, pos, rot);
+        byte[] buffer = MessagesHandler.NetMsgPack(msg);
+        NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
+        if (error != 0)
+            Debug.LogError("SendStateToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
+    }
+
     // Update is called once per frame
     void Update ()
     {

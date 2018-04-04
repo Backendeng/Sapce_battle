@@ -18,7 +18,7 @@ public class Server : MonoBehaviour {
 
     int lastEntityId;
     Dictionary<int, GameObject> connectedPlayers = new Dictionary<int, GameObject>();
-    Dictionary<int, NetworkEntity> netEntities = new Dictionary<int, NetworkEntity>();
+    public Dictionary<int, NetworkEntity> netEntities = new Dictionary<int, NetworkEntity>();
     Queue<NetMsg> outgoingMessages = new Queue<NetMsg>();
 
     public GameObject remotePlayer;         // player prefab                  TODO: spawner
@@ -33,6 +33,7 @@ public class Server : MonoBehaviour {
 
         ConnectionConfig config = new ConnectionConfig();
         reliableChannelId = config.AddChannel(QosType.Reliable);
+
 
         int maxConnections = 10;
         HostTopology topology = new HostTopology(config, maxConnections);
@@ -175,7 +176,7 @@ public class Server : MonoBehaviour {
         netEntities.Add(lastEntityId, newObject.GetComponent<NetworkEntity>());
 
         SC_EntityCreated mssg = new SC_EntityCreated(lastEntityId, createMsg.TimeStamp, createMsg.Position, createMsg.Rotation, -1 ,type);
-        outgoingMessages.Enqueue(msg);
+        outgoingMessages.Enqueue(mssg);
 
         Debug.Log("Entity Created, id: " + lastEntityId);
     }
@@ -184,13 +185,22 @@ public class Server : MonoBehaviour {
         if (outgoingMessages.Count == 0)
             return;
         byte error;
+
+        int size = 0;
+
         foreach (KeyValuePair<int, GameObject> client in connectedPlayers) {
             foreach (NetMsg msg in outgoingMessages) {
                 byte[] buffer = MessagesHandler.NetMsgPack(msg);
                 NetworkTransport.Send(hostId, client.Key, reliableChannelId, buffer, buffer.Length, out error);
+                ///
+                if (buffer.Length > size)
+                    size = buffer.Length;
+                ///
             }
         }
         outgoingMessages.Clear();
+
+        Debug.Log("buffer size = " + size);
     }
 
 
@@ -202,6 +212,10 @@ public class Server : MonoBehaviour {
         nextStagingTime = Time.time + sendRate;
 
         foreach (KeyValuePair<int, NetworkEntity> entity in netEntities) {
+            if (entity.Value == null) {
+                Debug.LogWarning("trying to access entity that's missing from the netEntities dictionary");
+                continue;
+            }
             Vector3 pos = entity.Value.gameObject.GetComponent<Transform>().position;
             Quaternion rot = entity.Value.gameObject.GetComponent<Transform>().rotation;
           //  float lastRecStateTime = entity.Value.gameObject.GetComponent<RemotePlayerShip>().LastReceivedStateTime;

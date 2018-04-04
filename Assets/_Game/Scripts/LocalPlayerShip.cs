@@ -84,8 +84,13 @@ public class LocalPlayerShip : PlayerShip {
     private void MoveShadow(SC_MovementData message) {
         Vector3 pos = this.gameObject.GetComponent<Transform>().position;
         Quaternion rot = this.gameObject.GetComponent<Transform>().rotation;
-
-        shadow.GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
+        if (shadow != null) {
+            shadow.GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
+        }
+        else {
+            Debug.LogWarning("No shadow prefab connected to LocalPlayerShip");
+        }
+        
     }
 
 }

@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-public class Projectile : MonoBehaviour {
+public class Projectile : NetworkEntity {
     public float speed;
     public GameObject projExplosion;
     public float timeout = 10.0f;
@@ -18,7 +18,7 @@ public class Projectile : MonoBehaviour {
 
     private void Awake()
     {
-        Destroy(gameObject, timeout);
+      //  Destroy(gameObject, timeout);
     }
 
     public void OnBecameInvisible()
@@ -49,6 +49,6 @@ public class Projectile : MonoBehaviour {
         }
         //gameController.AddScore(scoreValue);
 
-        Destroy(gameObject);
+        //Destroy(gameObject);
     }
 }

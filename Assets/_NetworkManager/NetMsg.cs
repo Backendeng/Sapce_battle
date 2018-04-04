@@ -45,12 +45,17 @@ public abstract class MovementData : NetMsg {
 
 public class SC_EntityCreated : MovementData {
     protected int clientID;
-    public int ClientID { get { return clientID; } }
+    protected byte objectType;
 
-    public SC_EntityCreated(int entityID, float timeStamp, Vector3 position, Quaternion rotation, int clientID) : 
+    public int ClientID { get { return clientID; } }
+    public byte ObjectType { get { return objectType; } }
+
+
+    public SC_EntityCreated(int entityID, float timeStamp, Vector3 position, Quaternion rotation, int clientID, byte objId) : 
         base(entityID, timeStamp, position, rotation) {
         msgType = (byte)MsgType.SC_EntityCreated;
         this.clientID = clientID;
+        this.objectType = objId;
     }
 }
 

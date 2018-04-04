@@ -23,6 +23,7 @@ public class Server : MonoBehaviour {
 
     public GameObject remotePlayer;         // player prefab                  TODO: spawner
     public Transform playerSpawn;     // player spawn location
+    public GameObject missile;
 
     // Use this for initialization
     void Start ()
@@ -90,6 +91,11 @@ public class Server : MonoBehaviour {
                     case (byte)NetMsg.MsgType.SC_MovementData:
                         ProccessStateMessage(msg, recConnectionId);
                         break;
+                    case (byte)NetMsg.MsgType.SC_EntityCreated://this is a request from client to create a object
+                        SC_EntityCreated msssg = (SC_EntityCreated)msg;
+                        Debug.Log("Entity Creation requested: " + msssg.ObjectType);
+                        ProccessEntityCreateRequest(msg);
+                        break;
                 }
 
                 break;
@@ -133,7 +139,7 @@ public class Server : MonoBehaviour {
         netEntities.Add(lastEntityId, newPlayer.GetComponent<NetworkEntity>());
 
         //broadcast new entity to all
-        SC_EntityCreated msg1 = new SC_EntityCreated(lastEntityId, Time.fixedTime, playerSpawn.position, playerSpawn.rotation, recConnectionId);
+        SC_EntityCreated msg1 = new SC_EntityCreated(lastEntityId, Time.fixedTime, playerSpawn.position, playerSpawn.rotation, recConnectionId, (int)NetworkEntity.ObjType.Player);
         outgoingMessages.Enqueue(msg1);
     }
 
@@ -144,6 +150,34 @@ public class Server : MonoBehaviour {
         netEntities[entityIdToDestroy].AddRecMessage(destroyMsg);
         connectedPlayers.Remove(recConnectionId);
         netEntities.Remove(entityIdToDestroy);
+    }
+
+    // when a client wants to create an obj he sends SC_EntityCreated to the server and the server creates it and then distributes the new object
+    private void ProccessEntityCreateRequest(NetMsg msg) {
+        SC_EntityCreated createMsg = (SC_EntityCreated)msg;
+        Debug.Log("CREATEMSG: id: " + createMsg.ObjectType + " from " + createMsg.ClientID);
+
+        byte type = createMsg.ObjectType;
+        GameObject newObject = null;
+        switch (type) {
+              case (byte)NetworkEntity.ObjType.Player:
+                  Debug.LogError("Entity Creation failed, client should not request to createa player object ,id: ");
+                  break;
+              case (byte)NetworkEntity.ObjType.Missile:
+                  newObject = Instantiate(missile, createMsg.Position, createMsg.Rotation);//missile
+                  break;
+         }
+       
+        if (newObject != null)
+            newObject.GetComponent<NetworkEntity>().EntityID = lastEntityId++;
+        else
+            Debug.LogError("Entity Creation failed, id: " + (lastEntityId + 1));
+        netEntities.Add(lastEntityId, newObject.GetComponent<NetworkEntity>());
+
+        SC_EntityCreated mssg = new SC_EntityCreated(lastEntityId, createMsg.TimeStamp, createMsg.Position, createMsg.Rotation, -1 ,type);
+        outgoingMessages.Enqueue(msg);
+
+        Debug.Log("Entity Created, id: " + lastEntityId);
     }
 
     private void BroadcastAllMessages() {
@@ -170,8 +204,8 @@ public class Server : MonoBehaviour {
         foreach (KeyValuePair<int, NetworkEntity> entity in netEntities) {
             Vector3 pos = entity.Value.gameObject.GetComponent<Transform>().position;
             Quaternion rot = entity.Value.gameObject.GetComponent<Transform>().rotation;
-            float lastRecStateTime = entity.Value.gameObject.GetComponent<RemotePlayerShip>().LastReceivedStateTime;
-            SC_MovementData msg = new SC_MovementData(entity.Key, lastRecStateTime, pos, rot);
+          //  float lastRecStateTime = entity.Value.gameObject.GetComponent<RemotePlayerShip>().LastReceivedStateTime;
+            SC_MovementData msg = new SC_MovementData(entity.Key, -1/*lastRecStateTime*/, pos, rot);
 
             outgoingMessages.Enqueue(msg);
         }
@@ -184,7 +218,7 @@ public class Server : MonoBehaviour {
         foreach (KeyValuePair<int, NetworkEntity> entity in netEntities) {
             Vector3 pos = entity.Value.gameObject.GetComponent<Transform>().position;
             Quaternion rot = entity.Value.gameObject.GetComponent<Transform>().rotation;
-            SC_EntityCreated msg = new SC_EntityCreated(entity.Key, Time.fixedTime, pos, rot, -1);
+            SC_EntityCreated msg = new SC_EntityCreated(entity.Key, Time.fixedTime, pos, rot, -1, entity.Value.ObjectType);
             byte[] buffer = MessagesHandler.NetMsgPack(msg);
 
             NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);

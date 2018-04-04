@@ -46,9 +46,14 @@ public class LocalPlayerShip : PlayerShip {
     private void HandleShooting() {
         if ((Input.GetButton("RightTrigger") || Input.GetMouseButtonDown(0)) && Time.time > nextFire) {
             nextFire = Time.time + fireRate;
-            Instantiate(shot, shotSpawn.position, shotSpawn.rotation);
+            //Instantiate(shot, shotSpawn.position, shotSpawn.rotation);
+            SendMissileToServer(shotSpawn.position, shotSpawn.rotation);
             GetComponent<AudioSource>().Play();
         }
+    }
+
+    private void SendMissileToServer(Vector3 pos, Quaternion rot) {
+        networkController.GetComponent<Client>().SendMissileShotToHost(entityID, pos, rot);
     }
 
     private void SendStateToServer(Vector3 pos, Quaternion rot) {

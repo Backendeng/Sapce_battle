@@ -19,16 +19,15 @@ public class Client : MonoBehaviour {
 
     public GameObject localPlayer;         // player prefab
     public GameObject remotePlayer;
+    public GameObject missile;
 
     // Use this for initialization
-    void Start ()
-    {
+    void Start() {
         NetworkTransport.Init();
         Connect();
     }
 
-    public void Connect()
-    {
+    public void Connect() {
         ConnectionConfig config = new ConnectionConfig();
         reliableChannelId = config.AddChannel(QosType.Reliable);
         Debug.Log("Channel open id: " + reliableChannelId);
@@ -43,8 +42,7 @@ public class Client : MonoBehaviour {
         Debug.Log("Connected to server. ConnectionId: " + connectionId);
     }
 
-    public void Disconnect()
-    {
+    public void Disconnect() {
         NetworkTransport.Disconnect(hostId, connectionId, out error);
     }
 
@@ -61,14 +59,25 @@ public class Client : MonoBehaviour {
             Debug.LogError("SendStateToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
     }
 
+    public void SendMissileShotToHost(int selfEntityId, Vector3 pos, Quaternion rot) {
+        //create movementMessage/... and send it to server
+        Debug.Log("shoot" + (int)NetworkEntity.ObjType.Missile);
+        SC_EntityCreated msg = new SC_EntityCreated(-1 , Time.time, pos, rot, clientID, (byte)NetworkEntity.ObjType.Missile);
+        Debug.Log("shootMsg " + msg.ObjectType);
+        byte[] buffer = MessagesHandler.NetMsgPack(msg);
+        SC_EntityCreated m = (SC_EntityCreated)MessagesHandler.NetMsgUnpack(buffer);
+        Debug.Log("shootMsg " + m.ObjectType);
+        NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
+        if (error != 0)
+            Debug.LogError("SendcreateRequestToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
+    }
+
     // Update is called once per frame
-    void Update ()
-    {
+    void Update() {
         Listen();
     }
 
-    private void Listen()
-    {
+    private void Listen() {
         int recHostId;
         int recConnectionId;
         int channelId;
@@ -78,13 +87,11 @@ public class Client : MonoBehaviour {
         byte error;
 
         NetworkEventType recData = NetworkTransport.Receive(out recHostId, out recConnectionId, out channelId, recBuffer, bufferSize, out dataSize, out error);
-        switch (recData)
-        {
+        switch (recData) {
             case NetworkEventType.ConnectEvent:
                 if (recHostId == hostId &&
                     recConnectionId == connectionId &&
-                   (NetworkError)error == NetworkError.Ok)
-                {
+                   (NetworkError)error == NetworkError.Ok) {
                     Debug.Log("Connected");
                 }
                 //problem: how to pass entity id here?
@@ -110,8 +117,7 @@ public class Client : MonoBehaviour {
                 break;
             case NetworkEventType.DisconnectEvent:
                 if (recHostId == hostId &&
-                  recConnectionId == connectionId)
-                {
+                  recConnectionId == connectionId) {
                     Debug.Log("Connected, error:" + error.ToString());
                 }
                 break;
@@ -133,16 +139,28 @@ public class Client : MonoBehaviour {
     }
 
     private void ProccessEntityCreated(NetMsg msg) {
-        GameObject newPlayer;
         SC_EntityCreated createMsg = (SC_EntityCreated)msg;
-        if (clientID == createMsg.ClientID) { //when adding new types of objects, check this only for ship object.
-            newPlayer = Instantiate(localPlayer, createMsg.Position, createMsg.Rotation);//localPlayer
-        } else {
-            newPlayer = Instantiate(remotePlayer, createMsg.Position, createMsg.Rotation);//remotePlayer
+        int type = createMsg.ObjectType;
+        GameObject newObject = null;
+        Debug.Log("Entity Created, ofType: " + type);
+        switch (type) {
+            case (byte)NetworkEntity.ObjType.Player:
+                if (clientID == createMsg.ClientID) { 
+                    newObject = Instantiate(localPlayer, createMsg.Position, createMsg.Rotation);//localPlayer
+                } else {
+                    newObject = Instantiate(remotePlayer, createMsg.Position, createMsg.Rotation);//remotePlayer
+                }
+                break;
+            case (byte)NetworkEntity.ObjType.Missile:
+                newObject = Instantiate(missile, createMsg.Position, createMsg.Rotation);//missile
+                break;
+
         }
-       
-        newPlayer.GetComponent<NetworkEntity>().EntityID = createMsg.EntityID;
-        netEntities.Add(createMsg.EntityID, newPlayer.GetComponent<NetworkEntity>());
+        if (newObject != null)
+            newObject.GetComponent<NetworkEntity>().EntityID = createMsg.EntityID;
+        else
+            Debug.LogError("Entity Creation failed, id: " + createMsg.EntityID);
+        netEntities.Add(createMsg.EntityID, newObject.GetComponent<NetworkEntity>());
         Debug.Log("Entity Created, id: " + createMsg.EntityID);
     }
 

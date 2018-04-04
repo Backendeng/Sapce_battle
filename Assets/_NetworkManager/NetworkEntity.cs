@@ -7,11 +7,18 @@ using UnityEngine.Networking;
 
 public class NetworkEntity : MonoBehaviour {
 
+    public enum ObjType : byte {
+        Player,
+        Missile
+    }
+
     protected Queue<NetMsg> incomingQueue = new Queue<NetMsg>();
 
     protected GameObject networkController;
     protected int entityID = -1;
     public bool isServer;
+
+    protected byte objType;
 
     // History
     private class ShipSnapshot {
@@ -33,6 +40,11 @@ public class NetworkEntity : MonoBehaviour {
     public int EntityID {
         get { return entityID; }
         set { entityID = value; }
+    }
+
+    public byte ObjectType {
+        get { return objType; }
+        set { objType = value; }
     }
 
     public void AddRecMessage(NetMsg msg) {

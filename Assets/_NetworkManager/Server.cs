@@ -87,9 +87,6 @@ public class Server : MonoBehaviour {
                     case (byte)NetMsg.MsgType.SC_AllocClientID:
                         ProccessAllocClientID((SC_AllocClientID)msg, recConnectionId);
                         break;
-                    case (byte)NetMsg.MsgType.CS_InputData:
-                        ProccessInputMessage(msg, recConnectionId);
-                        break;
                     case (byte)NetMsg.MsgType.SC_MovementData:
                         ProccessStateMessage(msg, recConnectionId);
                         break;
@@ -119,14 +116,8 @@ public class Server : MonoBehaviour {
         }
     }
 
-    private void ProccessInputMessage(NetMsg mssg, int recConnectionId) {
-        //process message and send input to playerObject on this server 
-       
-        connectedPlayers[recConnectionId].GetComponent<NetworkEntity>().AddRecMessage(mssg);
-    }
-
     private void ProccessStateMessage(NetMsg mssg, int recConnectionId) {
-        //process message and send input to playerObject on this server 
+        //process message and send pos and rot to playerObject on this server 
 
         connectedPlayers[recConnectionId].GetComponent<NetworkEntity>().AddRecMessage(mssg);
     }
@@ -179,8 +170,8 @@ public class Server : MonoBehaviour {
         foreach (KeyValuePair<int, NetworkEntity> entity in netEntities) {
             Vector3 pos = entity.Value.gameObject.GetComponent<Transform>().position;
             Quaternion rot = entity.Value.gameObject.GetComponent<Transform>().rotation;
-            float lastInputTime = entity.Value.gameObject.GetComponent<RemotePlayerShip>().LastRecievedInputTime;
-            SC_MovementData msg = new SC_MovementData(entity.Key, lastInputTime, pos, rot);
+            float lastRecStateTime = entity.Value.gameObject.GetComponent<RemotePlayerShip>().LastRecievedStateTime;
+            SC_MovementData msg = new SC_MovementData(entity.Key, lastRecStateTime, pos, rot);
 
             outgoingMessages.Enqueue(msg);
         }

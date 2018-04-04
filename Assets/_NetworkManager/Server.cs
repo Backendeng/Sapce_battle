@@ -170,7 +170,7 @@ public class Server : MonoBehaviour {
         foreach (KeyValuePair<int, NetworkEntity> entity in netEntities) {
             Vector3 pos = entity.Value.gameObject.GetComponent<Transform>().position;
             Quaternion rot = entity.Value.gameObject.GetComponent<Transform>().rotation;
-            float lastRecStateTime = entity.Value.gameObject.GetComponent<RemotePlayerShip>().LastRecievedStateTime;
+            float lastRecStateTime = entity.Value.gameObject.GetComponent<RemotePlayerShip>().LastReceivedStateTime;
             SC_MovementData msg = new SC_MovementData(entity.Key, lastRecStateTime, pos, rot);
 
             outgoingMessages.Enqueue(msg);
@@ -191,3 +191,4 @@ public class Server : MonoBehaviour {
         }
     }
 }
+

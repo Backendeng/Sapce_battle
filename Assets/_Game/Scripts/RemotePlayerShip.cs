@@ -4,9 +4,13 @@ using UnityEngine;
 
 public class RemotePlayerShip : PlayerShip {
 
-    private float lastRecievedInputTime;
+    private float lastReceivedStateTime;
+    private Vector3 lastReceivedVelocity;
 
-    public float LastRecievedInputTime { get { return lastRecievedInputTime; } }
+    public static float LERP_MUL = 3f;
+
+    // for RemotePlayerShip on Server
+    public float LastReceivedStateTime { get { return lastReceivedStateTime; } }
 
     private void Start() {
         if (isServer) {
@@ -18,7 +22,7 @@ public class RemotePlayerShip : PlayerShip {
         if (networkController == null)
             Debug.LogError("ERROR! networkController not found");
 
-        lastRecievedInputTime = Time.time;
+        lastReceivedStateTime = -1f;
     }
 
     private void FixedUpdate() {
@@ -29,10 +33,10 @@ public class RemotePlayerShip : PlayerShip {
         if (isServer) {
             switch (netMessage.Type) {
                 case (byte)NetMsg.MsgType.CS_InputData:
-                    MoveShipUsingClientInput((CS_InputData)netMessage);
+                    // Handle Shooting
                     break;
                 case (byte)NetMsg.MsgType.SC_MovementData:
-                    MoveShipUsingReceivedServerData((SC_MovementData)netMessage);//this is recieved client data not server
+                    MoveShipUsingReceivedClientData((SC_MovementData)netMessage);
                     break;
                 case (byte)NetMsg.MsgType.SC_EntityDestroyed:
                     Destroy(gameObject);
@@ -56,12 +60,24 @@ public class RemotePlayerShip : PlayerShip {
         }
     }
 
-    private void MoveShipUsingClientInput(CS_InputData message) {
-        physics.SetPhysicsInput( new Vector3(0f, 0f, message.Throttle), message.AngularInput);
-        lastRecievedInputTime = message.TimeStamp;
+    public override Vector3 GetVelocity() {
+        return lastReceivedVelocity;
     }
 
     private void MoveShipUsingReceivedServerData(SC_MovementData message) {
-       GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
+       transform.position = Vector3.Lerp(transform.position, message.Position, LERP_MUL * Time.deltaTime);
+       transform.rotation = Quaternion.Lerp(transform.rotation, message.Rotation, LERP_MUL * Time.deltaTime);
     }
+
+    private void MoveShipUsingReceivedClientData(SC_MovementData message) {
+        GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
+    }
+
+    private void LagCompShooting(SC_MovementData message) {
+        float lagTime = 0f; // assign deleay here
+        
+        
+    }
+
 }
+

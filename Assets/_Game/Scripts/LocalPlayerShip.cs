@@ -3,65 +3,27 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class LocalPlayerShip : PlayerShip {
-
-    private float positionThreshold = 0.2f;
-    private float rotationThreshold = 0.3f;
-
-    public float sendInputRate = 0.02f;
-    private float nextInputSendTime;
-
-    
-    private class ShipSnapshot {
-        public float time;
-        public float deltaTime;
-        public Vector3 position;
-        public Quaternion rotation;
-        public Vector3 velocity;
-        public Vector3 deltaPosition;
-
-        public ShipSnapshot(float time, float deltaTime, Vector3 position, Quaternion rotation, Vector3 velocity, Vector3 dp) {
-            this.time = time;
-            this.deltaTime = deltaTime;
-            this.position = position;
-            this.rotation = rotation;
-            this.velocity = velocity;
-            this.deltaPosition = dp;
-        }
-    }
-    private List<ShipSnapshot> History = new List<ShipSnapshot>();
-    private float historyDuration;
-
-    private Vector3 lastLinearInput = new Vector3();
-    private Vector3 lastAngularInput = new Vector3();
-
     public GameObject shadowPrefab;
     private Transform shadow;
 
     private float lastReturnedInputTime;
     private float latency;
 
+    public float sendStateRate = 0.05f;
+    private float nextStateSendTime;
+
     private void Start() {
-        nextInputSendTime = Time.time;
-
-
         networkController = GameObject.Find("ClientNetworkController");
         if (networkController == null)
             Debug.LogWarning("ERROR! networkController not found");
 
         if (shadowPrefab != null)
             shadow = Instantiate(shadowPrefab, new Vector3(), new Quaternion()).transform;
+
+        nextStateSendTime = Time.time;
     }
 
     private void Update() {
-        /*
-        if (Input.GetButton("Jump")) {
-            Debug.Log("History: " + History);
-            foreach (ShipSnapshot snapshot in History) {
-                Debug.Log("time = " + snapshot.time + " timeDelta = " + snapshot.deltaTime + " position = " + snapshot.position + " rotation = " + snapshot.rotation);
-            }
-            
-        }*/
-
         // get player input for movement
         Vector3 linearInput = new Vector3(0.0f, 0.0f, input.throttle);
         Vector3 angularInput = new Vector3(input.pitch, input.yaw, input.roll);
@@ -69,14 +31,13 @@ public class LocalPlayerShip : PlayerShip {
         // apply movement physics using player input
         physics.SetPhysicsInput(linearInput, angularInput);
 
-       
-
         HandleMessagesFromServer();
 
         // shooting
         HandleShooting();
-        SendPosToServer(transform.position, transform.rotation);
-        AddSnapshotToHistory();
+
+        // update the server with our position
+        SendStateToServer(transform.position, transform.rotation);
 
         if (isPlayer)
             activeShip = this;
@@ -90,28 +51,12 @@ public class LocalPlayerShip : PlayerShip {
         }
     }
 
-    private void SendInputToServer(Vector3 linearInput, Vector3 angularInput) {
-        if (Time.time > nextInputSendTime /*&& (linearInput != lastLinearInput || lastAngularInput != angularInput)*/) {
-            networkController.GetComponent<Client>().SendInputToHost(entityID, input.throttle, angularInput);
-            lastLinearInput = linearInput;
-            lastAngularInput = angularInput;
-            nextInputSendTime = Time.time + sendInputRate;
-
-            //Debug.Log("Input send time = " + Time.time);
-        }
-        
-    }
-
-    private void SendPosToServer(Vector3 pos, Quaternion rot) {
-        if (Time.time > nextInputSendTime) {
+    private void SendStateToServer(Vector3 pos, Quaternion rot) {
+        if (Time.time > nextStateSendTime) {
             networkController.GetComponent<Client>().SendStateToHost(entityID, pos, rot);
-            nextInputSendTime = Time.time + sendInputRate;
-
-            //Debug.Log("Input send time = " + Time.time);
+            nextStateSendTime = Time.time + sendStateRate;
         }
-
     }
-
 
     private void HandleMessagesFromServer() {
         if (!isServer && incomingQueue.Count != 0) {
@@ -131,121 +76,12 @@ public class LocalPlayerShip : PlayerShip {
         }
     }
 
-    private void AddSnapshotToHistory() {
-        // correct previous snapshot's deltaTime and historyDuration.
-        if (History.Count > 0) {
-            historyDuration -= History[History.Count - 1].deltaTime;
-            historyDuration += Time.deltaTime;
-            History[History.Count - 1].deltaTime = Time.deltaTime;
-        }
-
-        Vector3 dp = new Vector3();
-        if (History.Count > 0) {
-            dp = transform.position - History[History.Count - 1].position;
-        } 
-        History.Add(new ShipSnapshot(Time.time, Time.deltaTime, transform.position, transform.rotation, physics.Rigidbody.velocity, dp));
-        historyDuration += Time.deltaTime;
-
-        // shouldn't be executed, but just in case - let's limit the History list to 200 snapshots.
-        // (if everything goes as should, the History size should be managed when messages are received from the server and be far less than that)
-        if (History.Count > 200) {
-            History.RemoveAt(0);
-        }
-        if (History.Count > 0) {
-            //Debug.Log("Added To History: Time = " +Time.time + " timeDelta = " + History[History.Count - 1].deltaTime + " position = " + History[History.Count - 1].position + " rotation = " + History[History.Count - 1].rotation);
-        }
-        
-    }
-
-    private void SyncPositionWithServer(SC_MovementData message) {
-        if (message.TimeStamp > lastReturnedInputTime) {
-            latency = Time.time - message.TimeStamp;
-        }
-        
-        lastReturnedInputTime = message.TimeStamp;
-        float dt = Mathf.Max(0, historyDuration - latency);
-        float ratio = 0f;
-        // remove time from History untill it's duration equals to the latency
-        while (History.Count > 1 && dt > 0) {
-            if (dt >= History[0].deltaTime) {
-                dt -= History[0].deltaTime;
-                History.RemoveAt(0);
-            }
-            else {
-                ratio = 1 - (dt / History[0].deltaTime);
-                History[0].deltaTime -= dt;
-                if (History.Count > 1) {
-                    History[0].position = (History[0].position + History[1].position) * ratio;
-                    History[0].deltaPosition *= ratio;
-                    //History[0].rotation =
-                    break;
-                }
-            }
-        }
-
-        //Debug.Log("Server Message: Time = " + Time.time + " inputTime = " + message.TimeStamp + " delta = " + (Time.time - message.TimeStamp) + " position = " + message.Position + " rotation = " + message.Rotation);
-        if (History.Count == 0) {
-            return;
-        }
-        Vector3 historyPosition = History[0].position;
-        Quaternion historyRotation = History[0].rotation;
-        Vector3 historyVelocity = History[0].velocity;
-
-        if ((Vector3.Distance(message.Position, historyPosition) > positionThreshold) ||
-            (Quaternion.Angle(message.Rotation, historyRotation) > rotationThreshold) ) {
-
-        //  Vector3 deltaPosition = transform.position - historyPosition;
-            Vector3 deltaPosition = new Vector3();
-            foreach (ShipSnapshot ss in History) {
-                deltaPosition += ss.deltaPosition;
-            }
-            Vector3 predictedPosition = message.Position + deltaPosition;
-            Vector3 extrapolatedPosition = predictedPosition + physics.Rigidbody.velocity * latency * (1.05f);
-
-            //Quaternion predictedRotation = message.Rotation * Quaternion.Inverse(historyRotation);
-            //  Quaternion extrapolatedRotation = predictedRotation * Quaternion.Euler(physics.Rigidbody.angularVelocity * latency);
-            /* Quaternion r = transform.rotation * Quaternion.Inverse(message.Rotation);
-             double t1 = message.TimeStamp;
-             double t2 = Time.time;
-             double t3 = latency;
-             double ddt = (t3 - t1) / (t2 - t1);
-
-             float ang = 0.0f;
-
-             Vector3 axis = Vector3.zero;
-
-             r.ToAngleAxis(out ang, out axis);
-
-             if (ang > 180) {
-                 ang -= 360;
-             }
-
-             ang = ang * (float)ddt % 360;
-
-             Quaternion extrapolatedRotation = Quaternion.AngleAxis(ang, axis) * message.Rotation;*/
-            var angularVelocity = physics.Rigidbody.angularVelocity;
-            Quaternion extrapolatedRotation = Quaternion.AngleAxis(angularVelocity.magnitude * Time.deltaTime, angularVelocity) * transform.rotation;
-
-            //transform.rotation.SetLookRotation(physics.Rigidbody.velocity);
-            transform.position = Vector3.Lerp(transform.position, extrapolatedPosition, Time.deltaTime);
-            transform.rotation = Quaternion.Slerp(transform.rotation, extrapolatedRotation, Time.deltaTime);
-            Debug.Log("Correcting... lat = " + latency);
-    }
-    }
-
-    private void CorrectPositionUsingSnapshot(SC_MovementData message) {
-        //transform.position = Vector3.Lerp(transform.position, message.Position, Time.deltaTime);
-        //transform.rotation = Quaternion.Lerp(transform.rotation, message.Rotation, Time.deltaTime);
-       
-
-    }
-
     private void MoveShadow(SC_MovementData message) {
         Vector3 pos = this.gameObject.GetComponent<Transform>().position;
         Quaternion rot = this.gameObject.GetComponent<Transform>().rotation;
 
         shadow.GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
-
     }
 
 }
+

@@ -13,8 +13,11 @@ public class Server : MonoBehaviour {
 
     int reliableChannelId;
     int hostId;
-    int inPort = 8888;
+    static int inPort = 8888;
     int connectionId;
+    static int bufferSize = 1024;
+    int dataSize;
+    static byte[] recBuffer = new byte[bufferSize];
 
     int lastEntityId;
     Dictionary<int, GameObject> connectedPlayers = new Dictionary<int, GameObject>();
@@ -45,7 +48,7 @@ public class Server : MonoBehaviour {
     }
 	
 	// Update is called once per frame
-	void Update ()
+	private void Update ()
     {
         Listen();//first listen
         StageAllEntities();// put all entity positions and rotations on queue
@@ -64,47 +67,50 @@ public class Server : MonoBehaviour {
 
     private void Listen()
     {
+        NetworkEventType recData = NetworkEventType.Nothing;
+        byte error;
         int recHostId;
         int recConnectionId;
         int channelId;
-        byte[] recBuffer = new byte[1024];
-        int bufferSize = 1024;
-        int dataSize;
-        byte error;
 
-        NetworkEventType recData = NetworkTransport.Receive(out recHostId, out recConnectionId, out channelId, recBuffer, bufferSize, out dataSize, out error);
-        switch (recData)
-        {
-            case NetworkEventType.Nothing:         //1
-                break;
-            case NetworkEventType.ConnectEvent:    //2
-                Debug.Log("incoming connection event received id: " + recConnectionId);
-                ProccessConnectionRequest(recConnectionId);
-                break;
-            case NetworkEventType.DataEvent:       //3
-                Debug.Log("incoming message event received from: " + recConnectionId);
-                //TODO: interpolation data will be sent as regular pos update, is this fast enough?
-                NetMsg msg = MessagesHandler.NetMsgUnpack(recBuffer);
-                switch (msg.Type) {
-                    case (byte)NetMsg.MsgType.SC_AllocClientID:
-                        ProccessAllocClientID((SC_AllocClientID)msg, recConnectionId);
-                        break;
-                    case (byte)NetMsg.MsgType.SC_MovementData:
-                        ProccessStateMessage(msg, recConnectionId);
-                        break;
-                    case (byte)NetMsg.MsgType.SC_EntityCreated://this is a request from client to create a object
-                        SC_EntityCreated msssg = (SC_EntityCreated)msg;
-                        Debug.Log("Entity Creation requested: " + msssg.ObjectType);
-                        ProccessEntityCreateRequest(msg);
-                        break;
-                }
+        do {
+            System.Array.Clear(recBuffer, 0, dataSize);
+            recData = NetworkTransport.Receive(out recHostId, out recConnectionId, out channelId, recBuffer, bufferSize, out dataSize, out error);
+            switch (recData) {
+                case NetworkEventType.Nothing:         //1
+                    break;
+                case NetworkEventType.ConnectEvent:    //2
+                    Debug.Log("incoming connection event received id: " + recConnectionId);
+                    ProccessConnectionRequest(recConnectionId);
+                    break;
+                case NetworkEventType.DataEvent:       //3
+                                                       //Debug.Log("incoming message event received from: " + recConnectionId);
+                                                       //TODO: interpolation data will be sent as regular pos update, is this fast enough?
+                    NetMsg msg = MessagesHandler.NetMsgUnpack(recBuffer);
+                    switch (msg.Type) {
+                        case (byte)NetMsg.MsgType.SC_AllocClientID:
+                            ProccessAllocClientID((SC_AllocClientID)msg, recConnectionId);
+                            break;
+                        case (byte)NetMsg.MsgType.SC_MovementData:
+                            ProccessStateMessage(msg, recConnectionId);
+                            break;
+                        case (byte)NetMsg.MsgType.SC_EntityCreated://this is a request from client to create a object
+                            SC_EntityCreated msssg = (SC_EntityCreated)msg;
+                            Debug.Log("Entity Creation requested: " + msssg.ObjectType);
+                            ProccessEntityCreateRequest(msg);
+                            break;
+                    }
 
-                break;
-            case NetworkEventType.DisconnectEvent: //4
-                Debug.Log("remote client event disconnected id: " + recConnectionId);
-                ProccessDisconnection(recConnectionId); //BUG: servers sends data for a non existing entity after cliend disconnects
-                break;
-        }
+                    break;
+                case NetworkEventType.DisconnectEvent: //4
+                    Debug.Log("remote client event disconnected id: " + recConnectionId);
+                    ProccessDisconnection(recConnectionId); //BUG: servers sends data for a non existing entity after cliend disconnects
+                    break;
+            } // end of switch case
+
+        } while (recData != NetworkEventType.Nothing);
+
+        
     }
 
     private void ProccessConnectionRequest(int recConnectionId) {
@@ -188,19 +194,14 @@ public class Server : MonoBehaviour {
 
         int size = 0;
 
-        foreach (KeyValuePair<int, GameObject> client in connectedPlayers) {
-            foreach (NetMsg msg in outgoingMessages) {
-                byte[] buffer = MessagesHandler.NetMsgPack(msg);
+        foreach (NetMsg msg in outgoingMessages) {
+            byte[] buffer = MessagesHandler.NetMsgPack(msg);
+            foreach (KeyValuePair<int, GameObject> client in connectedPlayers) {
                 NetworkTransport.Send(hostId, client.Key, reliableChannelId, buffer, buffer.Length, out error);
-                ///
-                if (buffer.Length > size)
-                    size = buffer.Length;
-                ///
             }
         }
-        outgoingMessages.Clear();
 
-        Debug.Log("buffer size = " + size);
+        outgoingMessages.Clear();
     }
 
 

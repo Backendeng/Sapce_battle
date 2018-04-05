@@ -9,7 +9,9 @@ public class NetworkEntity : MonoBehaviour {
 
     protected Queue<NetMsg> incomingQueue = new Queue<NetMsg>();
 
-    protected GameObject networkController;
+    protected GameObject networkControllerObj;
+    protected Server serverController;
+    protected Client clientController;
     protected int entityID = -1;
     public bool isServer;
 
@@ -45,6 +47,40 @@ public class NetworkEntity : MonoBehaviour {
         set { entityID = value; }
     }
 
+    public void Start() {
+        Debug.Log("START OF NETWORK ENTITY!");
+        // setting up serverController / clientController referecnce 
+        networkControllerObj = GameObject.Find("ServerNetworkController");
+        if (networkControllerObj != null) {
+            isServer = true;
+            serverController = networkControllerObj.GetComponent<Server>();
+            if (serverController == null) {
+                Debug.LogError("server controller wasn't found for network entity = " + entityID);
+            }
+        }
+        else {
+            networkControllerObj = GameObject.Find("ClientNetworkController");
+            if (networkControllerObj != null) {
+                isServer = false;
+                clientController = networkControllerObj.GetComponent<Client>();
+                if (clientController == null) {
+                    Debug.LogError("client controller wasn't found for network entity = " + entityID);
+                }
+            }
+            else {
+                Debug.LogError("ERROR! networkController not found for network entity = " + entityID);
+            }
+        }
+            
+
+    }
+
+    private void FixedUpdate() {
+        if (incomingQueue.Count > 100) {
+            Debug.LogWarning("Warning: incomingQueue size > 100 for network entity = " + entityID);
+        }
+    }
+
     public void AddRecMessage(NetMsg msg) {
         incomingQueue.Enqueue(msg);
        // Debug.Log("incoming message to NetworkEntity");
@@ -62,6 +98,12 @@ public class NetworkEntity : MonoBehaviour {
 
     public virtual Vector3 GetVelocity() {
         return GetComponent<Rigidbody>().velocity; // overridden in RemotePlayerShip to return last received velocity (because it's rigid body has 0 velocity)
+    }
+
+    private void OnDestroy() {
+        if (isServer) {
+            //serverController.netEntities.Remove(entityID);
+        }
     }
 
 

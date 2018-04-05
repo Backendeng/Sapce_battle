@@ -12,11 +12,8 @@ public class LocalPlayerShip : PlayerShip {
     public float sendStateRate = 0.05f;
     private float nextStateSendTime;
 
-    private void Start() {
-        networkController = GameObject.Find("ClientNetworkController");
-        if (networkController == null)
-            Debug.LogWarning("ERROR! networkController not found");
-
+    public new void Start() {
+        base.Start();
         if (shadowPrefab != null)
             shadow = Instantiate(shadowPrefab, new Vector3(), new Quaternion()).transform;
 
@@ -53,12 +50,15 @@ public class LocalPlayerShip : PlayerShip {
     }
 
     private void SendMissileToServer(Vector3 pos, Quaternion rot) {
-        networkController.GetComponent<Client>().SendMissileShotToHost(entityID, pos, rot);
+        clientController.SendMissileShotToHost(entityID, pos, rot);
     }
 
     private void SendStateToServer(Vector3 pos, Quaternion rot) {
         if (Time.time > nextStateSendTime) {
-            networkController.GetComponent<Client>().SendStateToHost(entityID, pos, rot);
+            if (clientController == null) {
+                Debug.Log("EEEEEEEEEE");
+            }
+            clientController.SendStateToHost(entityID, pos, rot);
             nextStateSendTime = Time.time + sendStateRate;
         }
     }

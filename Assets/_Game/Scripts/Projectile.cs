@@ -4,21 +4,23 @@ using UnityEngine;
 public class Projectile : NetworkEntity {
     public float speed;
     public GameObject projExplosion;
-    public float timeout = 10.0f;
+    public float timeout = 5.0f;
 
-    void Start ()
-    {
-        GetComponent<Rigidbody>().velocity = transform.forward * speed;
+    public new void Start() {
+        base.Start();
+        if (isServer) {
+            GetComponent<Rigidbody>().velocity = transform.forward * speed;
+        }
     }
 	
-	void Update ()
+	private void Update ()
     {
 		
 	}
 
     private void Awake()
     {
-        //Destroy(gameObject, timeout);
+        Destroy(gameObject, timeout);
     }
 
     public void OnBecameInvisible()
@@ -50,5 +52,9 @@ public class Projectile : NetworkEntity {
         //gameController.AddScore(scoreValue);
 
         //Destroy(gameObject);
+    }
+
+    private void OnDestroy() {
+        
     }
 }

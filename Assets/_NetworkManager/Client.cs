@@ -14,6 +14,9 @@ public class Client : MonoBehaviour {
     int outPort = 8888;
     int connectionId;
     int clientID = -1;
+    static int bufferSize = 1024;
+    byte[] recBuffer = new byte[bufferSize];
+    int dataSize;
 
     Dictionary<int, NetworkEntity> netEntities = new Dictionary<int, NetworkEntity>();
 
@@ -73,55 +76,58 @@ public class Client : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update() {
+    private void Update() {
         Listen();
     }
 
     private void Listen() {
+        NetworkEventType recData = NetworkEventType.Nothing;
+        byte error;
         int recHostId;
         int recConnectionId;
         int channelId;
-        byte[] recBuffer = new byte[1024];
-        int bufferSize = 1024;
-        int dataSize;
-        byte error;
 
-        NetworkEventType recData = NetworkTransport.Receive(out recHostId, out recConnectionId, out channelId, recBuffer, bufferSize, out dataSize, out error);
-        switch (recData) {
-            case NetworkEventType.ConnectEvent:
-                if (recHostId == hostId &&
-                    recConnectionId == connectionId &&
-                   (NetworkError)error == NetworkError.Ok) {
-                    Debug.Log("Connected");
-                }
-                //problem: how to pass entity id here?
-                break;
-            case NetworkEventType.DataEvent:
-                //distribute messages to network entities
-                NetMsg msg = MessagesHandler.NetMsgUnpack(recBuffer);
-                byte type = msg.Type;
-                switch (type) {
-                    case (byte)NetMsg.MsgType.SC_AllocClientID:
-                        ProccessAllocClientID(msg);
-                        break;
-                    case (byte)NetMsg.MsgType.SC_EntityCreated://BUG: 2nd player gets ERROR, update for netEntity that does not exist in client 
-                        ProccessEntityCreated(msg);
-                        break;
-                    case (byte)NetMsg.MsgType.SC_MovementData:
-                        ProccessMovementData(msg);
-                        break;
-                    case (byte)NetMsg.MsgType.SC_EntityDestroyed:
-                        ProccessEntityDestroyed(msg);
-                        break;
-                }
-                break;
-            case NetworkEventType.DisconnectEvent:
-                if (recHostId == hostId &&
-                  recConnectionId == connectionId) {
-                    Debug.Log("Connected, error:" + error.ToString());
-                }
-                break;
-        }
+        do {
+            System.Array.Clear(recBuffer, 0, dataSize);
+            recData = NetworkTransport.Receive(out recHostId, out recConnectionId, out channelId, recBuffer, bufferSize, out dataSize, out error);
+            switch (recData) {
+                case NetworkEventType.ConnectEvent:
+                    if (recHostId == hostId &&
+                        recConnectionId == connectionId &&
+                       (NetworkError)error == NetworkError.Ok) {
+                        Debug.Log("Connected");
+                    }
+                    //problem: how to pass entity id here?
+                    break;
+                case NetworkEventType.DataEvent:
+                    //distribute messages to network entities
+                    NetMsg msg = MessagesHandler.NetMsgUnpack(recBuffer);
+                    byte type = msg.Type;
+                    switch (type) {
+                        case (byte)NetMsg.MsgType.SC_AllocClientID:
+                            ProccessAllocClientID(msg);
+                            break;
+                        case (byte)NetMsg.MsgType.SC_EntityCreated://BUG: 2nd player gets ERROR, update for netEntity that does not exist in client 
+                            ProccessEntityCreated(msg);
+                            break;
+                        case (byte)NetMsg.MsgType.SC_MovementData:
+                            ProccessMovementData(msg);
+                            break;
+                        case (byte)NetMsg.MsgType.SC_EntityDestroyed:
+                            ProccessEntityDestroyed(msg);
+                            break;
+                    }
+                    break;
+                case NetworkEventType.DisconnectEvent:
+                    if (recHostId == hostId &&
+                      recConnectionId == connectionId) {
+                        Debug.Log("Connected, error:" + error.ToString());
+                    }
+                    break;
+            } // end of switch case
+
+        } while (recData != NetworkEventType.Nothing);
+
     }
 
     private void ProccessAllocClientID(NetMsg msg) {

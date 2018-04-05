@@ -7,21 +7,12 @@ public class RemotePlayerShip : PlayerShip {
     private float lastReceivedStateTime;
     private Vector3 lastReceivedVelocity;
 
-    public static float LERP_MUL = 3f;
+    public static float LERP_MUL = 1f;
 
     // for RemotePlayerShip on Server
     public float LastReceivedStateTime { get { return lastReceivedStateTime; } }
 
-    private void Start() {
-        if (isServer) {
-            networkController = GameObject.Find("ServerNetworkController");
-        }
-        else {
-            networkController = GameObject.Find("ClientNetworkController");
-        }
-        if (networkController == null)
-            Debug.LogError("ERROR! networkController not found");
-
+    public new void Start() {
         lastReceivedStateTime = -1f;
     }
 
@@ -66,7 +57,7 @@ public class RemotePlayerShip : PlayerShip {
 
     private void MoveShipUsingReceivedServerData(SC_MovementData message) {
        transform.position = Vector3.Lerp(transform.position, message.Position, LERP_MUL * Time.deltaTime);
-       transform.rotation = Quaternion.Lerp(transform.rotation, message.Rotation, LERP_MUL * Time.deltaTime);
+       transform.rotation = Quaternion.Slerp(transform.rotation, message.Rotation, LERP_MUL * Time.deltaTime);
     }
 
     private void MoveShipUsingReceivedClientData(SC_MovementData message) {

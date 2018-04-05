@@ -55,9 +55,7 @@ public class LocalPlayerShip : PlayerShip {
 
     private void SendStateToServer(Vector3 pos, Quaternion rot) {
         if (Time.time > nextStateSendTime) {
-            if (clientController == null) {
-                Debug.Log("EEEEEEEEEE");
-            }
+        
             clientController.SendStateToHost(entityID, pos, rot);
             nextStateSendTime = Time.time + sendStateRate;
         }
@@ -68,7 +66,6 @@ public class LocalPlayerShip : PlayerShip {
             NetMsg netMessage = incomingQueue.Dequeue();
             switch (netMessage.Type) {
                 case (byte)NetMsg.MsgType.SC_MovementData:
-                 //   SyncPositionWithServer((SC_MovementData)netMessage);
                     MoveShadow((SC_MovementData)netMessage);
                     break;
                 case (byte)NetMsg.MsgType.SC_EntityDestroyed:

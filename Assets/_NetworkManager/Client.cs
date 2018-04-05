@@ -9,6 +9,7 @@ public class Client : MonoBehaviour {
 
     public string serverIP = "127.0.0.1";
     byte error;
+    int unreliableChannelId;
     int reliableChannelId;
     int hostId;
     int outPort = 8888;
@@ -33,13 +34,15 @@ public class Client : MonoBehaviour {
     public void Connect() {
         ConnectionConfig config = new ConnectionConfig();
         reliableChannelId = config.AddChannel(QosType.Reliable);
-        Debug.Log("Channel open id: " + reliableChannelId);
+        Debug.Log("reliableChannelId open id: " + reliableChannelId);
+        unreliableChannelId = config.AddChannel(QosType.Unreliable);
+        Debug.Log("unreliableChannelId open id: " + unreliableChannelId);
 
         int maxConnections = 10;
         HostTopology topology = new HostTopology(config, maxConnections);
 
         hostId = NetworkTransport.AddHost(topology, 0);
-        Debug.Log("Socket Open. HostId is: " + hostId);
+        Debug.Log("Socket Open. SocketID is: " + hostId);
 
         connectionId = NetworkTransport.Connect(hostId, serverIP, outPort, 0, out error);
         Debug.Log("Connected to server. ConnectionId: " + connectionId);
@@ -57,20 +60,16 @@ public class Client : MonoBehaviour {
         //create movementMessage/... and send it to server
         SC_MovementData msg = new SC_MovementData(selfEntityId, Time.time, pos, rot);
         byte[] buffer = MessagesHandler.NetMsgPack(msg);
-        NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
+        NetworkTransport.Send(hostId, connectionId, unreliableChannelId, buffer, buffer.Length, out error);
         if (error != 0)
-            Debug.LogError("SendStateToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
+            Debug.LogError("SendStateToHost error: " + error.ToString() + " channelID: " + unreliableChannelId);
     }
 
     public void SendMissileShotToHost(int selfEntityId, Vector3 pos, Quaternion rot) {
         //create movementMessage/... and send it to server
-        Debug.Log("shoot" + (int)NetworkEntity.ObjType.Missile);
         SC_EntityCreated msg = new SC_EntityCreated(-1 , Time.time, pos, rot, clientID, (byte)NetworkEntity.ObjType.Missile);
-        Debug.Log("shootMsg " + msg.ObjectType);
         byte[] buffer = MessagesHandler.NetMsgPack(msg);
-        SC_EntityCreated m = (SC_EntityCreated)MessagesHandler.NetMsgUnpack(buffer);
-        Debug.Log("shootMsg " + m.ObjectType);
-        NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
+        NetworkTransport.Send(hostId, connectionId, unreliableChannelId, buffer, buffer.Length, out error);
         if (error != 0)
             Debug.LogError("SendcreateRequestToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
     }
@@ -97,7 +96,6 @@ public class Client : MonoBehaviour {
                        (NetworkError)error == NetworkError.Ok) {
                         Debug.Log("Connected");
                     }
-                    //problem: how to pass entity id here?
                     break;
                 case NetworkEventType.DataEvent:
                     //distribute messages to network entities
@@ -140,7 +138,7 @@ public class Client : MonoBehaviour {
         byte[] buffer = MessagesHandler.NetMsgPack(ack);
         NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
         if (error != 0)
-            Debug.LogError("SendInputToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
+            Debug.LogError("SendConnectionAckToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
 
     }
 

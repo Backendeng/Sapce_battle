@@ -35,8 +35,9 @@ public class Projectile : NetworkEntity {
     }
 
     private void MoveProjUsingReceivedServerData(SC_MovementData message) {
-        transform.position = Vector3.Lerp(transform.position, message.Position, LERP_MUL * Time.deltaTime);
-        transform.rotation = Quaternion.Lerp(transform.rotation, message.Rotation, LERP_MUL * Time.deltaTime);
+        // transform.position = Vector3.Lerp(transform.position, message.Position, LERP_MUL * Time.deltaTime);
+        //transform.rotation = Quaternion.Lerp(transform.rotation, message.Rotation, LERP_MUL * Time.deltaTime);
+        GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
     }
 
     private void Awake()

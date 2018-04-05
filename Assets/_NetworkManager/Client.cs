@@ -14,7 +14,10 @@ public class Client : MonoBehaviour {
     int hostId;
     int outPort = 8888;
     int connectionId;
+
     int clientID = -1;
+    bool playerAvatarCreated = false;
+
     static int bufferSize = 1024;
     byte[] recBuffer = new byte[bufferSize];
     int dataSize;
@@ -105,7 +108,7 @@ public class Client : MonoBehaviour {
                         case (byte)NetMsg.MsgType.SC_AllocClientID:
                             ProccessAllocClientID(msg);
                             break;
-                        case (byte)NetMsg.MsgType.SC_EntityCreated://BUG: 2nd player gets ERROR, update for netEntity that does not exist in client 
+                        case (byte)NetMsg.MsgType.SC_EntityCreated://BUG: 2nd player gets ERROR, update for netEntity that does not exist in client . maybe he gets state updates for enteties before he created them?
                             ProccessEntityCreated(msg);
                             break;
                         case (byte)NetMsg.MsgType.SC_MovementData:
@@ -151,6 +154,7 @@ public class Client : MonoBehaviour {
             case (byte)NetworkEntity.ObjType.Player:
                 if (clientID == createMsg.ClientID) { 
                     newObject = Instantiate(localPlayer, createMsg.Position, createMsg.Rotation);//localPlayer
+                    playerAvatarCreated = true;
                 } else {
                     newObject = Instantiate(remotePlayer, createMsg.Position, createMsg.Rotation);//remotePlayer
                 }
@@ -169,6 +173,9 @@ public class Client : MonoBehaviour {
     }
 
     private void ProccessMovementData(NetMsg msg) {
+        // player creation msg is sent after the other creation nessages when starting this client, so when hes created we can receive updates
+        if (!playerAvatarCreated)
+            return;
         SC_MovementData moveMsg = (SC_MovementData)msg;
         if (netEntities.ContainsKey(moveMsg.EntityID))
             netEntities[moveMsg.EntityID].AddRecMessage(moveMsg);

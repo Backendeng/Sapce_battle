@@ -35,14 +35,14 @@ public class Projectile : NetworkEntity {
     }
 
     private void MoveProjUsingReceivedServerData(SC_MovementData message) {
-        // transform.position = Vector3.Lerp(transform.position, message.Position, LERP_MUL * Time.deltaTime);
+        //transform.position = Vector3.Lerp(transform.position, message.Position, LERP_MUL * Time.deltaTime);
         //transform.rotation = Quaternion.Lerp(transform.rotation, message.Rotation, LERP_MUL * Time.deltaTime);
         GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
     }
 
     private void Awake()
     {
-        //Destroy(gameObject, timeout);
+        Destroy(gameObject, timeout);
     }
 
     public void OnBecameInvisible()
@@ -54,13 +54,11 @@ public class Projectile : NetworkEntity {
     void OnTriggerEnter(Collider other)
     {
         // ignore bullet to bullet collision
-        if (other.GetComponent<Projectile>())
+        if (other.name == "Projectile")
             return;
 
         // ignore collision with boundary or other projectiles
         if (other.name == "Boundary")
-            return;
-        if (other.GetComponent<Projectile>() )
             return;
 
         if (projExplosion)
@@ -76,7 +74,4 @@ public class Projectile : NetworkEntity {
         //Destroy(gameObject);
     }
 
-    private void OnDestroy() {
-        
-    }
 }

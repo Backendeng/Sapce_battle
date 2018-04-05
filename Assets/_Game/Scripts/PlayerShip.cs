@@ -16,8 +16,10 @@ public abstract class PlayerShip : NetworkEntity
     protected PlayerShipPhysics physics;
 
     [Header("Shooting")]
-    public float fireRate = 0.5f;
-    protected float nextFire = 0.0f;
+    public float fireRate1 = 0.5f;
+    protected float nextFire1;
+    public float fireRate2 = 0.5f;
+    protected float nextFire2;
     public GameObject shot;         // bullet prefab
     public Transform shotSpawn;     // bullet spawn location
 
@@ -49,7 +51,7 @@ public abstract class PlayerShip : NetworkEntity
 
     }
 
-    private void Awake() {
+    protected void Awake() {
         input = GetComponent<PlayerShipInput>();
         physics = GetComponent<PlayerShipPhysics>();
     }

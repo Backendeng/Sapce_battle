@@ -13,6 +13,7 @@ public class RemotePlayerShip : PlayerShip {
     public float LastReceivedStateTime { get { return lastReceivedStateTime; } }
 
     public new void Start() {
+        base.Start();
         lastReceivedStateTime = -1f;
     }
 
@@ -56,8 +57,8 @@ public class RemotePlayerShip : PlayerShip {
     }
 
     private void MoveShipUsingReceivedServerData(SC_MovementData message) {
-       //transform.position = Vector3.Lerp(transform.position, message.Position, LERP_MUL * Time.deltaTime);
-      // transform.rotation = Quaternion.Slerp(transform.rotation, message.Rotation, LERP_MUL * Time.deltaTime);
+        //transform.position = Vector3.Lerp(transform.position, message.Position, LERP_MUL * Time.deltaTime);
+        //transform.rotation = Quaternion.Slerp(transform.rotation, message.Rotation, LERP_MUL * Time.deltaTime);
         GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
     }
 

@@ -24,6 +24,7 @@ public class Client : MonoBehaviour {
 
     Dictionary<int, NetworkEntity> netEntities = new Dictionary<int, NetworkEntity>();
 
+    //PUT THIS INTO A DICT AND THEN processEntityCreated can use it instead of a switch clause
     public GameObject localPlayer;         // player prefab
     public GameObject remotePlayer;
     public GameObject missile;

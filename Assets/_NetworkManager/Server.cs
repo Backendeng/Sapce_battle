@@ -20,18 +20,17 @@ public class Server : MonoBehaviour {
     int dataSize;
     static byte[] recBuffer = new byte[bufferSize];
 
-    int lastEntityId;
     Dictionary<int, GameObject> connectedPlayers = new Dictionary<int, GameObject>();
-    public Dictionary<int, NetworkEntity> netEntities = new Dictionary<int, NetworkEntity>();
     Queue<NetMsg> outgoingReliable = new Queue<NetMsg>();
     Queue<NetMsg> outgoingUnReliable = new Queue<NetMsg>();
 
 
-    //move these to some kind of dict by object type 
+    //move these to some kind of dict by object type  FACTOR THIS OUT
     public GameObject remotePlayer;         // player prefab                  TODO: spawner
     public Transform playerSpawn;     // player spawn location
     public GameObject missile;
 
+    EntityManager entityManager;
 
     //debug
     private float lastSendTime; 
@@ -55,7 +54,8 @@ public class Server : MonoBehaviour {
         hostId = NetworkTransport.AddHost(topology, inPort);
         Debug.Log("Socket Open. SocketId is: " + hostId);
 
-        lastEntityId = 1;
+
+        entityManager = new EntityManager();
         InitializeWorld();
     }
 
@@ -63,15 +63,12 @@ public class Server : MonoBehaviour {
         GameObject[] worldEntities = GameObject.FindGameObjectsWithTag("WorldNetEntities");
 
         foreach (GameObject entity in worldEntities) {
-            entity.GetComponent<NetworkEntity>().EntityID = lastEntityId;
-            netEntities.Add(lastEntityId, entity.GetComponent<NetworkEntity>());
+            int id = entityManager.RegisterEntity(entity);
             Transform tr = entity.transform;
 
             //broadcast new entity to all
-            SC_EntityCreated msg1 = new SC_EntityCreated(lastEntityId, Time.time, tr.position, tr.rotation, -1, entity.GetComponent<NetworkEntity>().ObjectType);
+            SC_EntityCreated msg1 = new SC_EntityCreated(id, Time.time, tr.position, tr.rotation, -1, entity.GetComponent<NetworkEntity>().ObjectType);
             outgoingReliable.Enqueue(msg1);
-
-            lastEntityId++;
         }
     }
 
@@ -104,8 +101,7 @@ public class Server : MonoBehaviour {
                     ProccessConnectionRequest(recConnectionId);
                     break;
                 case NetworkEventType.DataEvent:       //3
-                                                       //Debug.Log("incoming message event received from: " + recConnectionId);
-                                                       //TODO: interpolation data will be sent as regular pos update, is this fast enough?
+                     //Debug.Log("incoming message event received from: " + recConnectionId);
                     NetMsg msg = MessagesHandler.NetMsgUnpack(recBuffer);
                     switch (msg.Type) {
                         case (byte)NetMsg.MsgType.SC_AllocClientID:
@@ -158,16 +154,14 @@ public class Server : MonoBehaviour {
         //send all netEntites to new player 
         SendAllEntitiesToNewClient(recConnectionId);
 
-        GameObject newPlayer = Instantiate(remotePlayer, playerSpawn.position, playerSpawn.rotation);
-        newPlayer.GetComponent<NetworkEntity>().EntityID = lastEntityId;
+        int entityId;
+        GameObject newPlayer = entityManager.createEntity(remotePlayer, playerSpawn.position, playerSpawn.rotation, (byte)NetworkEntity.ObjType.Player, out entityId);
+
         connectedPlayers[recConnectionId] = newPlayer;
-        netEntities.Add(lastEntityId, newPlayer.GetComponent<NetworkEntity>());
 
         //broadcast new entity to all
-        SC_EntityCreated msg1 = new SC_EntityCreated(lastEntityId, Time.time, playerSpawn.position, playerSpawn.rotation, recConnectionId, (byte)NetworkEntity.ObjType.Player);
+        SC_EntityCreated msg1 = new SC_EntityCreated(entityId, Time.time, playerSpawn.position, playerSpawn.rotation, recConnectionId, (byte)NetworkEntity.ObjType.Player);
         outgoingReliable.Enqueue(msg1);
-
-        lastEntityId++;
     }
 
     private void ProccessDisconnection(int recConnectionId) {
@@ -178,10 +172,10 @@ public class Server : MonoBehaviour {
 
         SC_EntityDestroyed destroyMsg = new SC_EntityDestroyed(entityIdToDestroy, Time.time);
         outgoingReliable.Enqueue(destroyMsg); //send destroy to all 
-        netEntities[entityIdToDestroy].AddRecMessage(destroyMsg); //destroy on server
+        entityManager.netEntities[entityIdToDestroy].AddRecMessage(destroyMsg); //destroy on server
 
         connectedPlayers.Remove(recConnectionId);//end connection
-        netEntities.Remove(entityIdToDestroy);
+        entityManager.RemoveEntity(entityIdToDestroy);
     }
 
     // when a client wants to create an obj he sends SC_EntityCreated to the server and the server creates it and then distributes the new object
@@ -191,26 +185,23 @@ public class Server : MonoBehaviour {
 
         byte type = createMsg.ObjectType;
         GameObject newObject = null;
+        int entityId = -1;
         switch (type) {
               case (byte)NetworkEntity.ObjType.Player:
                   Debug.LogError("Entity Creation failed, client should not request to createa player object ,id: ");
                   break;
               case (byte)NetworkEntity.ObjType.Missile://TODO: mark this obj as originated from clientID
-                  newObject = Instantiate(missile, createMsg.Position, createMsg.Rotation);//missile
+                  newObject = entityManager.createEntity(missile, createMsg.Position, createMsg.Rotation, (byte)NetworkEntity.ObjType.Missile, out entityId);
                   break;
          }
-       
-        if (newObject != null)
-            newObject.GetComponent<NetworkEntity>().EntityID = lastEntityId;
-        else
-            Debug.LogError("Entity Creation failed, id: " + (lastEntityId + 1));
-        netEntities.Add(lastEntityId, newObject.GetComponent<NetworkEntity>());
 
-        SC_EntityCreated mssg = new SC_EntityCreated(lastEntityId, createMsg.TimeStamp, createMsg.Position, createMsg.Rotation, -1 ,type);
+        if (newObject == null)
+            Debug.LogError("Entity Creation failed");
+
+        SC_EntityCreated mssg = new SC_EntityCreated(entityId, createMsg.TimeStamp, createMsg.Position, createMsg.Rotation, -1 ,type);
         outgoingReliable.Enqueue(mssg);
 
-        Debug.Log("Entity Created, id: " + lastEntityId);
-        lastEntityId++;
+        Debug.Log("Entity Created, id: " + entityId);
     }
 
     private void BroadcastAllMessages(Queue<NetMsg> queue, int channelId) {
@@ -235,7 +226,6 @@ public class Server : MonoBehaviour {
         lastSendTime = Time.time;
     }
 
-
     //this is called once every sendRate time and puts the positions of all entities on the queue
     private void StageAllEntities() {
         if (Time.time < nextStagingTime)
@@ -243,7 +233,7 @@ public class Server : MonoBehaviour {
 
         nextStagingTime = Time.time + sendRate;
 
-        foreach (KeyValuePair<int, NetworkEntity> entity in netEntities) {
+        foreach (KeyValuePair<int, NetworkEntity> entity in entityManager.netEntities) {
             if (entity.Value == null) {
                 Debug.LogWarning("trying to access entity that's missing from the netEntities dictionary");
                 continue;
@@ -256,13 +246,12 @@ public class Server : MonoBehaviour {
             outgoingUnReliable.Enqueue(msg);
 
         }
-
     }
 
     private void SendAllEntitiesToNewClient(int connectionId) {
         byte error;
         //send all enteties as createMsg to new client
-        foreach (KeyValuePair<int, NetworkEntity> entity in netEntities) {
+        foreach (KeyValuePair<int, NetworkEntity> entity in entityManager.netEntities) {
             Vector3 pos = entity.Value.gameObject.GetComponent<Transform>().position;
             Quaternion rot = entity.Value.gameObject.GetComponent<Transform>().rotation;
 

@@ -25,33 +25,21 @@ public abstract class NetMsg {
     }
 }
 
-public abstract class MovementData : NetMsg {
+public class SC_EntityCreated : NetMsg {
     protected Vector3 position;
     protected Quaternion rotation;
-
-    public Vector3 Position { get { return position; } }
-    public Quaternion Rotation {
-        get {
-            return rotation;
-        }
-    }
-
-    public MovementData(int entityID, float timeStamp, Vector3 position, Quaternion rotation) :
-        base(entityID, timeStamp) {
-        this.position = position;
-        this.rotation = rotation;
-    }
-}
-
-public class SC_EntityCreated : MovementData {
     protected int clientID;
     protected byte objectType;
+
+    public Vector3 Position { get { return position; } }
+    public Quaternion Rotation { get { return rotation; } }
     public int ClientID { get { return clientID; } }
     public byte ObjectType { get { return objectType; } }
 
-    public SC_EntityCreated(int entityID, float timeStamp, Vector3 position, Quaternion rotation, int clientID, byte objectType) : 
-        base(entityID, timeStamp, position, rotation) {
+    public SC_EntityCreated(int entityID, float timeStamp, Vector3 position, Quaternion rotation, int clientID, byte objectType) : base(entityID, timeStamp) {
         msgType = (byte)MsgType.SC_EntityCreated;
+        this.position = position;
+        this.rotation = rotation;
         this.clientID = clientID;
         this.objectType = objectType;
     }
@@ -64,11 +52,17 @@ public class SC_EntityDestroyed : NetMsg {
     }
 }
 
-public class SC_MovementData : MovementData {
+public class SC_MovementData : NetMsg {
+    protected Vector3 position;
+    protected Quaternion rotation;
 
-    public SC_MovementData(int entityID, float timeStamp, Vector3 position, Quaternion rotation) : 
-        base(entityID, timeStamp, position, rotation) {
+    public Vector3 Position { get { return position; } }
+    public Quaternion Rotation { get { return rotation; } }
+
+    public SC_MovementData(int entityID, float timeStamp, Vector3 position, Quaternion rotation) : base(entityID, timeStamp) {
         msgType = (byte)MsgType.SC_MovementData;
+        this.position = position;
+        this.rotation = rotation;
     }
 }
 
@@ -90,8 +84,7 @@ public class SC_AllocClientID : NetMsg {
     protected int clientID;
     public int ClientID { get { return clientID; } }
 
-    public SC_AllocClientID(int entityID, float timeStamp, int clientID) :
-        base(entityID, timeStamp) {
+    public SC_AllocClientID(int entityID, float timeStamp, int clientID) : base(entityID, timeStamp) {
         this.clientID = clientID;
         msgType = (byte)MsgType.SC_AllocClientID;
     }

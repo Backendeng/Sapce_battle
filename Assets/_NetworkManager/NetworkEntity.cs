@@ -18,6 +18,7 @@ public class NetworkEntity : MonoBehaviour {
     public enum ObjType : byte {
         Player,
         Missile,
+        Astroid,
     }
     protected byte objectType;
     public byte ObjectType {

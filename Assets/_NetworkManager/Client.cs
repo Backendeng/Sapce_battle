@@ -27,6 +27,7 @@ public class Client : MonoBehaviour {
     public GameObject localPlayer;         // player prefab
     public GameObject remotePlayer;
     public GameObject missile;
+    public GameObject astroid;
 
     // Use this for initialization
     void Start() {
@@ -162,7 +163,9 @@ public class Client : MonoBehaviour {
             case (byte)NetworkEntity.ObjType.Missile:
                 newObject = Instantiate(missile, createMsg.Position, createMsg.Rotation);//missile
                 break;
-
+            case (byte)NetworkEntity.ObjType.Astroid:
+                newObject = Instantiate(astroid, createMsg.Position, createMsg.Rotation);//astroid
+                break;
         }
         if (newObject != null)
             newObject.GetComponent<NetworkEntity>().EntityID = createMsg.EntityID;

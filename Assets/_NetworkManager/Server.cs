@@ -56,10 +56,27 @@ public class Server : MonoBehaviour {
         Debug.Log("Socket Open. SocketId is: " + hostId);
 
         lastEntityId = 1;
+        InitializeWorld();
     }
-	
-	// Update is called once per frame
-	private void Update ()
+
+    void InitializeWorld() {
+        GameObject[] worldEntities = GameObject.FindGameObjectsWithTag("WorldNetEntities");
+
+        foreach (GameObject entity in worldEntities) {
+            entity.GetComponent<NetworkEntity>().EntityID = lastEntityId;
+            netEntities.Add(lastEntityId, entity.GetComponent<NetworkEntity>());
+            Transform tr = entity.transform;
+
+            //broadcast new entity to all
+            SC_EntityCreated msg1 = new SC_EntityCreated(lastEntityId, Time.time, tr.position, tr.rotation, -1, entity.GetComponent<NetworkEntity>().ObjectType);
+            outgoingReliable.Enqueue(msg1);
+
+            lastEntityId++;
+        }
+    }
+
+    // Update is called once per frame
+    private void Update ()
     {
         Listen();//first listen
         StageAllEntities();// put all entity positions and rotations on queue
@@ -147,7 +164,7 @@ public class Server : MonoBehaviour {
         netEntities.Add(lastEntityId, newPlayer.GetComponent<NetworkEntity>());
 
         //broadcast new entity to all
-        SC_EntityCreated msg1 = new SC_EntityCreated(lastEntityId, Time.time, playerSpawn.position, playerSpawn.rotation, recConnectionId, (int)NetworkEntity.ObjType.Player);
+        SC_EntityCreated msg1 = new SC_EntityCreated(lastEntityId, Time.time, playerSpawn.position, playerSpawn.rotation, recConnectionId, (byte)NetworkEntity.ObjType.Player);
         outgoingReliable.Enqueue(msg1);
 
         lastEntityId++;
@@ -254,5 +271,6 @@ public class Server : MonoBehaviour {
             NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
         }
     }
+
 }
 

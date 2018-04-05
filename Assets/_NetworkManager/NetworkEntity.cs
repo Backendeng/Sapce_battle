@@ -48,7 +48,6 @@ public class NetworkEntity : MonoBehaviour {
     }
 
     public void Start() {
-        Debug.Log("START OF NETWORK ENTITY!");
         // setting up serverController / clientController referecnce 
         networkControllerObj = GameObject.Find("ServerNetworkController");
         if (networkControllerObj != null) {
@@ -102,7 +101,7 @@ public class NetworkEntity : MonoBehaviour {
 
     private void OnDestroy() {
         if (isServer) {
-            //serverController.netEntities.Remove(entityID);
+           
         }
     }
 

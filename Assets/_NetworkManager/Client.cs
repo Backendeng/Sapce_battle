@@ -9,11 +9,15 @@ public class Client : MonoBehaviour {
 
     public string serverIP = "127.0.0.1";
     byte error;
+    int unreliableChannelId;
     int reliableChannelId;
     int hostId;
     int outPort = 8888;
     int connectionId;
+
     int clientID = -1;
+    bool playerAvatarCreated = false;
+
     static int bufferSize = 1024;
     byte[] recBuffer = new byte[bufferSize];
     int dataSize;
@@ -33,13 +37,15 @@ public class Client : MonoBehaviour {
     public void Connect() {
         ConnectionConfig config = new ConnectionConfig();
         reliableChannelId = config.AddChannel(QosType.Reliable);
-        Debug.Log("Channel open id: " + reliableChannelId);
+        Debug.Log("reliableChannelId open id: " + reliableChannelId);
+        unreliableChannelId = config.AddChannel(QosType.Unreliable);
+        Debug.Log("unreliableChannelId open id: " + unreliableChannelId);
 
         int maxConnections = 10;
         HostTopology topology = new HostTopology(config, maxConnections);
 
         hostId = NetworkTransport.AddHost(topology, 0);
-        Debug.Log("Socket Open. HostId is: " + hostId);
+        Debug.Log("Socket Open. SocketID is: " + hostId);
 
         connectionId = NetworkTransport.Connect(hostId, serverIP, outPort, 0, out error);
         Debug.Log("Connected to server. ConnectionId: " + connectionId);
@@ -57,20 +63,16 @@ public class Client : MonoBehaviour {
         //create movementMessage/... and send it to server
         SC_MovementData msg = new SC_MovementData(selfEntityId, Time.time, pos, rot);
         byte[] buffer = MessagesHandler.NetMsgPack(msg);
-        NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
+        NetworkTransport.Send(hostId, connectionId, unreliableChannelId, buffer, buffer.Length, out error);
         if (error != 0)
-            Debug.LogError("SendStateToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
+            Debug.LogError("SendStateToHost error: " + error.ToString() + " channelID: " + unreliableChannelId);
     }
 
     public void SendMissileShotToHost(int selfEntityId, Vector3 pos, Quaternion rot) {
         //create movementMessage/... and send it to server
-        Debug.Log("shoot" + (int)NetworkEntity.ObjType.Missile);
         SC_EntityCreated msg = new SC_EntityCreated(-1 , Time.time, pos, rot, clientID, (byte)NetworkEntity.ObjType.Missile);
-        Debug.Log("shootMsg " + msg.ObjectType);
         byte[] buffer = MessagesHandler.NetMsgPack(msg);
-        SC_EntityCreated m = (SC_EntityCreated)MessagesHandler.NetMsgUnpack(buffer);
-        Debug.Log("shootMsg " + m.ObjectType);
-        NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
+        NetworkTransport.Send(hostId, connectionId, unreliableChannelId, buffer, buffer.Length, out error);
         if (error != 0)
             Debug.LogError("SendcreateRequestToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
     }
@@ -97,7 +99,6 @@ public class Client : MonoBehaviour {
                        (NetworkError)error == NetworkError.Ok) {
                         Debug.Log("Connected");
                     }
-                    //problem: how to pass entity id here?
                     break;
                 case NetworkEventType.DataEvent:
                     //distribute messages to network entities
@@ -107,7 +108,7 @@ public class Client : MonoBehaviour {
                         case (byte)NetMsg.MsgType.SC_AllocClientID:
                             ProccessAllocClientID(msg);
                             break;
-                        case (byte)NetMsg.MsgType.SC_EntityCreated://BUG: 2nd player gets ERROR, update for netEntity that does not exist in client 
+                        case (byte)NetMsg.MsgType.SC_EntityCreated://BUG: 2nd player gets ERROR, update for netEntity that does not exist in client . maybe he gets state updates for enteties before he created them?
                             ProccessEntityCreated(msg);
                             break;
                         case (byte)NetMsg.MsgType.SC_MovementData:
@@ -140,7 +141,7 @@ public class Client : MonoBehaviour {
         byte[] buffer = MessagesHandler.NetMsgPack(ack);
         NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
         if (error != 0)
-            Debug.LogError("SendInputToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
+            Debug.LogError("SendConnectionAckToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
 
     }
 
@@ -153,6 +154,7 @@ public class Client : MonoBehaviour {
             case (byte)NetworkEntity.ObjType.Player:
                 if (clientID == createMsg.ClientID) { 
                     newObject = Instantiate(localPlayer, createMsg.Position, createMsg.Rotation);//localPlayer
+                    playerAvatarCreated = true;
                 } else {
                     newObject = Instantiate(remotePlayer, createMsg.Position, createMsg.Rotation);//remotePlayer
                 }
@@ -171,6 +173,9 @@ public class Client : MonoBehaviour {
     }
 
     private void ProccessMovementData(NetMsg msg) {
+        // player creation msg is sent after the other creation nessages when starting this client, so when hes created we can receive updates
+        if (!playerAvatarCreated)
+            return;
         SC_MovementData moveMsg = (SC_MovementData)msg;
         if (netEntities.ContainsKey(moveMsg.EntityID))
             netEntities[moveMsg.EntityID].AddRecMessage(moveMsg);

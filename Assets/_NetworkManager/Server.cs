@@ -26,7 +26,7 @@ public class Server : MonoBehaviour {
 
 
     //move these to some kind of dict by object type  FACTOR THIS OUT
-    public GameObject remotePlayer;         // player prefab                  TODO: spawner
+    public GameObject remotePlayer;   // player prefab                  TODO: spawner
     public Transform playerSpawn;     // player spawn location
     public GameObject missile;
 

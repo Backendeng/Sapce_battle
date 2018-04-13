@@ -6,6 +6,7 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerShipPhysics))]
 [RequireComponent(typeof(PlayerShipInput))]
 
+
 public abstract class PlayerShip : NetworkEntity
 {
 
@@ -14,15 +15,6 @@ public abstract class PlayerShip : NetworkEntity
 
     protected PlayerShipInput input;
     protected PlayerShipPhysics physics;
-
-    [Header("Shooting")]
-    public float fireRate1 = 0.5f;
-    protected float nextFire1;
-    public float fireRate2 = 0.5f;
-    protected float nextFire2;
-    public GameObject shot;         // bullet prefab
-    public Transform shotSpawn;     // bullet spawn location
-
 
     public static PlayerShip ActiveShip
     {

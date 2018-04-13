@@ -1,8 +1,12 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
+
+[RequireComponent(typeof(ShipShootingClient))]
 
 public class LocalPlayerShip : PlayerShip {
     public GameObject shadowPrefab;
     private Transform shadow;
+    private ShipShootingClient shooting;
 
     private float lastReturnedInputTime;
     private float latency;
@@ -10,13 +14,13 @@ public class LocalPlayerShip : PlayerShip {
     public float sendStateRate = 0.05f;
     private float nextStateSendTime;
 
-    // Shooting : Ray
-    float rayRange = 50f;
+    public GameObject playerCamera;
 
-    GameObject playerCamera;
+    private new void Awake() {
+        base.Awake();
+    }
 
-
-    public new void Start() {
+    private new void Start() {
         base.Start();
 
         if (isPlayer)
@@ -24,6 +28,10 @@ public class LocalPlayerShip : PlayerShip {
 
         if (shadowPrefab != null)
             shadow = Instantiate(shadowPrefab, new Vector3(), new Quaternion()).transform;
+
+        // shooting init
+        shooting = GetComponent<ShipShootingClient>();
+        shooting.Init(clientController, entityID);
 
         //nextStateSendTime = Time.time;
         playerCamera = GameObject.FindWithTag("MainCamera");
@@ -41,44 +49,17 @@ public class LocalPlayerShip : PlayerShip {
         HandleMessagesFromServer();
 
         // shooting
-        HandleShooting();
+        shooting.HandleShooting();
 
         // update the server with our position
         SendStateToServer(transform.position, transform.rotation);
 
         
     }
-  
-    private void HandleShooting() {
-        // Secondary Shot - Missiles
-        if ( Time.time > nextFire2 && (Input.GetButton("LeftTrigger") || Input.GetMouseButtonDown(1))) {
-            nextFire2 = Time.time + fireRate2;
-            //Instantiate(shot, shotSpawn.position, shotSpawn.rotation);
-            SendMissileToServer(shotSpawn.position, shotSpawn.rotation);
-            GetComponent<AudioSource>().Play();
-        }
-        // Primary Shot - Ray
-        if (Time.time > nextFire1 && (Input.GetButton("RightTrigger") || Input.GetMouseButtonDown(0))) {
-            nextFire1 = Time.time + fireRate1;
-            ShootRay();
-        }
-    }
-
-    private void SendMissileToServer(Vector3 pos, Quaternion rot) {
-        clientController.SendMissileShotToHost(entityID, pos, rot);
-    }
-
-    private void ShootRay() {
-        
-        RaycastHit hit;
-
-        if (Physics.Raycast(shotSpawn.position, playerCamera.transform.forward, out hit, rayRange)) {
-            Debug.Log("Hit: " + hit.transform.name);
-        }
-    }
+ 
 
     private void SendStateToServer(Vector3 pos, Quaternion rot) {
-        if (Time.time > nextStateSendTime) {
+        if (Time.time > nextStateSendTime && clientController != null) {
             clientController.SendStateToHost(entityID, pos, rot);
             nextStateSendTime = Time.time + sendStateRate;
         }
@@ -89,7 +70,7 @@ public class LocalPlayerShip : PlayerShip {
             NetMsg netMessage = incomingQueue.Dequeue();
             switch (netMessage.Type) {
                 case (byte)NetMsg.MsgType.SC_MovementData:
-                    MoveShadow((SC_MovementData)netMessage);
+                    //MoveShadow((SC_MovementData)netMessage);
                     break;
                 case (byte)NetMsg.MsgType.SC_EntityDestroyed:
                     Destroy(gameObject);

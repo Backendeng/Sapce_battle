@@ -13,7 +13,7 @@ public class NetworkEntity : MonoBehaviour {
     protected Server serverController;
     protected Client clientController;
     protected int entityID = -1;
-    public bool isServer;
+    protected bool isServer;
 
     protected float lastReceivedStateTime;
     public float LastReceivedStateTime { get { return lastReceivedStateTime; } }

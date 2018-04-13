@@ -1,9 +1,9 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-public class Projectile : NetworkEntity {
+public class Missile : NetworkEntity {
     public float speed;
-    public GameObject projExplosion;
+    public GameObject missileExplosion;
     public float timeout = 5.0f;
     public static float LERP_MUL = 3f;
 
@@ -14,8 +14,7 @@ public class Projectile : NetworkEntity {
         }
     }
 
-	private void Update ()
-    {
+    private void Update() {
         if (isServer)
             return;
         if (incomingQueue.Count == 0)
@@ -40,32 +39,28 @@ public class Projectile : NetworkEntity {
         GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
     }
 
-    private void Awake()
-    {
+    private void Awake() {
         Destroy(gameObject, timeout);
     }
 
-    public void OnBecameInvisible()
-    {
+    public void OnBecameInvisible() {
         //Destroy(gameObject);
     }
 
-    // when the projectile hits something
-    void OnTriggerEnter(Collider other)
-    {
+    // when the missile hits something
+    void OnTriggerEnter(Collider other) {
         // ignore bullet to bullet collision
-        if (other.name == "Projectile")
+        if (other.name == "Missile")
             return;
 
         // ignore collision with boundary or other projectiles
         if (other.name == "Boundary")
             return;
 
-        if (projExplosion)
-            Instantiate(projExplosion, transform.position, transform.rotation);
+        if (missileExplosion)
+            Instantiate(missileExplosion, transform.position, transform.rotation);
 
-        if (other.CompareTag("Player"))
-        {
+        if (other.CompareTag("Player")) {
             // make hitting effects
             //Instantiate(playerExplosion, other.transform.position, other.transform.rotation);
         }

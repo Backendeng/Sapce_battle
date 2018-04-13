@@ -9,6 +9,7 @@ public class RemotePlayerShipClient : PlayerShip {
     private Vector3 lastReceivedVelocity;
 
     // Lerping State
+    public bool doLerp = true;
     private float lerpingStartTime;
     private float lerpDeltaTime;
     private Vector3 lerpStartPos;
@@ -71,6 +72,10 @@ public class RemotePlayerShipClient : PlayerShip {
 
     //use lerp state to lerp 
     private void MoveShipUsingReceivedServerData() {
+        if (!doLerp) {
+            GetComponent<Transform>().SetPositionAndRotation(lerpEndPos, lerpEndRot);
+            return;
+        }
 	// GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
         if (lerpingStartTime == -1f)
             return;
@@ -78,11 +83,6 @@ public class RemotePlayerShipClient : PlayerShip {
         transform.position = Vector3.Lerp(lerpStartPos, lerpEndPos, lerpPercentage);
         transform.rotation = Quaternion.Slerp(lerpStartRot, lerpEndRot, lerpPercentage);
     }
-
-    private void MoveShipUsingReceivedClientData(SC_MovementData message) {
-        GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
-    }
-
 
 }
 

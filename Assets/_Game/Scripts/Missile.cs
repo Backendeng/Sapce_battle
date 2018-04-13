@@ -40,7 +40,7 @@ public class Missile : NetworkEntity {
     }
 
     private void Awake() {
-        Destroy(gameObject, timeout);
+      //  Destroy(gameObject, timeout);
     }
 
     public void OnBecameInvisible() {

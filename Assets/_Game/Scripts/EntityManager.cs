@@ -23,7 +23,7 @@ public class EntityManager {
         return lastEntityId;
     }
 
-    public GameObject createEntity(GameObject prefab, Vector3 pos, Quaternion rot, byte objId, out int id) {
+    public GameObject CreateEntity(GameObject prefab, Vector3 pos, Quaternion rot, byte objId, out int id) {
         GameObject newEntity = GameObject.Instantiate(prefab, pos, rot);
        
         NetworkEntity netEntity = newEntity.GetComponent<NetworkEntity>();

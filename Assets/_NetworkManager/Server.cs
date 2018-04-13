@@ -155,7 +155,7 @@ public class Server : MonoBehaviour {
         SendAllEntitiesToNewClient(recConnectionId);
 
         int entityId;
-        GameObject newPlayer = entityManager.createEntity(remotePlayer, playerSpawn.position, playerSpawn.rotation, (byte)NetworkEntity.ObjType.Player, out entityId);
+        GameObject newPlayer = entityManager.CreateEntity(remotePlayer, playerSpawn.position, playerSpawn.rotation, (byte)NetworkEntity.ObjType.Player, out entityId);
 
         connectedPlayers[recConnectionId] = newPlayer;
 
@@ -191,7 +191,7 @@ public class Server : MonoBehaviour {
                   Debug.LogError("Entity Creation failed, client should not request to createa player object ,id: ");
                   break;
               case (byte)NetworkEntity.ObjType.Missile://TODO: mark this obj as originated from clientID
-                  newObject = entityManager.createEntity(missile, createMsg.Position, createMsg.Rotation, (byte)NetworkEntity.ObjType.Missile, out entityId);
+                  newObject = entityManager.CreateEntity(missile, createMsg.Position, createMsg.Rotation, (byte)NetworkEntity.ObjType.Missile, out entityId);
                   break;
          }
 
@@ -240,8 +240,8 @@ public class Server : MonoBehaviour {
             }
             Vector3 pos = entity.Value.gameObject.GetComponent<Transform>().position;
             Quaternion rot = entity.Value.gameObject.GetComponent<Transform>().rotation;
-          //  float lastRecStateTime = entity.Value.gameObject.GetComponent<RemotePlayerShip>().LastReceivedStateTime;
-            SC_MovementData msg = new SC_MovementData(entity.Key, -1/*lastRecStateTime*/, pos, rot);
+            float lastRecStateTime = entity.Value.LastReceivedStateTime;
+            SC_MovementData msg = new SC_MovementData(entity.Key, lastRecStateTime, pos, rot);
 
             outgoingUnReliable.Enqueue(msg);
 

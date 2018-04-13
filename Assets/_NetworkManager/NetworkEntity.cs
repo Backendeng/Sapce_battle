@@ -15,6 +15,9 @@ public class NetworkEntity : MonoBehaviour {
     protected int entityID = -1;
     public bool isServer;
 
+    protected float lastReceivedStateTime;
+    public float LastReceivedStateTime { get { return lastReceivedStateTime; } }
+
     public enum ObjType : byte {
         Player,
         Missile,
@@ -27,20 +30,20 @@ public class NetworkEntity : MonoBehaviour {
     }
 
     // History
-    private class ShipSnapshot {
+    protected class StateSnapshot {
         public float time;
         public Vector3 position;
         public Quaternion rotation;
         public Vector3 velocity;
 
-        public ShipSnapshot(float time, Vector3 position, Quaternion rotation, Vector3 velocity) {
+        public StateSnapshot(float time, Vector3 position, Quaternion rotation, Vector3 velocity) {
             this.time = time;
             this.position = position;
             this.rotation = rotation;
             this.velocity = velocity;
         }
     }
-    private List<ShipSnapshot> History = new List<ShipSnapshot>();
+    private List<StateSnapshot> History = new List<StateSnapshot>();
     private static int historySize = 200;
 
     public int EntityID {
@@ -68,11 +71,11 @@ public class NetworkEntity : MonoBehaviour {
                 }
             }
             else {
-                Debug.LogError("ERROR! networkController not found for network entity = " + entityID);
+                Debug.LogWarning("ERROR! networkController not found for network entity = " + entityID);
             }
         }
-            
 
+        lastReceivedStateTime = -1f;
     }
 
     private void FixedUpdate() {
@@ -86,14 +89,22 @@ public class NetworkEntity : MonoBehaviour {
        // Debug.Log("incoming message to NetworkEntity");
     }
 
-    private void AddSnapshotToHistory() {
+    protected void AddSnapshotToHistoryOnClient(SC_MovementData message) {
 
-        History.Add(new ShipSnapshot(Time.time, transform.position, transform.rotation, GetVelocity() ));
+        History.Add(new StateSnapshot(message.TimeStamp, message.Position, message.Rotation, new Vector3() ));///TODO:pass velocity
 
         // let's limit thje History size
         if (History.Count > historySize) {
             History.RemoveAt(0);
         }
+    }
+
+    protected StateSnapshot GetLastSnapshotAt(int idx) {
+        return History[idx];
+    }
+
+    protected int GetHistoryLastIdx() {
+        return History.Count - 1;
     }
 
     public virtual Vector3 GetVelocity() {

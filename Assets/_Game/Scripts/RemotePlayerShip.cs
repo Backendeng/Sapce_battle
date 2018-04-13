@@ -4,20 +4,29 @@ using UnityEngine;
 
 public class RemotePlayerShip : PlayerShip {
 
-    private float lastReceivedStateTime;
+   
     private Vector3 lastReceivedVelocity;
 
     public static float LERP_MUL = 1f;
 
-    // for RemotePlayerShip on Server
-    public float LastReceivedStateTime { get { return lastReceivedStateTime; } }
+    private float lerpingStartTime;
+    private float lerpDeltaTime;
+    private Vector3 lerpStartPos;
+    private Vector3 lerpEndPos;
+    private Quaternion lerpStartRot;
+    private Quaternion lerpEndRot;
 
     public new void Start() {
         base.Start();
-        lastReceivedStateTime = -1f;
+        lerpingStartTime = -1f;
     }
 
-    private void FixedUpdate() {
+    private void Update() {
+
+        if (!isServer) {
+            MoveShipUsingReceivedServerData();
+        }
+
         if (incomingQueue.Count == 0)
             return;
         NetMsg netMessage = incomingQueue.Dequeue();
@@ -40,7 +49,8 @@ public class RemotePlayerShip : PlayerShip {
         } else {
             switch (netMessage.Type) {
                 case (byte)NetMsg.MsgType.SC_MovementData:
-                    MoveShipUsingReceivedServerData((SC_MovementData)netMessage);
+                    AddSnapshotToHistoryOnClient((SC_MovementData)netMessage); // for interpolation and extrapolation
+                    ReceiveServerStateUpdate();// uses snapshotHistory
                     break;
                 case (byte)NetMsg.MsgType.SC_EntityDestroyed:
                     Destroy(gameObject);
@@ -56,13 +66,41 @@ public class RemotePlayerShip : PlayerShip {
         return lastReceivedVelocity;
     }
 
-    private void MoveShipUsingReceivedServerData(SC_MovementData message) {
-        //transform.position = Vector3.Lerp(transform.position, message.Position, LERP_MUL * Time.deltaTime);
-        //transform.rotation = Quaternion.Slerp(transform.rotation, message.Rotation, LERP_MUL * Time.deltaTime);
-        GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
+    private void ReceiveServerStateUpdate() {
+        int lastIdx = GetHistoryLastIdx();
+
+        if (lastIdx == 0)
+            return;
+
+        int prevIdx = lastIdx - 1;
+        StateSnapshot lastSnap = GetLastSnapshotAt(lastIdx);
+        StateSnapshot prevSnap = GetLastSnapshotAt(prevIdx);
+
+        //lerp state update
+        lerpingStartTime = Time.time;
+
+        lerpDeltaTime = lastSnap.time - prevSnap.time;
+        lerpStartPos = prevSnap.position;
+        lerpEndPos = lastSnap.position;
+        lerpStartRot = prevSnap.rotation;
+        lerpEndRot = lastSnap.rotation;
+    }
+
+    // transform.position = Vector3.Lerp(transform.position, message.Position, LERP_MUL * Time.deltaTime);
+    //transform.rotation = Quaternion.Slerp(transform.rotation, message.Rotation, LERP_MUL * Time.deltaTime);
+    // GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
+
+    //use lerp state to lerp 
+    private void MoveShipUsingReceivedServerData() {
+        if (lerpingStartTime == -1f)
+            return;
+        float lerpPercentage = (Time.time - lerpingStartTime) / lerpDeltaTime;
+        transform.position = Vector3.Lerp(lerpStartPos, lerpEndPos, lerpPercentage);
+        transform.rotation = Quaternion.Slerp(lerpStartRot, lerpEndRot, lerpPercentage);
     }
 
     private void MoveShipUsingReceivedClientData(SC_MovementData message) {
+        lastReceivedStateTime = message.TimeStamp;
         GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
     }
 

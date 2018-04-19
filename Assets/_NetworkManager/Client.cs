@@ -73,8 +73,7 @@ public class Client : MonoBehaviour {
     }
 
     public void SendShotToHost(byte shotObjType, int selfEntityId, Vector3 pos, Quaternion rot, byte shotObjectType) {
-        //SC_EntityCreated msg = new SC_EntityCreated(-1 , Time.time, pos, rot, clientID, shotObjType);
-        CS_CreationRequest msg = new CS_CreationRequest(clientID, NetworkTransport.GetNetworkTimestamp(), pos, rot, shotObjectType);
+        CS_CreationRequest msg = new CS_CreationRequest(NetworkTransport.GetNetworkTimestamp(), pos, rot, shotObjectType);
         byte[] buffer = MessagesHandler.NetMsgPack(msg);
         NetworkTransport.Send(hostId, connectionId, unreliableChannelId, buffer, buffer.Length, out error);
         if (error != 0)

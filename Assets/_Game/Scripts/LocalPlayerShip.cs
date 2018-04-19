@@ -32,7 +32,6 @@ public class LocalPlayerShip : PlayerShip {
         shooting = GetComponent<ShipShootingClient>();
         shooting.Init(clientController, entityID);
 
-        //nextStateSendTime = Time.time;
         playerCamera = GameObject.FindWithTag("MainCamera");
 
     }
@@ -69,7 +68,7 @@ public class LocalPlayerShip : PlayerShip {
             NetMsg netMessage = incomingQueue.Dequeue();
             switch (netMessage.Type) {
                 case (byte)NetMsg.MsgType.SC_MovementData:
-                    MoveShadow((SC_MovementData)netMessage);
+                    //MoveShadow((SC_MovementData)netMessage);
                     break;
                 case (byte)NetMsg.MsgType.SC_EntityDestroyed:
                     Destroy(gameObject);

@@ -7,6 +7,7 @@ public class ShipShootingClient : MonoBehaviour {
     private float nextFire1;
     private float fireRate2 = 0.5f;
     private float nextFire2;
+    public GameObject projectile;   // projectile prefab
     public GameObject missile;      // missile prefab
     public Transform shotSpawn;     // shooting spawn location
 
@@ -52,8 +53,12 @@ public class ShipShootingClient : MonoBehaviour {
     }
 
     private void ShootProjectile(Vector3 pos, Quaternion rot) {
+        GameObject simProjectile = Instantiate(projectile, pos, rot);
         clientController.SendShotToHost((byte)NetworkEntity.ObjType.Projectile, entityID, pos, rot, (byte)NetworkEntity.ObjType.Projectile);
         GetComponent<AudioSource>().Play();
+
+        simProjectile.GetComponent<Projectile>().ClientID = -1; // mark as locally simulated projectile
+
     }
 
     private void ShootRay() {

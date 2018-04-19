@@ -25,7 +25,7 @@ public class MessagesHandler {
             //break;
             case (byte)NetMsg.MsgType.CS_CreationRequest:
                 //jsonMsg = JsonConvert.SerializeObject( (CS_ShootMsg)message );
-                bytesMessage = PackShootMsg((CS_CreationRequest)message);
+                bytesMessage = PackCreationRequestMsg((CS_CreationRequest)message);
                 return bytesMessage;
             //break;
             case (byte)NetMsg.MsgType.CS_InputData:
@@ -67,7 +67,7 @@ public class MessagesHandler {
                 break;
             case (byte)NetMsg.MsgType.CS_CreationRequest:
                 //unpackedMessage = JsonConvert.DeserializeObject<CS_ShootMsg>(jsonMsg);
-                unpackedMessage = UnpackShootMsg(packedMessage);
+                unpackedMessage = UnpackCreationRequestMsg(packedMessage);
                 break;
             case (byte)NetMsg.MsgType.CS_InputData:
                 unpackedMessage = JsonConvert.DeserializeObject<CS_InputData>(jsonMsg);
@@ -130,50 +130,47 @@ public class MessagesHandler {
         return unpacked;
     }
 
-    private static byte[] PackShootMsg(CS_CreationRequest message) {
-        byte[] packedMessage = new byte[37 + headerSize];
+    private static byte[] PackCreationRequestMsg(CS_CreationRequest message) {
+        byte[] packedMessage = new byte[33 + headerSize];
         packedMessage[0] = message.Type;
 
-        byte[] clientID = System.BitConverter.GetBytes(message.ClientID); // 1
-        byte[] timeStamp = System.BitConverter.GetBytes(message.TimeStamp); // 5
-        byte[] position_x = System.BitConverter.GetBytes(message.Position.x); // 9
-        byte[] position_y = System.BitConverter.GetBytes(message.Position.y); // 13
-        byte[] position_z = System.BitConverter.GetBytes(message.Position.z); // 17
-        byte[] rotation_x = System.BitConverter.GetBytes(message.Rotation.x); // 21
-        byte[] rotation_y = System.BitConverter.GetBytes(message.Rotation.y); // 25
-        byte[] rotation_z = System.BitConverter.GetBytes(message.Rotation.z); // 29
-        byte[] rotation_w = System.BitConverter.GetBytes(message.Rotation.w); // 33
+        byte[] timeStamp = System.BitConverter.GetBytes(message.TimeStamp); // 1
+        byte[] position_x = System.BitConverter.GetBytes(message.Position.x); // 5
+        byte[] position_y = System.BitConverter.GetBytes(message.Position.y); // 9
+        byte[] position_z = System.BitConverter.GetBytes(message.Position.z); // 13
+        byte[] rotation_x = System.BitConverter.GetBytes(message.Rotation.x); // 17
+        byte[] rotation_y = System.BitConverter.GetBytes(message.Rotation.y); // 21
+        byte[] rotation_z = System.BitConverter.GetBytes(message.Rotation.z); // 25
+        byte[] rotation_w = System.BitConverter.GetBytes(message.Rotation.w); // 29
 
-        System.Buffer.BlockCopy(clientID, 0, packedMessage, 1, 4);
-        System.Buffer.BlockCopy(timeStamp, 0, packedMessage, 5, 4);
-        System.Buffer.BlockCopy(position_x, 0, packedMessage, 9, 4);
-        System.Buffer.BlockCopy(position_y, 0, packedMessage, 13, 4);
-        System.Buffer.BlockCopy(position_z, 0, packedMessage, 17, 4);
-        System.Buffer.BlockCopy(rotation_x, 0, packedMessage, 21, 4);
-        System.Buffer.BlockCopy(rotation_y, 0, packedMessage, 25, 4);
-        System.Buffer.BlockCopy(rotation_z, 0, packedMessage, 29, 4);
-        System.Buffer.BlockCopy(rotation_w, 0, packedMessage, 33, 4);
-        packedMessage[37] = message.ObjectType;
+        System.Buffer.BlockCopy(timeStamp, 0, packedMessage, 1, 4);
+        System.Buffer.BlockCopy(position_x, 0, packedMessage, 5, 4);
+        System.Buffer.BlockCopy(position_y, 0, packedMessage, 9, 4);
+        System.Buffer.BlockCopy(position_z, 0, packedMessage, 13, 4);
+        System.Buffer.BlockCopy(rotation_x, 0, packedMessage, 17, 4);
+        System.Buffer.BlockCopy(rotation_y, 0, packedMessage, 21, 4);
+        System.Buffer.BlockCopy(rotation_z, 0, packedMessage, 25, 4);
+        System.Buffer.BlockCopy(rotation_w, 0, packedMessage, 29, 4);
+        packedMessage[33] = message.ObjectType;
         return packedMessage;
     }
 
-    private static CS_CreationRequest UnpackShootMsg(byte[] packedMessage) {
+    private static CS_CreationRequest UnpackCreationRequestMsg(byte[] packedMessage) {
 
-        int clientID = System.BitConverter.ToInt32(packedMessage, 1);
-        float timeStamp = System.BitConverter.ToSingle(packedMessage, 5);
-        float position_x = System.BitConverter.ToSingle(packedMessage, 9);
-        float position_y = System.BitConverter.ToSingle(packedMessage, 13);
-        float position_z = System.BitConverter.ToSingle(packedMessage, 17);
-        float rotation_x = System.BitConverter.ToSingle(packedMessage, 21);
-        float rotation_y = System.BitConverter.ToSingle(packedMessage, 25);
-        float rotation_z = System.BitConverter.ToSingle(packedMessage, 29);
-        float rotation_w = System.BitConverter.ToSingle(packedMessage, 33);
-        byte objectType = packedMessage[37];
+        float timeStamp = System.BitConverter.ToSingle(packedMessage, 1);
+        float position_x = System.BitConverter.ToSingle(packedMessage, 5);
+        float position_y = System.BitConverter.ToSingle(packedMessage, 9);
+        float position_z = System.BitConverter.ToSingle(packedMessage, 13);
+        float rotation_x = System.BitConverter.ToSingle(packedMessage, 17);
+        float rotation_y = System.BitConverter.ToSingle(packedMessage, 21);
+        float rotation_z = System.BitConverter.ToSingle(packedMessage, 25);
+        float rotation_w = System.BitConverter.ToSingle(packedMessage, 29);
+        byte objectType = packedMessage[33];
 
         Vector3 position = new Vector3(position_x, position_y, position_z);
         Quaternion rotation = new Quaternion(rotation_x, rotation_y, rotation_z, rotation_w);
 
-        CS_CreationRequest unpacked = new CS_CreationRequest(clientID, timeStamp, position, rotation, objectType);
+        CS_CreationRequest unpacked = new CS_CreationRequest(timeStamp, position, rotation, objectType);
 
         return unpacked;
     }

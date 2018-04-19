@@ -105,19 +105,16 @@ public class SC_AllocClientID : NetMsg {
 }
 
 public class CS_CreationRequest : NetMsg {
-    protected int clientID;
     protected byte objectType;
     protected Vector3 position;
     protected Quaternion rotation;
 
-    public int ClientID { get { return clientID; } }
     public byte ObjectType { get { return objectType; } }
     public Vector3 Position { get { return position; } }
     public Quaternion Rotation { get { return rotation; } }
 
-    public CS_CreationRequest(int clientID, float timeStamp, Vector3 position, Quaternion rotation, byte objectType) : base(timeStamp) {
+    public CS_CreationRequest(float timeStamp, Vector3 position, Quaternion rotation, byte objectType) : base(timeStamp) {
         msgType = (byte)MsgType.CS_CreationRequest;
-        this.clientID = clientID;
         this.position = position;
         this.rotation = rotation;
         this.objectType = objectType;

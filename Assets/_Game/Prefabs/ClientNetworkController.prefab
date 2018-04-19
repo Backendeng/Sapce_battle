@@ -52,9 +52,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   serverIP: 127.0.0.1
-  localPlayer: {fileID: 1961017184520670, guid: fd0c917ec5be2f94a81df1bc63c7bbdb,
+  localPlayer: {fileID: 1029491532727718, guid: 9a1d8d6dea35cef44b0c77888039edb5,
     type: 2}
   remotePlayer: {fileID: 1784733856528564, guid: 7f4e651a4e8dab849a7aa5c83d161b4b,
     type: 2}
-  missile: {fileID: 1797507949524058, guid: c19d3c470479d7141b0458168dd57f22, type: 2}
-  astroid: {fileID: 1369977270608104, guid: 13b99159d9700054aa02fcc5d75d623c, type: 2}
+  missile: {fileID: 1617560382120252, guid: 00e22094a06784c48bf967ebb2eda819, type: 2}
+  astroid: {fileID: 1097960939135994, guid: 706d7134dd37d7b41ab35db42c1d356d, type: 2}

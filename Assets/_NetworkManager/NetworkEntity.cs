@@ -22,6 +22,7 @@ public class NetworkEntity : MonoBehaviour {
         Player,
         Missile,
         Astroid,
+        Projectile,
     }
     protected byte objectType;
     public byte ObjectType {
@@ -81,6 +82,7 @@ public class NetworkEntity : MonoBehaviour {
     private void FixedUpdate() {
         if (incomingQueue.Count > 100) {
             Debug.LogWarning("Warning: incomingQueue size > 100 for network entity = " + entityID);
+            incomingQueue.Dequeue();
         }
     }
 
@@ -89,11 +91,11 @@ public class NetworkEntity : MonoBehaviour {
        // Debug.Log("incoming message to NetworkEntity");
     }
 
-    protected void AddSnapshotToHistoryOnClient(SC_MovementData message) {
+    protected void AddSnapshotToHistory(SC_MovementData message) {
 
         History.Add(new StateSnapshot(message.TimeStamp, message.Position, message.Rotation, new Vector3() ));///TODO:pass velocity
 
-        // let's limit thje History size
+        // let's limit the History size
         if (History.Count > historySize) {
             History.RemoveAt(0);
         }
@@ -112,9 +114,7 @@ public class NetworkEntity : MonoBehaviour {
     }
 
     private void OnDestroy() {
-        if (isServer) {
-           
-        }
+
     }
 
 

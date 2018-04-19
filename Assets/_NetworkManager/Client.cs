@@ -29,6 +29,8 @@ public class Client : MonoBehaviour {
     public GameObject remotePlayer;
     public GameObject missile;
     public GameObject astroid;
+    public GameObject projectile;
+
 
     // Use this for initialization
     void Start() {
@@ -70,9 +72,9 @@ public class Client : MonoBehaviour {
             Debug.LogError("SendStateToHost error: " + error.ToString() + " channelID: " + unreliableChannelId);
     }
 
-    public void SendMissileShotToHost(int selfEntityId, Vector3 pos, Quaternion rot) {
-        //create movementMessage/... and send it to server
-        SC_EntityCreated msg = new SC_EntityCreated(-1 , Time.time, pos, rot, clientID, (byte)NetworkEntity.ObjType.Missile);
+    public void SendShotToHost(byte shotObjType, int selfEntityId, Vector3 pos, Quaternion rot, byte shotObjectType) {
+        //SC_EntityCreated msg = new SC_EntityCreated(-1 , Time.time, pos, rot, clientID, shotObjType);
+        CS_CreationRequest msg = new CS_CreationRequest(clientID, NetworkTransport.GetNetworkTimestamp(), pos, rot, shotObjectType);
         byte[] buffer = MessagesHandler.NetMsgPack(msg);
         NetworkTransport.Send(hostId, connectionId, unreliableChannelId, buffer, buffer.Length, out error);
         if (error != 0)
@@ -151,7 +153,7 @@ public class Client : MonoBehaviour {
         SC_EntityCreated createMsg = (SC_EntityCreated)msg;
         int type = createMsg.ObjectType;
         GameObject newObject = null;
-        Debug.Log("Entity Created, ofType: " + type);
+        //Debug.Log("Entity Created, ofType: " + type);
         switch (type) {
             case (byte)NetworkEntity.ObjType.Player:
                 if (clientID == createMsg.ClientID) { 
@@ -167,13 +169,16 @@ public class Client : MonoBehaviour {
             case (byte)NetworkEntity.ObjType.Astroid:
                 newObject = Instantiate(astroid, createMsg.Position, createMsg.Rotation);//astroid
                 break;
+            case (byte)NetworkEntity.ObjType.Projectile:
+                newObject = Instantiate(projectile, createMsg.Position, createMsg.Rotation);
+                break;
         }
         if (newObject != null)
             newObject.GetComponent<NetworkEntity>().EntityID = createMsg.EntityID;
         else
             Debug.LogError("Entity Creation failed, id: " + createMsg.EntityID);
         netEntities.Add(createMsg.EntityID, newObject.GetComponent<NetworkEntity>());
-        Debug.Log("Entity Created, id: " + createMsg.EntityID);
+        //Debug.Log("Entity Created, id: " + createMsg.EntityID);
     }
 
     private void ProccessMovementData(NetMsg msg) {
@@ -183,8 +188,8 @@ public class Client : MonoBehaviour {
         SC_MovementData moveMsg = (SC_MovementData)msg;
         if (netEntities.ContainsKey(moveMsg.EntityID))
             netEntities[moveMsg.EntityID].AddRecMessage(moveMsg);
-        else
-            Debug.Log("ERROR, update for netEntity that does not exist in client with entityId:" + moveMsg.EntityID);
+        //else
+            //Debug.LogWarning("update movement for netEntity that does not exist in client with entityId:" + moveMsg.EntityID);
     }
 
     private void ProccessEntityDestroyed(NetMsg msg) {
@@ -192,10 +197,10 @@ public class Client : MonoBehaviour {
         if (netEntities.ContainsKey(destroyMsg.EntityID)) {
             netEntities[destroyMsg.EntityID].AddRecMessage(destroyMsg);
             netEntities.Remove(destroyMsg.EntityID);
-            Debug.Log("Entity Destroyed, id: " + destroyMsg.EntityID);
+            //Debug.Log("Entity Destroyed, id: " + destroyMsg.EntityID);
         }
         else
             Debug.Log("ERROR, destroy for netEntity that does not exist in client with entityId:" + destroyMsg.EntityID);
     }
 
-    }
+}

@@ -20,9 +20,6 @@ public class RemotePlayerShipServer : PlayerShip {
         NetMsg netMessage = incomingQueue.Dequeue();
     
         switch (netMessage.Type) {
-            case (byte)NetMsg.MsgType.CS_InputData:
-                // Handle Shooting
-                break;
             case (byte)NetMsg.MsgType.SC_MovementData:
                 MoveShipUsingReceivedClientData((SC_MovementData)netMessage);
                 break;

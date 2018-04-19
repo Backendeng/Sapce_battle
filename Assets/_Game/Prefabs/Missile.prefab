@@ -169,7 +169,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: daf7d49bc5b34bf4ba578980b4785b7b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isServer: 0
   speed: 100
   missileExplosion: {fileID: 0}
   timeout: 10
@@ -180,7 +179,7 @@ CapsuleCollider:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1617560382120252}
   m_Material: {fileID: 0}
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_Enabled: 1
   m_Radius: 0.16255414
   m_Height: 0.6188678

@@ -32,7 +32,7 @@ public class RemotePlayerShipClient : PlayerShip {
 
         switch (netMessage.Type) {
             case (byte)NetMsg.MsgType.SC_MovementData:
-		        AddSnapshotToHistoryOnClient((SC_MovementData)netMessage); // for interpolation and extrapolation
+		        AddSnapshotToHistory((SC_MovementData)netMessage); // for interpolation and extrapolation
 		        ReceiveServerStateUpdate();// uses snapshotHistory
 		        break;
 	        case (byte)NetMsg.MsgType.SC_EntityDestroyed:

@@ -15,6 +15,8 @@ public class PlayerShipInput : MonoBehaviour {
     public float mouseStickSensitivity = 0.5f;
 
     public float analogStickSensitivity = 0.5f;
+
+    private int crosshairYOffset = 15;
  
 
     [Range(-1, 1)]
@@ -63,7 +65,7 @@ public class PlayerShipInput : MonoBehaviour {
 
         // set pitch and yaw with mouse position relative to the center of the screen.
         // (0,0) is te center, (-1,-1) is the bottom left, (1,1) is the top right.
-        pitch = (mousePos.y - (Screen.height * 0.5f)) / (Screen.height * 0.5f) * mouseStickSensitivity;
+        pitch = (mousePos.y + crosshairYOffset - (Screen.height * 0.5f)) / (Screen.height * 0.5f) * mouseStickSensitivity;
         yaw = (mousePos.x - (Screen.width * 0.5f)) / (Screen.width * 0.5f) * mouseStickSensitivity;
 
         // make sure the values don't exceed limits.

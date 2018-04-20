@@ -32,6 +32,8 @@ public class LocalPlayerShip : PlayerShip {
         shooting = GetComponent<ShipShootingClient>();
         shooting.Init(clientController, entityID);
 
+        clientID = clientController.ClientID;
+
         playerCamera = GameObject.FindWithTag("MainCamera");
 
     }

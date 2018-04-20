@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+using UnityEngine;
+using UnityEngine.Networking;
 
 public class ShipShootingClient : MonoBehaviour {
 
@@ -48,17 +49,22 @@ public class ShipShootingClient : MonoBehaviour {
     }
 
     private void ShootMissile(Vector3 pos, Quaternion rot) {
-        clientController.SendShotToHost((byte)NetworkEntity.ObjType.Missile, entityID, pos, rot, (byte)NetworkEntity.ObjType.Missile);
+        int netTimeStamp = NetworkTransport.GetNetworkTimestamp();
+        clientController.SendShotToHost((byte)NetworkEntity.ObjType.Missile, pos, rot, (byte)NetworkEntity.ObjType.Missile, netTimeStamp);
         GetComponent<AudioSource>().Play();
     }
 
     private void ShootProjectile(Vector3 pos, Quaternion rot) {
-        GameObject simProjectile = Instantiate(projectile, pos, rot);
-        clientController.SendShotToHost((byte)NetworkEntity.ObjType.Projectile, entityID, pos, rot, (byte)NetworkEntity.ObjType.Projectile);
+        float netTimeStamp = NetworkTransport.GetNetworkTimestamp(); // NetworkTimeStamp is int, but we use float because NetMsg uses float for time stamps.
+        // instantiate a mock projectile to simulate the shooting instantly on the client side
+        GameObject mockProjectile = Instantiate(projectile, pos, rot);
         GetComponent<AudioSource>().Play();
-
-        simProjectile.GetComponent<Projectile>().ClientID = -1; // mark as locally simulated projectile
-
+        // mark as mock projectile (locally simulated untill the real projectile is instantiated)
+        mockProjectile.GetComponent<Projectile>().ClientID = -1;
+        // add to local dict, so mock projectile could be found and destroyed when the real projectile from the server is instantiated.
+        clientController.mockProjectiles.Add((int)netTimeStamp, mockProjectile);
+        // send request to the server for the real thing
+        clientController.SendShotToHost((byte)NetworkEntity.ObjType.Projectile, pos, rot, (byte)NetworkEntity.ObjType.Projectile, (int)netTimeStamp);
     }
 
     private void ShootRay() {

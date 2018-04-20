@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -154,7 +154,7 @@ public class Server : MonoBehaviour {
 
         int entityId;
         GameObject newPlayer = entityManager.CreateEntity(remotePlayer, playerSpawn.position, playerSpawn.rotation, (byte)NetworkEntity.ObjType.Player, out entityId);
-
+        newPlayer.GetComponent<RemotePlayerShipServer>().ClientID = recConnectionId;
         connectedPlayers[recConnectionId] = newPlayer;
 
         //broadcast new entity to all
@@ -189,7 +189,6 @@ public class Server : MonoBehaviour {
                 break;
             case (byte)NetworkEntity.ObjType.Projectile://TODO: mark this obj as originated from clientID
                 newObject = CreateRequestedProjectile(createMsg, clientID, out entityId);
-                //newObject = entityManager.CreateEntity(projectile, createMsg.Position, createMsg.Rotation, (byte)NetworkEntity.ObjType.Projectile, out entityId);
                 break;
             case (byte)NetworkEntity.ObjType.Player:
                 Debug.LogError("Entity Creation failed, client should not request to createa player object ,id: ");
@@ -272,7 +271,7 @@ public class Server : MonoBehaviour {
         byte error;
         int newEntityID = -1;
         float msgDelayTime = (float)NetworkTransport.GetRemoteDelayTimeMS(hostId, clientID, (int)msg.TimeStamp, out error) / 1000;
-        Vector3 position = msg.Position + (msg.Rotation * Vector3.forward * Projectile.speed * msgDelayTime );
+        Vector3 position = msg.Position + (msg.Rotation * Vector3.forward * Projectile.Speed * msgDelayTime );
         //Debug.Log("msg delay time for shot: " + msgDelayTime);
 
         GameObject newObject = entityManager.CreateEntity(projectile, position, msg.Rotation, (byte)NetworkEntity.ObjType.Projectile, out newEntityID);

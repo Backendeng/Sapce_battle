@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +9,7 @@ using UnityEngine;
 
 public abstract class PlayerShip : NetworkEntity
 {
+    protected int clientID = -1;
 
     public bool isPlayer = true;
     protected static PlayerShip activeShip;
@@ -16,10 +17,8 @@ public abstract class PlayerShip : NetworkEntity
     protected PlayerShipInput input;
     protected PlayerShipPhysics physics;
 
-    public static PlayerShip ActiveShip
-    {
-        get { return activeShip; }
-    }
+    public int ClientID { get { return clientID; } set { clientID = value; } }
+    public static PlayerShip ActiveShip { get { return activeShip; } }
     
 
     // Getters for external objects

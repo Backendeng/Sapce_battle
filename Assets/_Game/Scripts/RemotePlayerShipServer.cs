@@ -3,8 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(ShipShootingServer))]
+[RequireComponent(typeof(Target))]
+
 
 public class RemotePlayerShipServer : PlayerShip {
+    
+    private Target target;
     private ShipShootingServer shooting;
     private Vector3 lastReceivedVelocity;
 
@@ -12,6 +16,11 @@ public class RemotePlayerShipServer : PlayerShip {
 
     public new void Start() {
         base.Start();
+
+        Debug.Log("ClientID = " + clientID);
+        // target init
+        target = GetComponent<Target>();
+        //target.Init(serverController, );
     }
 
     private void FixedUpdate() {

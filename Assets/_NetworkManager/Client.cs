@@ -1,4 +1,3 @@
-﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -16,6 +15,8 @@ public class Client : MonoBehaviour {
     int connectionId;
 
     int clientID = -1;
+    public int ClientID { get { return clientID; } }
+
     bool playerAvatarCreated = false;
 
     static int bufferSize = 1024;
@@ -30,6 +31,8 @@ public class Client : MonoBehaviour {
     public GameObject missile;
     public GameObject astroid;
     public GameObject projectile;
+
+    public Dictionary<int, GameObject> mockProjectiles = new Dictionary<int, GameObject>();
 
 
     // Use this for initialization
@@ -72,8 +75,8 @@ public class Client : MonoBehaviour {
             Debug.LogError("SendStateToHost error: " + error.ToString() + " channelID: " + unreliableChannelId);
     }
 
-    public void SendShotToHost(byte shotObjType, int selfEntityId, Vector3 pos, Quaternion rot, byte shotObjectType) {
-        CS_CreationRequest msg = new CS_CreationRequest(NetworkTransport.GetNetworkTimestamp(), pos, rot, shotObjectType);
+    public void SendShotToHost(byte shotObjType, Vector3 pos, Quaternion rot, byte shotObjectType, int networkTimeStamp) {
+        CS_CreationRequest msg = new CS_CreationRequest(networkTimeStamp, pos, rot, shotObjectType);
         byte[] buffer = MessagesHandler.NetMsgPack(msg);
         NetworkTransport.Send(hostId, connectionId, unreliableChannelId, buffer, buffer.Length, out error);
         if (error != 0)
@@ -163,13 +166,13 @@ public class Client : MonoBehaviour {
                 }
                 break;
             case (byte)NetworkEntity.ObjType.Missile:
-                newObject = Instantiate(missile, createMsg.Position, createMsg.Rotation);//missile
+                newObject = Instantiate(missile, createMsg.Position, createMsg.Rotation);
                 break;
             case (byte)NetworkEntity.ObjType.Astroid:
-                newObject = Instantiate(astroid, createMsg.Position, createMsg.Rotation);//astroid
+                newObject = Instantiate(astroid, createMsg.Position, createMsg.Rotation);
                 break;
             case (byte)NetworkEntity.ObjType.Projectile:
-                newObject = Instantiate(projectile, createMsg.Position, createMsg.Rotation);
+                newObject = OnReceivedProjectileCreation(createMsg);
                 break;
         }
         if (newObject != null)
@@ -178,6 +181,24 @@ public class Client : MonoBehaviour {
             Debug.LogError("Entity Creation failed, id: " + createMsg.EntityID);
         netEntities.Add(createMsg.EntityID, newObject.GetComponent<NetworkEntity>());
         //Debug.Log("Entity Created, id: " + createMsg.EntityID);
+    }
+
+    private GameObject OnReceivedProjectileCreation(SC_EntityCreated msg) {
+        GameObject proj = Instantiate(projectile, msg.Position, msg.Rotation);
+        proj.GetComponent<Projectile>().ClientID = msg.ClientID; // mark the owner of the received (syned from server) projectile
+        int key = (int)msg.TimeStamp;
+        if (clientID != msg.ClientID) {
+            return proj;
+        }
+        // the projectile is originated from this client
+        if (!mockProjectiles.ContainsKey(key)) {
+            Debug.LogWarning("mock projectile wasn't found! timestamp = " + key);
+        }
+        else {
+            Destroy(mockProjectiles[key]);
+            mockProjectiles.Remove(key);
+        }
+        return proj;
     }
 
     private void ProccessMovementData(NetMsg msg) {

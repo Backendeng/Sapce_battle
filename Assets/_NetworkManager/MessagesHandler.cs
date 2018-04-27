@@ -75,7 +75,7 @@ public class MessagesHandler {
     }
 
     private static byte[] PackMovementMsg(SC_MovementData message) {
-        byte[] packedMessage = new byte[36 + headerSize];
+        byte[] packedMessage = new byte[48 + headerSize];
         packedMessage[0] = message.Type;
 
         byte[] entityID = System.BitConverter.GetBytes(message.EntityID); // 1
@@ -87,6 +87,10 @@ public class MessagesHandler {
         byte[] rotation_y = System.BitConverter.GetBytes(message.Rotation.y); // 25
         byte[] rotation_z = System.BitConverter.GetBytes(message.Rotation.z); // 29
         byte[] rotation_w = System.BitConverter.GetBytes(message.Rotation.w); // 33
+        byte[] velocity_x = System.BitConverter.GetBytes(message.Velocity.x); // 37
+        byte[] velocity_y = System.BitConverter.GetBytes(message.Velocity.y); // 41
+        byte[] velocity_z = System.BitConverter.GetBytes(message.Velocity.z); // 45
+
 
         System.Buffer.BlockCopy(entityID, 0, packedMessage, 1, 4);
         System.Buffer.BlockCopy(timeStamp, 0, packedMessage, 5, 4);
@@ -97,6 +101,10 @@ public class MessagesHandler {
         System.Buffer.BlockCopy(rotation_y, 0, packedMessage, 25, 4);
         System.Buffer.BlockCopy(rotation_z, 0, packedMessage, 29, 4);
         System.Buffer.BlockCopy(rotation_w, 0, packedMessage, 33, 4);
+        System.Buffer.BlockCopy(velocity_x, 0, packedMessage, 37, 4);
+        System.Buffer.BlockCopy(velocity_y, 0, packedMessage, 41, 4);
+        System.Buffer.BlockCopy(velocity_z, 0, packedMessage, 45, 4);
+
 
         return packedMessage;
     }
@@ -112,11 +120,15 @@ public class MessagesHandler {
         float rotation_y = System.BitConverter.ToSingle(packedMessage, 25);
         float rotation_z = System.BitConverter.ToSingle(packedMessage, 29);
         float rotation_w = System.BitConverter.ToSingle(packedMessage, 33);
+        float velocity_x = System.BitConverter.ToSingle(packedMessage, 37);
+        float velocity_y = System.BitConverter.ToSingle(packedMessage, 41);
+        float velocity_z = System.BitConverter.ToSingle(packedMessage, 45);
 
         Vector3 position = new Vector3(position_x, position_y, position_z);
         Quaternion rotation = new Quaternion(rotation_x, rotation_y, rotation_z, rotation_w);
+        Vector3 velocity = new Vector3(velocity_x, velocity_y, velocity_z);
 
-        SC_MovementData unpacked = new SC_MovementData(entityID, timeStamp, position, rotation);
+        SC_MovementData unpacked = new SC_MovementData(entityID, timeStamp, position, rotation, velocity);
 
         return unpacked;
     }

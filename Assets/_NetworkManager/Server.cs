@@ -7,9 +7,9 @@ using UnityEngine.Networking;
 
 public class Server : MonoBehaviour {
 
-    public float sendRate = 0.05f;
-    private float nextStagingTime;
-
+    //public float sendRate = 0.05f;
+    private int timeStep = 0;
+    public int rate = 2;//2 for 0.06f 
 
     int unreliableChannelId;
     int reliableChannelId;
@@ -38,7 +38,6 @@ public class Server : MonoBehaviour {
     // Use this for initialization
     void Start ()
     {
-        nextStagingTime = Time.time;
         NetworkTransport.Init();
 
         ConnectionConfig config = new ConnectionConfig();
@@ -73,7 +72,7 @@ public class Server : MonoBehaviour {
     }
 
     // Update is called once per frame
-    private void Update ()
+    private void FixedUpdate ()
     {
         Listen();//first listen
         StageAllEntities();// put all entity positions and rotations on queue
@@ -226,12 +225,17 @@ public class Server : MonoBehaviour {
         lastSendTime = Time.time;
     }
 
+    private float lastSend;
     //this is called once every sendRate time and puts the positions of all entities on the queue
     private void StageAllEntities() {
-        if (Time.time < nextStagingTime)
+        if (timeStep < rate) {
+            timeStep++;
             return;
+        }
+        timeStep = 0;
 
-        nextStagingTime = Time.time + sendRate;
+        Debug.Log("send interval: " + (Time.time - lastSend));
+        lastSend = Time.time;
 
         foreach (KeyValuePair<int, NetworkEntity> entity in entityManager.netEntities) {
             if (entity.Value == null) {
@@ -241,7 +245,10 @@ public class Server : MonoBehaviour {
             Vector3 pos = entity.Value.gameObject.GetComponent<Transform>().position;
             Quaternion rot = entity.Value.gameObject.GetComponent<Transform>().rotation;
             float lastRecStateTime = entity.Value.LastReceivedStateTime;
-            SC_MovementData msg = new SC_MovementData(entity.Key, lastRecStateTime, pos, rot);
+     
+            //float lastRecStateTime = Time.time;//confusing var name
+            Vector3 vel = entity.Value.LastReceivedVelocity();
+            SC_MovementData msg = new SC_MovementData(entity.Key, lastRecStateTime, pos, rot, vel);
 
             outgoingUnReliable.Enqueue(msg);
 

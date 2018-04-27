@@ -30,7 +30,7 @@ public abstract class PlayerShip : NetworkEntity
 
     public Vector3 Velocity
     {
-        get { return physics.GetComponent<Rigidbody>().velocity; }
+        get { return physics.Rigidbody.velocity; }
     }
 
     public float Throttle

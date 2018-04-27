@@ -18,6 +18,11 @@ public class NetworkEntity : MonoBehaviour {
     protected float lastReceivedStateTime;
     public float LastReceivedStateTime { get { return lastReceivedStateTime; } }
 
+    protected Vector3 lastReceivedVelocity;
+    public Vector3 LastReceivedVelocity() {
+        return lastReceivedVelocity;
+    }
+
     public enum ObjType : byte {
         Player,
         Missile,
@@ -89,18 +94,13 @@ public class NetworkEntity : MonoBehaviour {
        // Debug.Log("incoming message to NetworkEntity");
     }
 
-    protected void AddSnapshotToHistoryOnClient(SC_MovementData message) {
+    protected void AddSnapshotToHistory(float time , Vector3 position, Quaternion rotation, Vector3 velocity) {
 
-        History.Add(new StateSnapshot(message.TimeStamp, message.Position, message.Rotation, new Vector3() ));///TODO:pass velocity
-
+        History.Add(new StateSnapshot(time, position, rotation, velocity));
         // let's limit thje History size
         if (History.Count > historySize) {
             History.RemoveAt(0);
         }
-    }
-
-    protected StateSnapshot GetLastSnapshotAt(int idx) {
-        return History[idx];
     }
 
     protected int GetHistoryLastIdx() {

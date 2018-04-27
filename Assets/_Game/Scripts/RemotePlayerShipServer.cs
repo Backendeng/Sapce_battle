@@ -6,7 +6,6 @@ using UnityEngine;
 
 public class RemotePlayerShipServer : PlayerShip {
     private ShipShootingServer shooting;
-    private Vector3 lastReceivedVelocity;
 
     public static float LERP_MUL = 1f;
 
@@ -14,7 +13,7 @@ public class RemotePlayerShipServer : PlayerShip {
         base.Start();
     }
 
-    private void FixedUpdate() {
+    private void Update() {
         if (incomingQueue.Count == 0)
             return;
         NetMsg netMessage = incomingQueue.Dequeue();
@@ -36,12 +35,9 @@ public class RemotePlayerShipServer : PlayerShip {
 
     }
 
-    public override Vector3 GetVelocity() {
-        return lastReceivedVelocity;
-    }
-
     private void MoveShipUsingReceivedClientData(SC_MovementData message) {
         lastReceivedStateTime = message.TimeStamp;
+        lastReceivedVelocity = message.Velocity;
         GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
     }
 

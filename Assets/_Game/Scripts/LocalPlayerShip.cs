@@ -4,15 +4,17 @@ using UnityEngine;
 [RequireComponent(typeof(ShipShootingClient))]
 
 public class LocalPlayerShip : PlayerShip {
+    public GameObject interShadowPrefab;
     public GameObject shadowPrefab;
     private Transform shadow;
+    private NetworkEntity InterShadow;
     private ShipShootingClient shooting;
 
     private float lastReturnedInputTime;
     private float latency;
 
     public float sendStateRate = 0.05f;
-    private float nextStateSendTime;
+   
 
     public GameObject playerCamera;
 
@@ -28,6 +30,8 @@ public class LocalPlayerShip : PlayerShip {
 
         if (shadowPrefab != null)
             shadow = Instantiate(shadowPrefab, new Vector3(), new Quaternion()).transform;
+        if (interShadowPrefab != null)
+            InterShadow = Instantiate(interShadowPrefab, new Vector3(), new Quaternion()).GetComponent<NetworkEntity>();
 
         // shooting init
         shooting = GetComponent<ShipShootingClient>();
@@ -38,7 +42,19 @@ public class LocalPlayerShip : PlayerShip {
 
     }
 
+    private void FixedUpdate() {
+       
+        HandleMessagesFromServer();
+
+        // update the server with our position
+        SendStateToServer(transform.position, transform.rotation, Velocity);
+
+        
+    }
+
+
     private void Update() {
+
         // get player input for movement
         Vector3 linearInput = new Vector3(0.0f, 0.0f, input.throttle);
         Vector3 angularInput = new Vector3(input.pitch, input.yaw, input.roll);
@@ -46,23 +62,25 @@ public class LocalPlayerShip : PlayerShip {
         // apply movement physics using player input
         physics.SetPhysicsInput(linearInput, angularInput);
 
-        HandleMessagesFromServer();
-
         // shooting
         shooting.HandleShooting();
 
-        // update the server with our position
-        SendStateToServer(transform.position, transform.rotation);
-
-        
     }
- 
 
-    private void SendStateToServer(Vector3 pos, Quaternion rot) {
-        if (Time.time > nextStateSendTime) {
-            clientController.SendStateToHost(entityID, pos, rot);
-            nextStateSendTime = Time.time + sendStateRate;
+
+    int timeStep = 0;
+    int rate = 2;//2 for 0.06f 
+    private void SendStateToServer(Vector3 pos, Quaternion rot, Vector3 vel) {
+        if (timeStep < rate) {
+            timeStep++;
+            return;
         }
+        timeStep = 0;
+
+        //Debug.Log("DDDD sent " + Time.time);///////////////////
+  
+        clientController.SendStateToHost(entityID, pos, rot, vel);
+ 
     }
 
     private void HandleMessagesFromServer() {
@@ -71,6 +89,7 @@ public class LocalPlayerShip : PlayerShip {
             switch (netMessage.Type) {
                 case (byte)NetMsg.MsgType.SC_MovementData:
                     MoveShadow((SC_MovementData)netMessage);
+                    MoveInterShadow((SC_MovementData)netMessage);
                     break;
                 case (byte)NetMsg.MsgType.SC_EntityDestroyed:
                     Destroy(gameObject);
@@ -89,9 +108,20 @@ public class LocalPlayerShip : PlayerShip {
             shadow.GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
         }
         else {
-            Debug.LogWarning("No shadow prefab connected to LocalPlayerShip");
+          //  Debug.LogWarning("No shadow prefab connected to LocalPlayerShip");
         }
         
+    }
+
+    private void MoveInterShadow(SC_MovementData message) {
+        if (InterShadow != null) {
+            InterShadow.AddRecMessage(message);
+        }
+        else {
+        //    Debug.LogWarning("No InterShadow prefab connected to LocalPlayerShip");
+        }
+
+
     }
 
 }

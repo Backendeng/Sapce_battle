@@ -61,9 +61,9 @@ public class Client : MonoBehaviour {
         Disconnect();
     }
 
-    public void SendStateToHost(int selfEntityId, Vector3 pos, Quaternion rot) {
+    public void SendStateToHost(int selfEntityId, Vector3 pos, Quaternion rot, Vector3 vel) {
         //create movementMessage/... and send it to server
-        SC_MovementData msg = new SC_MovementData(selfEntityId, Time.time, pos, rot);
+        SC_MovementData msg = new SC_MovementData(selfEntityId, Time.time, pos, rot, vel);
         byte[] buffer = MessagesHandler.NetMsgPack(msg);
         NetworkTransport.Send(hostId, connectionId, unreliableChannelId, buffer, buffer.Length, out error);
         if (error != 0)

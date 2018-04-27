@@ -55,14 +55,17 @@ public class SC_EntityDestroyed : NetMsg {
 public class SC_MovementData : NetMsg {
     protected Vector3 position;
     protected Quaternion rotation;
+    protected Vector3 velocity;
 
     public Vector3 Position { get { return position; } }
+    public Vector3 Velocity { get { return velocity; } }
     public Quaternion Rotation { get { return rotation; } }
 
-    public SC_MovementData(int entityID, float timeStamp, Vector3 position, Quaternion rotation) : base(entityID, timeStamp) {
+    public SC_MovementData(int entityID, float timeStamp, Vector3 position, Quaternion rotation, Vector3 velocity) : base(entityID, timeStamp) {
         msgType = (byte)MsgType.SC_MovementData;
         this.position = position;
         this.rotation = rotation;
+        this.velocity = velocity;
     }
 }
 

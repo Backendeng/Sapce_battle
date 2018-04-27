@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -29,6 +29,7 @@ public class Server : MonoBehaviour {
     public GameObject remotePlayer;   // player prefab                  TODO: spawner
     public Transform playerSpawn;     // player spawn location
     public GameObject missile;
+    public GameObject projectile;
 
     EntityManager entityManager;
 
@@ -103,17 +104,16 @@ public class Server : MonoBehaviour {
                      //Debug.Log("incoming message event received from: " + recConnectionId);
                     NetMsg msg = MessagesHandler.NetMsgUnpack(recBuffer);
                     switch (msg.Type) {
-                        case (byte)NetMsg.MsgType.SC_AllocClientID:
-                            ProccessAllocClientID((SC_AllocClientID)msg, recConnectionId);
-                            break;
                         case (byte)NetMsg.MsgType.SC_MovementData:
                             ProccessStateMessage(msg, recConnectionId);
                             break;
-                        case (byte)NetMsg.MsgType.SC_EntityCreated://this is a request from client to create an object
-                            ProccessEntityCreateRequest(msg);
+                        case (byte)NetMsg.MsgType.SC_AllocClientID:
+                            ProccessAllocClientID((SC_AllocClientID)msg, recConnectionId);
+                            break;
+                        case (byte)NetMsg.MsgType.CS_CreationRequest://this is a request from client to create an object
+                            ProccessEntityCreateRequest(msg, recConnectionId);
                             break;
                     }
-
                     break;
                 case NetworkEventType.DisconnectEvent: //4
                     Debug.Log("remote client event disconnected id: " + recConnectionId);
@@ -122,8 +122,6 @@ public class Server : MonoBehaviour {
             } // end of switch case
 
         } while (recData != NetworkEventType.Nothing);
-
-
     }
 
     private void ProccessConnectionRequest(int recConnectionId) {
@@ -155,7 +153,7 @@ public class Server : MonoBehaviour {
 
         int entityId;
         GameObject newPlayer = entityManager.CreateEntity(remotePlayer, playerSpawn.position, playerSpawn.rotation, (byte)NetworkEntity.ObjType.Player, out entityId);
-
+        newPlayer.GetComponent<RemotePlayerShipServer>().ClientID = recConnectionId;
         connectedPlayers[recConnectionId] = newPlayer;
 
         //broadcast new entity to all
@@ -177,30 +175,30 @@ public class Server : MonoBehaviour {
         entityManager.RemoveEntity(entityIdToDestroy);
     }
 
-    // when a client wants to create an obj he sends SC_EntityCreated to the server and the server creates it and then distributes the new object
-    private void ProccessEntityCreateRequest(NetMsg msg) {
-        SC_EntityCreated createMsg = (SC_EntityCreated)msg;
-        Debug.Log("Object creation request received: objType: " + createMsg.ObjectType + " from " + createMsg.ClientID);
-
-        byte type = createMsg.ObjectType;
+    // when a client wants to create an obj he sends CS_CreationRequest to the server and the server creates it and then distributes the new object
+    private void ProccessEntityCreateRequest(NetMsg msg, int clientID) {
+        CS_CreationRequest createMsg = (CS_CreationRequest)msg;
+        //Debug.Log("Object creation request received: objType: " + createMsg.ObjectType + " from " + createMsg.ClientID);
+        byte objectType = createMsg.ObjectType;
         GameObject newObject = null;
         int entityId = -1;
-        switch (type) {
-              case (byte)NetworkEntity.ObjType.Player:
-                  Debug.LogError("Entity Creation failed, client should not request to createa player object ,id: ");
-                  break;
-              case (byte)NetworkEntity.ObjType.Missile://TODO: mark this obj as originated from clientID
-                  newObject = entityManager.CreateEntity(missile, createMsg.Position, createMsg.Rotation, (byte)NetworkEntity.ObjType.Missile, out entityId);
-                  break;
-         }
-
-        if (newObject == null)
+        switch (objectType) {
+            case (byte)NetworkEntity.ObjType.Missile://TODO: mark this obj as originated from clientID
+                newObject = entityManager.CreateEntity(missile, createMsg.Position, createMsg.Rotation, (byte)NetworkEntity.ObjType.Missile, out entityId);
+                break;
+            case (byte)NetworkEntity.ObjType.Projectile://TODO: mark this obj as originated from clientID
+                newObject = CreateRequestedProjectile(createMsg, clientID, out entityId);
+                break;
+            case (byte)NetworkEntity.ObjType.Player:
+                Debug.LogError("Entity Creation failed, client should not request to createa player object ,id: ");
+                break;
+        }
+        if (newObject == null || entityId == -1)
             Debug.LogError("Entity Creation failed");
 
-        SC_EntityCreated mssg = new SC_EntityCreated(entityId, createMsg.TimeStamp, createMsg.Position, createMsg.Rotation, -1 ,type);
+        SC_EntityCreated mssg = new SC_EntityCreated(entityId, createMsg.TimeStamp, createMsg.Position, createMsg.Rotation, clientID, objectType);
         outgoingReliable.Enqueue(mssg);
-
-        Debug.Log("Entity Created, id: " + entityId);
+        //Debug.Log("Entity Created, id: " + entityId);
     }
 
     private void BroadcastAllMessages(Queue<NetMsg> queue, int channelId) {
@@ -268,5 +266,31 @@ public class Server : MonoBehaviour {
         }
     }
 
+    public void DestroyEntity(int entityID) {
+        //Debug.Log("destroying entity id = " + entityID);
+        SC_EntityDestroyed destroyMsg = new SC_EntityDestroyed(entityID, Time.time);
+        outgoingReliable.Enqueue(destroyMsg); //send destroy to all 
+        entityManager.netEntities[entityID].AddRecMessage(destroyMsg); //destroy on server
+        entityManager.RemoveEntity(entityID);
+    }
+
+    private GameObject CreateRequestedProjectile(CS_CreationRequest msg, int clientID, out int entityID) {
+        byte error;
+        int newEntityID = -1;
+        float msgDelayTime = (float)NetworkTransport.GetRemoteDelayTimeMS(hostId, clientID, (int)msg.TimeStamp, out error) / 1000;
+        Vector3 position = msg.Position + (msg.Rotation * Vector3.forward * Projectile.Speed * msgDelayTime );
+        //Debug.Log("msg delay time for shot: " + msgDelayTime);
+
+        GameObject newObject = entityManager.CreateEntity(projectile, position, msg.Rotation, (byte)NetworkEntity.ObjType.Projectile, out newEntityID);
+        if (newEntityID == -1) {
+            entityID = -1;
+            return null;
+        }
+        entityID = newEntityID;
+        entityManager.netEntities[entityID].GetComponent<Projectile>().ClientID = clientID; // mark the owner of this projectile
+        return newObject;
+    }
+
 }
 
+ 

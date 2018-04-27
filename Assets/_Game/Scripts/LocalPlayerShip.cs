@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 [RequireComponent(typeof(ShipShootingClient))]
 
@@ -15,8 +14,6 @@ public class LocalPlayerShip : PlayerShip {
 
     public float sendStateRate = 0.05f;
    
-
-    public GameObject playerCamera;
 
     private new void Awake() {
         base.Awake();
@@ -37,8 +34,7 @@ public class LocalPlayerShip : PlayerShip {
         shooting = GetComponent<ShipShootingClient>();
         shooting.Init(clientController, entityID);
 
-        //nextStateSendTime = Time.time;
-        playerCamera = GameObject.FindWithTag("MainCamera");
+        clientID = clientController.ClientID;
 
     }
 

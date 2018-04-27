@@ -13,18 +13,27 @@ public class MessagesHandler {
 
         switch (message.Type) {
             case (byte)NetMsg.MsgType.SC_EntityCreated:
-                jsonMsg = JsonConvert.SerializeObject( (SC_EntityCreated)message );
-                break;
+                //jsonMsg = JsonConvert.SerializeObject((SC_EntityCreated)message);
+                bytesMessage = PackEntityCreatedMsg((SC_EntityCreated)message);
+                return bytesMessage;
+                //break;
             case (byte)NetMsg.MsgType.SC_EntityDestroyed:
-                jsonMsg = JsonConvert.SerializeObject( (SC_EntityDestroyed)message );
-                break;
+                //jsonMsg = JsonConvert.SerializeObject((SC_EntityDestroyed)message);
+                bytesMessage = PackEntityDestroyedMsg((SC_EntityDestroyed)message);
+                return bytesMessage;
+                //break;
             case (byte)NetMsg.MsgType.SC_MovementData:
                 //jsonMsg = JsonConvert.SerializeObject( (SC_MovementData)message );
                 bytesMessage = PackMovementMsg((SC_MovementData)message);
                 return bytesMessage;
-                //break;
+            //break;
+            case (byte)NetMsg.MsgType.CS_CreationRequest:
+                //jsonMsg = JsonConvert.SerializeObject( (CS_ShootMsg)message );
+                bytesMessage = PackCreationRequestMsg((CS_CreationRequest)message);
+                return bytesMessage;
+            //break;
             case (byte)NetMsg.MsgType.CS_InputData:
-                jsonMsg = JsonConvert.SerializeObject( (CS_InputData)message );
+                jsonMsg = JsonConvert.SerializeObject((CS_InputData)message);
                 break;
             case (byte)NetMsg.MsgType.SC_AllocClientID:
                 jsonMsg = JsonConvert.SerializeObject((SC_AllocClientID)message);
@@ -47,18 +56,24 @@ public class MessagesHandler {
         byte[] bytesMessage = packedMessage.Skip(headerSize).ToArray();
 
         string jsonMsg = System.Text.ASCIIEncoding.ASCII.GetString(bytesMessage);
-        
+
         byte msgType = packedMessage[0];
         switch (msgType) {
             case (byte)NetMsg.MsgType.SC_EntityCreated:
-                unpackedMessage = JsonConvert.DeserializeObject<SC_EntityCreated>(jsonMsg);
+                //unpackedMessage = JsonConvert.DeserializeObject<SC_EntityCreated>(jsonMsg);
+                unpackedMessage = UnpackEntityCreatedMsg(packedMessage);
                 break;
             case (byte)NetMsg.MsgType.SC_EntityDestroyed:
-                unpackedMessage = JsonConvert.DeserializeObject<SC_EntityDestroyed>(jsonMsg);
+                //unpackedMessage = JsonConvert.DeserializeObject<SC_EntityDestroyed>(jsonMsg);
+                unpackedMessage = UnpackEntityDestroyedMsg(packedMessage);
                 break;
             case (byte)NetMsg.MsgType.SC_MovementData:
                 //unpackedMessage = JsonConvert.DeserializeObject<SC_MovementData>(jsonMsg);
                 unpackedMessage = UnpackMovementMsg(packedMessage);
+                break;
+            case (byte)NetMsg.MsgType.CS_CreationRequest:
+                //unpackedMessage = JsonConvert.DeserializeObject<CS_ShootMsg>(jsonMsg);
+                unpackedMessage = UnpackCreationRequestMsg(packedMessage);
                 break;
             case (byte)NetMsg.MsgType.CS_InputData:
                 unpackedMessage = JsonConvert.DeserializeObject<CS_InputData>(jsonMsg);
@@ -132,5 +147,127 @@ public class MessagesHandler {
 
         return unpacked;
     }
-}
 
+    private static byte[] PackCreationRequestMsg(CS_CreationRequest message) {
+        byte[] packedMessage = new byte[33 + headerSize];
+        packedMessage[0] = message.Type;
+
+        byte[] timeStamp = System.BitConverter.GetBytes(message.TimeStamp); // 1
+        byte[] position_x = System.BitConverter.GetBytes(message.Position.x); // 5
+        byte[] position_y = System.BitConverter.GetBytes(message.Position.y); // 9
+        byte[] position_z = System.BitConverter.GetBytes(message.Position.z); // 13
+        byte[] rotation_x = System.BitConverter.GetBytes(message.Rotation.x); // 17
+        byte[] rotation_y = System.BitConverter.GetBytes(message.Rotation.y); // 21
+        byte[] rotation_z = System.BitConverter.GetBytes(message.Rotation.z); // 25
+        byte[] rotation_w = System.BitConverter.GetBytes(message.Rotation.w); // 29
+        // object type is a byte so no need to use GetBytes                   // 33
+
+        System.Buffer.BlockCopy(timeStamp, 0, packedMessage, 1, 4);
+        System.Buffer.BlockCopy(position_x, 0, packedMessage, 5, 4);
+        System.Buffer.BlockCopy(position_y, 0, packedMessage, 9, 4);
+        System.Buffer.BlockCopy(position_z, 0, packedMessage, 13, 4);
+        System.Buffer.BlockCopy(rotation_x, 0, packedMessage, 17, 4);
+        System.Buffer.BlockCopy(rotation_y, 0, packedMessage, 21, 4);
+        System.Buffer.BlockCopy(rotation_z, 0, packedMessage, 25, 4);
+        System.Buffer.BlockCopy(rotation_w, 0, packedMessage, 29, 4);
+        packedMessage[33] = message.ObjectType;
+        return packedMessage;
+    }
+
+    private static CS_CreationRequest UnpackCreationRequestMsg(byte[] packedMessage) {
+
+        float timeStamp = System.BitConverter.ToSingle(packedMessage, 1);
+        float position_x = System.BitConverter.ToSingle(packedMessage, 5);
+        float position_y = System.BitConverter.ToSingle(packedMessage, 9);
+        float position_z = System.BitConverter.ToSingle(packedMessage, 13);
+        float rotation_x = System.BitConverter.ToSingle(packedMessage, 17);
+        float rotation_y = System.BitConverter.ToSingle(packedMessage, 21);
+        float rotation_z = System.BitConverter.ToSingle(packedMessage, 25);
+        float rotation_w = System.BitConverter.ToSingle(packedMessage, 29);
+        byte objectType = packedMessage[33];
+
+        Vector3 position = new Vector3(position_x, position_y, position_z);
+        Quaternion rotation = new Quaternion(rotation_x, rotation_y, rotation_z, rotation_w);
+
+        CS_CreationRequest unpacked = new CS_CreationRequest(timeStamp, position, rotation, objectType);
+
+        return unpacked;
+    }
+
+    private static byte[] PackEntityCreatedMsg(SC_EntityCreated message) {
+        byte[] packedMessage = new byte[41 + headerSize];
+        packedMessage[0] = message.Type;
+
+        byte[] timeStamp = System.BitConverter.GetBytes(message.TimeStamp);   // 1
+        byte[] position_x = System.BitConverter.GetBytes(message.Position.x); // 5
+        byte[] position_y = System.BitConverter.GetBytes(message.Position.y); // 9
+        byte[] position_z = System.BitConverter.GetBytes(message.Position.z); // 13
+        byte[] rotation_x = System.BitConverter.GetBytes(message.Rotation.x); // 17
+        byte[] rotation_y = System.BitConverter.GetBytes(message.Rotation.y); // 21
+        byte[] rotation_z = System.BitConverter.GetBytes(message.Rotation.z); // 25
+        byte[] rotation_w = System.BitConverter.GetBytes(message.Rotation.w); // 29
+        // object type is a byte so no need to use GetBytes                   // 33
+        byte[] entityID = System.BitConverter.GetBytes(message.EntityID);     // 34
+        byte[] clientID = System.BitConverter.GetBytes(message.ClientID);     // 38
+
+        System.Buffer.BlockCopy(timeStamp, 0, packedMessage, 1, 4);
+        System.Buffer.BlockCopy(position_x, 0, packedMessage, 5, 4);
+        System.Buffer.BlockCopy(position_y, 0, packedMessage, 9, 4);
+        System.Buffer.BlockCopy(position_z, 0, packedMessage, 13, 4);
+        System.Buffer.BlockCopy(rotation_x, 0, packedMessage, 17, 4);
+        System.Buffer.BlockCopy(rotation_y, 0, packedMessage, 21, 4);
+        System.Buffer.BlockCopy(rotation_z, 0, packedMessage, 25, 4);
+        System.Buffer.BlockCopy(rotation_w, 0, packedMessage, 29, 4);
+        packedMessage[33] = message.ObjectType;
+        System.Buffer.BlockCopy(entityID, 0, packedMessage, 34, 4);
+        System.Buffer.BlockCopy(clientID, 0, packedMessage, 38, 4);
+
+        return packedMessage;
+    }
+
+    private static SC_EntityCreated UnpackEntityCreatedMsg(byte[] packedMessage) {
+
+        float timeStamp = System.BitConverter.ToSingle(packedMessage, 1);
+        float position_x = System.BitConverter.ToSingle(packedMessage, 5);
+        float position_y = System.BitConverter.ToSingle(packedMessage, 9);
+        float position_z = System.BitConverter.ToSingle(packedMessage, 13);
+        float rotation_x = System.BitConverter.ToSingle(packedMessage, 17);
+        float rotation_y = System.BitConverter.ToSingle(packedMessage, 21);
+        float rotation_z = System.BitConverter.ToSingle(packedMessage, 25);
+        float rotation_w = System.BitConverter.ToSingle(packedMessage, 29);
+        byte objectType = packedMessage[33];
+        int entityID = System.BitConverter.ToInt32(packedMessage, 34);
+        int clientID = System.BitConverter.ToInt32(packedMessage, 38);
+
+
+        Vector3 position = new Vector3(position_x, position_y, position_z);
+        Quaternion rotation = new Quaternion(rotation_x, rotation_y, rotation_z, rotation_w);
+
+        SC_EntityCreated unpacked = new SC_EntityCreated(entityID, timeStamp, position, rotation, clientID, objectType);
+
+        return unpacked;
+    }
+
+    private static byte[] PackEntityDestroyedMsg(SC_EntityDestroyed message) {
+        byte[] packedMessage = new byte[8 + headerSize];
+        packedMessage[0] = message.Type;
+
+        byte[] timeStamp = System.BitConverter.GetBytes(message.TimeStamp);   // 1
+        byte[] entityID = System.BitConverter.GetBytes(message.EntityID);     // 5
+
+        System.Buffer.BlockCopy(timeStamp, 0, packedMessage, 1, 4);
+        System.Buffer.BlockCopy(entityID, 0, packedMessage, 5, 4);
+
+        return packedMessage;
+    }
+
+    private static SC_EntityDestroyed UnpackEntityDestroyedMsg(byte[] packedMessage) {
+
+        float timeStamp = System.BitConverter.ToSingle(packedMessage, 1);
+        int entityID = System.BitConverter.ToInt32(packedMessage, 5);
+
+        SC_EntityDestroyed unpacked = new SC_EntityDestroyed(entityID, timeStamp);
+
+        return unpacked;
+    }
+}

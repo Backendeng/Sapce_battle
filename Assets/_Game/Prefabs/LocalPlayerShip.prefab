@@ -30,7 +30,7 @@ GameObject:
   - component: {fileID: 114979618246227964}
   m_Layer: 0
   m_Name: LocalPlayerShip
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -94,7 +94,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1363731338559834}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0, y: 9.25, z: -24.6}
+  m_LocalPosition: {x: -0, y: 8, z: -24.6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4242462948963026}
@@ -192,7 +192,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
-  - {fileID: 2100000, guid: 2559a45426cef5f438998ad7b52a539b, type: 3}
+  - {fileID: 2100000, guid: 7d5a8b40452506d4ea84d128e13c95ed, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -270,12 +270,12 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: edcf47efb7252e14e914f09ddc54f08c, type: 3}
+  m_audioClip: {fileID: 8300000, guid: ee3d7384d472f0f4eb7d7e298c5b452b, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 0
-  Mute: 1
+  Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
   Priority: 128
@@ -328,7 +328,7 @@ AudioSource:
       tangentMode: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
-    m_RotationOrder: 4
+    m_RotationOrder: 0
   reverbZoneMixCustomCurve:
     serializedVersion: 2
     m_Curve:
@@ -494,8 +494,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0e75534b33ac724797c76912d257e55, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isServer: 0
   isPlayer: 1
+  ShipExplosion: {fileID: 1283523661780226, guid: 17bbd929a091d5f48b2dad85d116f09d,
+    type: 2}
   shadowPrefab: {fileID: 1035905612510652, guid: cde7cf1ba9aff3c46aac44d55dc375c6,
     type: 2}
   sendStateRate: 0.05
@@ -511,13 +512,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e3fb31348c29f44bb243a56ce50034e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fireRate1: 0.05
-  fireRate2: 0.5
+  projectile: {fileID: 1534447118424718, guid: b68b27d7befff9341bb23f1f857aa22b, type: 2}
   missile: {fileID: 1617560382120252, guid: 00e22094a06784c48bf967ebb2eda819, type: 2}
   shotSpawn: {fileID: 4819910390893156}
   phaser: {fileID: 1071026651207802, guid: 962533cfa954b6f438ea5f699b34a08d, type: 2}
   phaserSparks: {fileID: 198528964919303818, guid: 962533cfa954b6f438ea5f699b34a08d,
     type: 2}
+  projectileClip: {fileID: 8300000, guid: ee3d7384d472f0f4eb7d7e298c5b452b, type: 3}
 --- !u!124 &124033453847721428
 Behaviour:
   m_ObjectHideFlags: 1

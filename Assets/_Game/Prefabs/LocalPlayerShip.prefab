@@ -270,12 +270,12 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: edcf47efb7252e14e914f09ddc54f08c, type: 3}
+  m_audioClip: {fileID: 8300000, guid: ee3d7384d472f0f4eb7d7e298c5b452b, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 0
-  Mute: 1
+  Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
   Priority: 128
@@ -328,7 +328,7 @@ AudioSource:
       tangentMode: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
-    m_RotationOrder: 4
+    m_RotationOrder: 0
   reverbZoneMixCustomCurve:
     serializedVersion: 2
     m_Curve:
@@ -495,6 +495,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isPlayer: 1
+  ShipExplosion: {fileID: 1283523661780226, guid: 17bbd929a091d5f48b2dad85d116f09d,
+    type: 2}
   shadowPrefab: {fileID: 1035905612510652, guid: cde7cf1ba9aff3c46aac44d55dc375c6,
     type: 2}
   sendStateRate: 0.05
@@ -516,6 +518,7 @@ MonoBehaviour:
   phaser: {fileID: 1071026651207802, guid: 962533cfa954b6f438ea5f699b34a08d, type: 2}
   phaserSparks: {fileID: 198528964919303818, guid: 962533cfa954b6f438ea5f699b34a08d,
     type: 2}
+  projectileClip: {fileID: 8300000, guid: ee3d7384d472f0f4eb7d7e298c5b452b, type: 3}
 --- !u!124 &124033453847721428
 Behaviour:
   m_ObjectHideFlags: 1

@@ -13,8 +13,6 @@ public class LocalPlayerShip : PlayerShip {
     public float sendStateRate = 0.05f;
     private float nextStateSendTime;
 
-    public GameObject playerCamera;
-
     private new void Awake() {
         base.Awake();
     }
@@ -33,8 +31,6 @@ public class LocalPlayerShip : PlayerShip {
         shooting.Init(clientController, entityID);
 
         clientID = clientController.ClientID;
-
-        playerCamera = GameObject.FindWithTag("MainCamera");
 
     }
 

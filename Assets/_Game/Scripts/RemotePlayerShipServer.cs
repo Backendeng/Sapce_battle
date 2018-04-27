@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,29 +17,15 @@ public class RemotePlayerShipServer : PlayerShip {
     public new void Start() {
         base.Start();
 
-        Debug.Log("ClientID = " + clientID);
         // target init
         target = GetComponent<Target>();
-        //target.Init(serverController, );
+        target.Init(serverController, clientID); // clientID is assigned in Server script @ ProccessAllocClientID
     }
 
     private void FixedUpdate() {
-        if (incomingQueue.Count == 0)
-            return;
-        NetMsg netMessage = incomingQueue.Dequeue();
-    
-        switch (netMessage.Type) {
-            case (byte)NetMsg.MsgType.SC_MovementData:
-                MoveShipUsingReceivedClientData((SC_MovementData)netMessage);
-                break;
-            case (byte)NetMsg.MsgType.SC_EntityDestroyed:
-                Destroy(gameObject);
-                break;
-            default:
-                Debug.Log("ERROR! RemotePlayerShip on Server reveived an invalid NetMsg message. NetMsg Type: " + netMessage.Type);
-                break;
-        }
+        HandleIncomingMessages();
 
+        UpdateGameData();
     }
 
     public override Vector3 GetVelocity() {
@@ -51,6 +37,30 @@ public class RemotePlayerShipServer : PlayerShip {
         GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
     }
 
+    private void HandleIncomingMessages() {
+        if (incomingQueue.Count == 0) {
+            return;
+        }
+ 
+        NetMsg netMessage = incomingQueue.Dequeue();
+
+        switch (netMessage.Type) {
+            case (byte)NetMsg.MsgType.SC_MovementData:
+                MoveShipUsingReceivedClientData((SC_MovementData)netMessage);
+                break;
+            case (byte)NetMsg.MsgType.SC_EntityDestroyed:
+                Destroy(gameObject);
+                break;
+            default:
+                Debug.Log("ERROR! RemotePlayerShip on Server reveived an invalid NetMsg message. NetMsg Type: " + netMessage.Type);
+                break;
+        }
+    }
+
+    private void UpdateGameData() {
+        
+
+    }
 
 }
 

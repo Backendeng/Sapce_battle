@@ -360,7 +360,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e3fb31348c29f44bb243a56ce50034e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  projectile: {fileID: 0}
+  projectile: {fileID: 1534447118424718, guid: b68b27d7befff9341bb23f1f857aa22b, type: 2}
   missile: {fileID: 1617560382120252, guid: 00e22094a06784c48bf967ebb2eda819, type: 2}
   shotSpawn: {fileID: 4054036195850054}
   phaser: {fileID: 1071026651207802, guid: 962533cfa954b6f438ea5f699b34a08d, type: 2}
@@ -378,6 +378,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isPlayer: 1
+  ShipExplosion: {fileID: 1283523661780226, guid: 17bbd929a091d5f48b2dad85d116f09d,
+    type: 2}
   doLerp: 1
 --- !u!114 &114490480028287398
 MonoBehaviour:

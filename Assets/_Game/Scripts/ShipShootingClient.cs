@@ -21,11 +21,16 @@ public class ShipShootingClient : MonoBehaviour {
     protected Client clientController;
     protected int entityID;
 
+    private AudioSource projectileSound;
+    public AudioClip projectileClip;
+
     private void Awake() {
 
         //missile = Resources.Load<GameObject>("Prefabs/Missile");
         //phaser = Resources.Load<GameObject>("Prefabs/Phaser");
         ship = GetComponent<LocalPlayerShip>();
+        projectileSound = GetComponent<AudioSource>();
+        projectileSound.clip = projectileClip;
     }
 
     public void Init(Client clientController, int entityID) {
@@ -58,7 +63,8 @@ public class ShipShootingClient : MonoBehaviour {
         float netTimeStamp = NetworkTransport.GetNetworkTimestamp(); // NetworkTimeStamp is int, but we use float because NetMsg uses float for time stamps.
         // instantiate a mock projectile to simulate the shooting instantly on the client side
         GameObject mockProjectile = Instantiate(projectile, pos, rot);
-        GetComponent<AudioSource>().Play();
+        projectileSound.Play();
+        //GetComponent<AudioSource>().Play();
         // mark as mock projectile (locally simulated untill the real projectile is instantiated)
         mockProjectile.GetComponent<Projectile>().ClientID = -1;
         // add to local dict, so mock projectile could be found and destroyed when the real projectile from the server is instantiated.
@@ -68,6 +74,7 @@ public class ShipShootingClient : MonoBehaviour {
     }
 
     private void ShootRay() {
+        /*
         RaycastHit hit;
         //GetComponent<LineRenderer>().enabled = true;
         GameObject phaser1 = Instantiate(phaser, shotSpawn);
@@ -75,6 +82,7 @@ public class ShipShootingClient : MonoBehaviour {
 
             Debug.Log("Hit: " + hit.transform.name);
         }
+        */
     }
 
 

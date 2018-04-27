@@ -19,7 +19,9 @@ public abstract class PlayerShip : NetworkEntity
 
     public int ClientID { get { return clientID; } set { clientID = value; } }
     public static PlayerShip ActiveShip { get { return activeShip; } }
-    
+
+    public GameObject ShipExplosion;
+
 
     // Getters for external objects
     public bool UsingMouseInput

@@ -387,6 +387,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isPlayer: 0
+  ShipExplosion: {fileID: 1283523661780226, guid: 17bbd929a091d5f48b2dad85d116f09d,
+    type: 2}
 --- !u!114 &114912840389327646
 MonoBehaviour:
   m_ObjectHideFlags: 1

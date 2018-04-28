@@ -2,7 +2,7 @@
 using UnityEngine;
 
 public class Missile : NetworkEntity {
-    public float speed;
+    public float speed = 100f;
     public GameObject missileExplosion;
     public float timeout = 5.0f;
     public static float LERP_MUL = 3f;

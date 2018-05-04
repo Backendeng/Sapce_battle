@@ -7,16 +7,31 @@ public class Missile : NetworkEntity {
     public float timeout = 5.0f;
     public static float LERP_MUL = 3f;
 
+    private Rigidbody rigid_body;
+
+    private int clientID = 0; // owner
+    public int ClientID { get { return clientID; } set { clientID = value; } }
+
+    private Transform target;
+	public Transform Target {
+		set { target = value; }
+	}
+
     public new void Start() {
         base.Start();
         if (isServer) {
-            GetComponent<Rigidbody>().velocity = transform.forward * speed;
+            rigid_body = GetComponent<Rigidbody>();
+            if (target == null)
+            	GetComponent<Rigidbody>().velocity = transform.forward * speed;
         }
     }
 
     private void Update() {
-        if (isServer)
+		if (isServer) {
+            transform.LookAt(target);
+            rigid_body.AddRelativeForce(Vector3.forward * speed, ForceMode.Force);
             return;
+		}
         if (incomingQueue.Count == 0)
             return;
         NetMsg netMessage = incomingQueue.Dequeue();

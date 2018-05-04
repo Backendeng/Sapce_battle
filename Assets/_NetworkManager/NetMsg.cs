@@ -16,6 +16,7 @@ public abstract class NetMsg {
         SC_AllocClientID, 
         CS_InputData,
         CS_CreationRequest,
+		CS_MissileRequest,
     }
 
     public NetMsg(float timeStamp) {
@@ -106,7 +107,7 @@ public class SC_AllocClientID : NetMsg {
         msgType = (byte)MsgType.SC_AllocClientID;
     }
 }
-
+//chsnge name to request Shot
 public class CS_CreationRequest : NetMsg {
     protected byte objectType;
     protected Vector3 position;
@@ -124,4 +125,19 @@ public class CS_CreationRequest : NetMsg {
     }
 }
 
+public class CS_MissileRequest : NetMsg {
+	protected int targetId;
+	protected Vector3 position;
+	protected Quaternion rotation;
 
+	public int TargetId { get { return targetId; } }
+	public Vector3 Position { get { return position; } }
+	public Quaternion Rotation { get { return rotation; } }
+
+	public CS_MissileRequest(float timeStamp, Vector3 position, Quaternion rotation, int targetId) : base(timeStamp) {
+		msgType = (byte)MsgType.CS_MissileRequest;
+		this.position = position;
+		this.rotation = rotation;
+		this.targetId = targetId;
+	}
+}

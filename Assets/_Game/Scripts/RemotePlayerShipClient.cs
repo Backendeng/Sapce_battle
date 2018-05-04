@@ -95,7 +95,7 @@ public class RemotePlayerShipClient : PlayerShip {
         lastUpdateTimestamp = msg.TimeStamp;
 
     }
-    /// observed desync from interDelay: when one packet is delayed, seems to delay all the queue
+   
     private void GetNextInterpolationParameters() {
        
         StateSnapshot updateA = serverUpdates[(currPtr + 1) % buffSize];
@@ -103,7 +103,7 @@ public class RemotePlayerShipClient : PlayerShip {
         StateSnapshot updateB = serverUpdates[nextPtr];
 
 
-        ///IMPORTENT: localy when not extrapolating we get good sync, catching up may skew it but the stall seems to resync it.
+        ///IMPORTENT: localy when not extrapolating we get good sync, catching up may skew it but the stall seems to resync it.(sometimes)
         ///// also we stall mainly when we wait a long time to get recs, which is probably normal. + after catching up
         //// strangly enough we get wait more for new updates when shooting etc...
         /// maybe we need a mechanisem that takes into consideration the avg wait time or new updates?
@@ -129,7 +129,7 @@ public class RemotePlayerShipClient : PlayerShip {
                // Debug.Log("Catching up to interp delay " + (lastUpdateTimestamp - updateA.time)+" from "+ updateA.time + " debug " + interpolationDelay + " " + (Time.fixedDeltaTime / 2));
                 GetNextInterpolationParameters();
                 return;/// posibly we need to allow for a small gap before catching up. sometimes 1 pack arrives early and there is no need to catch up
-            }//we need to keep some sort of stats that help us decide when to do this,(and extrapolate sometimes?) and not like this
+            }//==> we need to keep some sort of stats that help us decide when to do this,(and extrapolate sometimes?) and not like this
         }
 
         lerpDeltaTime = updateB.time - updateA.time;/// NUL REF EXP

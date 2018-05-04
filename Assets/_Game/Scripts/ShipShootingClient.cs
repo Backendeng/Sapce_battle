@@ -17,7 +17,7 @@ public class ShipShootingClient : MonoBehaviour {
     public ParticleSystem phaserSparks;
     float rayRange = 500f;
 
-    LocalPlayerShip ship;
+   // LocalPlayerShip ship;
     protected Client clientController;
     protected int entityID;
 
@@ -28,7 +28,7 @@ public class ShipShootingClient : MonoBehaviour {
 
         //missile = Resources.Load<GameObject>("Prefabs/Missile");
         //phaser = Resources.Load<GameObject>("Prefabs/Phaser");
-        ship = GetComponent<LocalPlayerShip>();
+        //ship = GetComponent<LocalPlayerShip>();
         projectileSound = GetComponent<AudioSource>();
         projectileSound.clip = projectileClip;
     }
@@ -55,7 +55,7 @@ public class ShipShootingClient : MonoBehaviour {
 
     private void ShootMissile(Vector3 pos, Quaternion rot) {
         int netTimeStamp = NetworkTransport.GetNetworkTimestamp();
-        clientController.SendShotToHost((byte)NetworkEntity.ObjType.Missile, pos, rot, (byte)NetworkEntity.ObjType.Missile, netTimeStamp);
+		clientController.SendMissileToHost((byte)NetworkEntity.ObjType.Missile, pos, rot, 5, netTimeStamp);///// target is static for now (5)
         GetComponent<AudioSource>().Play();
     }
 
@@ -74,11 +74,11 @@ public class ShipShootingClient : MonoBehaviour {
     }
 
     private void ShootRay() {
-        /*
-        RaycastHit hit;
+        
+       // RaycastHit hit;
         //GetComponent<LineRenderer>().enabled = true;
-        GameObject phaser1 = Instantiate(phaser, shotSpawn);
-        if (Physics.Raycast(shotSpawn.position, ship.playerCamera.transform.forward, out hit, rayRange)) {
+      //  GameObject phaser1 = Instantiate(phaser, shotSpawn);
+    /*    if (Physics.Raycast(shotSpawn.position, ship.playerCamera.transform.forward, out hit, rayRange)) {
 
             Debug.Log("Hit: " + hit.transform.name);
         }

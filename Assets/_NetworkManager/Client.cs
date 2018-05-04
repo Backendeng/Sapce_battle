@@ -77,6 +77,7 @@ public class Client : MonoBehaviour {
         Logger.Log(Time.time, Time.realtimeSinceStartup, selfEntityId, "sendState", Time.fixedTime.ToString());
     }
 
+	//TODO remove objType
     public void SendShotToHost(byte shotObjType, Vector3 pos, Quaternion rot, byte shotObjectType, int networkTimeStamp) {
         CS_CreationRequest msg = new CS_CreationRequest(networkTimeStamp, pos, rot, shotObjectType);
         byte[] buffer = MessagesHandler.NetMsgPack(msg);
@@ -85,6 +86,15 @@ public class Client : MonoBehaviour {
             Debug.LogError("SendcreateRequestToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
         Logger.Log(Time.time, Time.realtimeSinceStartup, -1, "sendShot", Time.fixedTime.ToString());
     }
+
+	public void SendMissileToHost(byte shotObjType, Vector3 pos, Quaternion rot, int targetId, int networkTimeStamp) {
+		CS_MissileRequest msg = new CS_MissileRequest(networkTimeStamp, pos, rot, targetId);
+		byte[] buffer = MessagesHandler.NetMsgPack(msg);
+		NetworkTransport.Send(hostId, connectionId, unreliableChannelId, buffer, buffer.Length, out error);
+		if (error != 0)
+			Debug.LogError("SendcreateMissileToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
+		Logger.Log(Time.time, Time.realtimeSinceStartup, -1, "sendMissile", Time.fixedTime.ToString());
+	}
 
     // Update is called once per frame
     private void Update() {
@@ -165,7 +175,7 @@ public class Client : MonoBehaviour {
         SC_EntityCreated createMsg = (SC_EntityCreated)msg;
         int type = createMsg.ObjectType;
         GameObject newObject = null;
-        //Debug.Log("Entity Created, ofType: " + type);
+        Debug.Log("Entity Created, ofType: " + type);
         switch (type) {
             case (byte)NetworkEntity.ObjType.Player:
                 if (clientID == createMsg.ClientID) { 

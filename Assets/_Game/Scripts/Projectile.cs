@@ -3,6 +3,8 @@ using UnityEngine;
 public class Projectile : NetworkEntity {
     private int clientID = 0; // owner
     private static float speed = 400f;
+    private bool active = true;
+    private bool hit = false;
     
     private float timeout = 2.0f;
     private float destroyTime;
@@ -22,7 +24,7 @@ public class Projectile : NetworkEntity {
     }
 
     private void Update() {
-        if (isServer && Time.time > destroyTime) {
+        if (isServer && Time.time > destroyTime && active) {
             serverController.DestroyEntity(entityID);
         }
         if (incomingQueue.Count == 0)
@@ -47,31 +49,30 @@ public class Projectile : NetworkEntity {
 
     // when the missile hits something
     void OnTriggerEnter(Collider other) {
-        Debug.Log("HIT: " + other.name + ", tag:" + other.tag);
+
+        if (other.CompareTag("Projectile") || // ignore bullet to bullet collision
+            other.CompareTag("Boundary") || // ignore collision with boundary
+            other.CompareTag("Player") && clientID == other.gameObject.GetComponent<PlayerShip>().ClientID) // ignore self harming!
+        {
+            return;
+        }
+
+        hit = true;
+
+        if (!isServer) { // do local effect only
+            Destroy(Instantiate(PT_Explosion, transform.position, Quaternion.identity), 1);
+            active = false;
+            return;
+        }
+
+        // On Server:
+
+        //Debug.Log("Projectile hit: " + other.name + ", tag:" + other.tag);
 
         if (other.CompareTag("Player")) {
-            Debug.Log("hit player with client id = " + other.gameObject.GetComponent<PlayerShip>().ClientID);
+            Debug.Log("Projectile hit: player with client id = " + other.gameObject.GetComponent<PlayerShip>().ClientID);
+            //gameController.AddScore(scoreValue);
         }
-
-        // ignore self harming!
-            if (other.CompareTag("Player") && clientID == other.gameObject.GetComponent<PlayerShip>().ClientID) {
-            return;
-        }
-
-        // ignore bullet to bullet collision
-        if (other.CompareTag("Projectile"))
-            return;
-
-
-        // ignore collision with boundary or other projectiles
-        if (other.name == "Boundary")
-            return;
-
-        if (other.CompareTag("Player")) {
-            // make hitting effects
-            //Instantiate(playerExplosion, other.transform.position, other.transform.rotation);
-        }
-        //gameController.AddScore(scoreValue);
 
         if (clientID != -1) {
             Explode();
@@ -79,12 +80,20 @@ public class Projectile : NetworkEntity {
     }
 
     private void Explode() {
-        if (PT_Explosion)
-            Destroy(Instantiate(PT_Explosion, transform.position, Quaternion.identity), 1);
+        // On Server:
+
+        Destroy(Instantiate(PT_Explosion, transform.position, Quaternion.identity), 1);
         GetComponentInChildren<TrailRenderer>().enabled = false;
         GetComponent<SphereCollider>().enabled = false;
-        if (isServer) {
-            //serverController.DestroyEntity(entityID); // before enabling this line, make sure the server doesn't send timed destroy msg for the projectils
+
+        serverController.DestroyEntity(entityID);
+        active = false;
+    }
+
+    private void OnDestroy() {
+        if (!isServer && hit && active) { // if the projectile was destroyed before it did an explosion effect on the client, do it now.
+            Destroy(Instantiate(PT_Explosion, transform.position, Quaternion.identity), 1);
+            return;
         }
     }
 

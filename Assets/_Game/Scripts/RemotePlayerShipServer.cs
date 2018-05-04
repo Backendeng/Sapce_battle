@@ -9,6 +9,7 @@ using UnityEngine;
 public class RemotePlayerShipServer : PlayerShip {
     
     private Target target;
+    private bool dead = false;
     private ShipShootingServer shooting;
 
     public static float LERP_MUL = 1f;
@@ -18,7 +19,7 @@ public class RemotePlayerShipServer : PlayerShip {
 
         // target init
         target = GetComponent<Target>();
-        target.Init(serverController, clientID); // clientID is assigned in Server script @ ProccessAllocClientID
+        target.Init(serverController, entityID, clientID); // clientID is assigned in Server script @ ProccessAllocClientID
     }
 
     private void FixedUpdate() {
@@ -62,7 +63,14 @@ public class RemotePlayerShipServer : PlayerShip {
         Debug.Log("registered ts "+ lastReceivedStateTime);////////////////////////////////////////////
     }
     private void UpdateGameData() {
-        
+        if (target.Health == 0 && dead == false) {
+            Destroy(Instantiate(ShipExplosion, transform.position, Quaternion.identity), 1);
+            GetComponentInChildren<MeshRenderer>().enabled = false;
+            GetComponent<CapsuleCollider>().enabled = false;
+            GetComponent<BoxCollider>().enabled = false;
+            GetComponent<TrailRenderer>().enabled = false;
+            dead = true;
+        }
 
 
     }

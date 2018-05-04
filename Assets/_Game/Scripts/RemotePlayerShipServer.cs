@@ -53,14 +53,27 @@ public class RemotePlayerShipServer : PlayerShip {
 
 
     private void MoveShipUsingReceivedClientData(SC_MovementData message) {
+
         lastReceivedStateTime = message.TimeStamp;
         lastReceivedVelocity = message.Velocity;
         GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
+
+        AddSnapshotToQueue(message.TimeStamp, message.Position, message.Rotation, message.Velocity);
+        Debug.Log("registered ts "+ lastReceivedStateTime);////////////////////////////////////////////
     }
     private void UpdateGameData() {
         
 
 
+    }
+    // we run this till we get null
+    public override SC_MovementData GetNextSnapshot(int entityId) {
+        StateSnapshot ss = GetNextSnapshotFromQueue();
+        if (ss == null)
+            return null;
+
+        SC_MovementData msg = new SC_MovementData(entityId, ss.time, ss.position, ss.rotation, ss.velocity);
+        return msg;
     }
 
 }

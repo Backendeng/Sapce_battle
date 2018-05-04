@@ -7,7 +7,7 @@ using UnityEngine.Networking;
 
 public class Server : MonoBehaviour {
 
-    //public float sendRate = 0.05f;
+    public float sendRate = 0.05f;
     private int timeStep = 0;
     public int rate = 2;//2 for 0.06f 
 
@@ -39,6 +39,7 @@ public class Server : MonoBehaviour {
     // Use this for initialization
     void Start ()
     {
+        Logger.AddPrefix("Server");
         NetworkTransport.Init();
 
         ConnectionConfig config = new ConnectionConfig();
@@ -75,11 +76,18 @@ public class Server : MonoBehaviour {
     // Update is called once per frame
     private void FixedUpdate ()
     {
+        Debug.Log("============================================================>> frame: " + Time.frameCount + " time: " + Time.time + " realtime: " + Time.realtimeSinceStartup);
+        Logger.Log(Time.time, Time.realtimeSinceStartup, -1, "frame", Time.frameCount.ToString());
+
         Listen();//first listen
         StageAllEntities();// put all entity positions and rotations on queue
         BroadcastAllMessages(outgoingUnReliable, unreliableChannelId);//then broadcast unreliable
         BroadcastAllMessages(outgoingReliable, reliableChannelId);//then broadcast reliable
 
+    }
+
+    void OnApplicationQuit() {
+        Logger.OutputToFile();
     }
 
     private void Listen()
@@ -143,7 +151,14 @@ public class Server : MonoBehaviour {
     private void ProccessStateMessage(NetMsg msg, int recConnectionId) {
         //process message and send pos and rot to playerObject on this server 
 
-        connectedPlayers[recConnectionId].GetComponent<NetworkEntity>().AddRecMessage(msg);
+        timeSinceRec2 = timeSinceRec1;///////////////////////////////////////////
+        timeSinceRec1 = timeSinceRec;///////////////////////////////////////////
+        timeSinceRec = Time.time;///////////////////////////////////////////
+       
+        Debug.Log("rec ts: " + ((SC_MovementData)msg).TimeStamp);///////////////////////////////////////////////
+        NetworkEntity entity = connectedPlayers[recConnectionId].GetComponent<NetworkEntity>();
+        entity.AddRecMessage(msg);
+        Logger.Log(Time.time, Time.realtimeSinceStartup, entity.EntityID, "rec", ((SC_MovementData)msg).TimeStamp.ToString());
     }
 
     private void ProccessAllocClientID(SC_AllocClientID msg, int recConnectionId) {
@@ -224,32 +239,54 @@ public class Server : MonoBehaviour {
     }
 
     private float lastSend;
+    private float lastreal;
+    private float timeSinceRec;
+    private float timeSinceRec1;
+    private float timeSinceRec2;
     //this is called once every sendRate time and puts the positions of all entities on the queue
+    private float nextSendTime = 0;
     private void StageAllEntities() {
-        if (timeStep < rate) {
-            timeStep++;
-            return;
-        }
-        timeStep = 0;
+        /*   if (timeStep < rate) {
+               timeStep++;
+               return;
+           }
+           timeStep = 0;
+           */
 
-        Debug.Log("send interval: " + (Time.time - lastSend));
+        if (Time.time < nextSendTime) 
+            return;
+        nextSendTime = Time.time + sendRate;
+
+        Debug.Log("====================send interval: " + (Time.time - lastSend) + " time since last rec: "+ (Time.time - timeSinceRec) +" "+ (Time.time - timeSinceRec1) +" " + (Time.time - timeSinceRec2));
+        Debug.Log("====================real send interval: " + (Time.realtimeSinceStartup - lastreal));
         lastSend = Time.time;
+        lastreal = Time.realtimeSinceStartup;
 
         foreach (KeyValuePair<int, NetworkEntity> entity in entityManager.netEntities) {
             if (entity.Value == null) {
                 Debug.LogWarning("trying to access entity that's missing from the netEntities dictionary");
                 continue;
             }
-            Vector3 pos = entity.Value.gameObject.GetComponent<Transform>().position;
-            Quaternion rot = entity.Value.gameObject.GetComponent<Transform>().rotation;
-            float lastRecStateTime = entity.Value.LastReceivedStateTime;
-     
-            //float lastRecStateTime = Time.time;//confusing var name
-            Vector3 vel = entity.Value.LastReceivedVelocity();
-            SC_MovementData msg = new SC_MovementData(entity.Key, lastRecStateTime, pos, rot, vel);
 
-            outgoingUnReliable.Enqueue(msg);
+            if(entity.Value.ObjectType == (byte)NetworkEntity.ObjType.Player) {
+                SC_MovementData msg = entity.Value.GetNextSnapshot(entity.Key);
+                while (msg != null) {
+                    Debug.Log("sent ts: "+ msg.TimeStamp);///////////////////////////////////////////////
+                    Logger.Log(Time.time, Time.realtimeSinceStartup, entity.Key, "sent", msg.TimeStamp.ToString());
+                    outgoingUnReliable.Enqueue(msg);
+                    msg = entity.Value.GetNextSnapshot(entity.Key);
+                }
+            } else {
+                Vector3 pos = entity.Value.gameObject.GetComponent<Transform>().position;
+                Quaternion rot = entity.Value.gameObject.GetComponent<Transform>().rotation;
+                Vector3 vel = entity.Value.GetVelocity();
 
+                SC_MovementData msg = new SC_MovementData(entity.Key, Time.time, pos, rot, vel);
+
+                outgoingUnReliable.Enqueue(msg);
+            }
+
+           
         }
     }
 

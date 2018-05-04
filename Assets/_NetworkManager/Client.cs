@@ -37,6 +37,7 @@ public class Client : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
+        Logger.AddPrefix("Client");
         NetworkTransport.Init();
         Connect();
     }
@@ -68,11 +69,12 @@ public class Client : MonoBehaviour {
 
     public void SendStateToHost(int selfEntityId, Vector3 pos, Quaternion rot, Vector3 vel) {
         //create movementMessage/... and send it to server
-        SC_MovementData msg = new SC_MovementData(selfEntityId, Time.time, pos, rot, vel);
+        SC_MovementData msg = new SC_MovementData(selfEntityId, Time.fixedTime, pos, rot, vel);//////////////////////////////fixedTime
         byte[] buffer = MessagesHandler.NetMsgPack(msg);
         NetworkTransport.Send(hostId, connectionId, unreliableChannelId, buffer, buffer.Length, out error);
         if (error != 0)
             Debug.LogError("SendStateToHost error: " + error.ToString() + " channelID: " + unreliableChannelId);
+        Logger.Log(Time.time, Time.realtimeSinceStartup, selfEntityId, "sendState", Time.fixedTime.ToString());
     }
 
     public void SendShotToHost(byte shotObjType, Vector3 pos, Quaternion rot, byte shotObjectType, int networkTimeStamp) {
@@ -81,11 +83,19 @@ public class Client : MonoBehaviour {
         NetworkTransport.Send(hostId, connectionId, unreliableChannelId, buffer, buffer.Length, out error);
         if (error != 0)
             Debug.LogError("SendcreateRequestToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
+        Logger.Log(Time.time, Time.realtimeSinceStartup, -1, "sendShot", Time.fixedTime.ToString());
     }
 
     // Update is called once per frame
     private void Update() {
+     //   Debug.Log("============================================================>> frame: " + Time.frameCount + " time: " + Time.time + " realtime: " + Time.realtimeSinceStartup);
+        Logger.Log(Time.time, Time.realtimeSinceStartup, -1, "frame", Time.frameCount.ToString());
         Listen();
+    }
+
+    void OnApplicationQuit() {
+        Logger.OutputToFile();
+        Logger.OutputInterpolationDEBUGToFile();
     }
 
     private void Listen() {
@@ -209,7 +219,8 @@ public class Client : MonoBehaviour {
         if (netEntities.ContainsKey(moveMsg.EntityID))
             netEntities[moveMsg.EntityID].AddRecMessage(moveMsg);
         //else
-            //Debug.LogWarning("update movement for netEntity that does not exist in client with entityId:" + moveMsg.EntityID);
+        //Debug.LogWarning("update movement for netEntity that does not exist in client with entityId:" + moveMsg.EntityID);
+        Logger.Log(Time.time, Time.realtimeSinceStartup, moveMsg.EntityID, "recState", moveMsg.TimeStamp.ToString());
     }
 
     private void ProccessEntityDestroyed(NetMsg msg) {

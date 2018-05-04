@@ -23,6 +23,11 @@ public class NetworkEntity : MonoBehaviour {
         return lastReceivedVelocity;
     }
 
+    protected float lastSentStateTime = -1;
+    public float LastSentStateTime { get { return lastSentStateTime; }
+                                       set { lastSentStateTime = value; }}
+
+
     public enum ObjType : byte {
         Player,
         Missile,
@@ -51,6 +56,8 @@ public class NetworkEntity : MonoBehaviour {
     }
     private List<StateSnapshot> History = new List<StateSnapshot>();
     private static int historySize = 200;
+
+    protected Queue<StateSnapshot> snapshotQueue = new Queue<StateSnapshot>();
 
     public int EntityID {
         get { return entityID; }
@@ -96,13 +103,22 @@ public class NetworkEntity : MonoBehaviour {
        // Debug.Log("incoming message to NetworkEntity");
     }
 
-
     protected void AddSnapshotToHistory(float time , Vector3 position, Quaternion rotation, Vector3 velocity) {
         History.Add(new StateSnapshot(time, position, rotation, velocity));
         // let's limit thje History size
         if (History.Count > historySize) {
             History.RemoveAt(0);
         }
+    }
+
+    protected void AddSnapshotToQueue(float time, Vector3 position, Quaternion rotation, Vector3 velocity) {
+        snapshotQueue.Enqueue(new StateSnapshot(time, position, rotation, velocity));
+    }
+
+    protected StateSnapshot GetNextSnapshotFromQueue() {
+        if (snapshotQueue.Count == 0)
+            return null;
+        return snapshotQueue.Dequeue();
     }
 
     protected int GetHistoryLastIdx() {
@@ -117,5 +133,6 @@ public class NetworkEntity : MonoBehaviour {
 
     }
 
+    public virtual SC_MovementData GetNextSnapshot(int entityId) { return null; }
 
 }

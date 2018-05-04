@@ -63,20 +63,34 @@ public class LocalPlayerShip : PlayerShip {
 
     }
 
+    /*
+        int timeStep = 0;
+        int rate = 2;//2 for 0.06f 
+        private void SendStateToServer(Vector3 pos, Quaternion rot, Vector3 vel) {
+            if (timeStep < rate) {
+                timeStep++;
+                return;
+            }
+            timeStep = 0;
 
-    int timeStep = 0;
-    int rate = 2;//2 for 0.06f 
-    private void SendStateToServer(Vector3 pos, Quaternion rot, Vector3 vel) {
-        if (timeStep < rate) {
-            timeStep++;
-            return;
+            Debug.Log("DDDD sent " + Time.time);///////////////////
+
+            clientController.SendStateToHost(entityID, pos, rot, vel);
+
         }
-        timeStep = 0;
+        */
+    float rate = 0.06f;
+    float nextSendTime = 0;
+    float lastSent = -1;
+    int lastFrameCount = 0;
+    private void SendStateToServer(Vector3 pos, Quaternion rot, Vector3 vel) {
+        if (Time.fixedTime < nextSendTime - 0.01f)
+            return;
+        nextSendTime = Time.fixedTime + 0.06f;
+        Debug.Log("DDDD sent " + Time.fixedTime);///////////////////
 
-        //Debug.Log("DDDD sent " + Time.time);///////////////////
-  
         clientController.SendStateToHost(entityID, pos, rot, vel);
- 
+
     }
 
     private void HandleMessagesFromServer() {

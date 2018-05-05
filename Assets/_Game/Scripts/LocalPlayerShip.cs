@@ -87,7 +87,7 @@ public class LocalPlayerShip : PlayerShip {
         if (Time.fixedTime < nextSendTime - 0.01f)
             return;
         nextSendTime = Time.fixedTime + 0.06f;
-        Debug.Log("DDDD sent " + Time.fixedTime);///////////////////
+        //Debug.Log("DDDD sent " + Time.fixedTime);///////////////////
 
         clientController.SendStateToHost(entityID, pos, rot, vel);
 

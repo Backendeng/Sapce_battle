@@ -17,7 +17,7 @@ public class ShipShootingClient : MonoBehaviour {
     public ParticleSystem phaserSparks;
     float rayRange = 500f;
 
-    LocalPlayerShip ship;
+    //LocalPlayerShip ship;
     protected Client clientController;
     protected int entityID;
 
@@ -28,7 +28,7 @@ public class ShipShootingClient : MonoBehaviour {
 
         //missile = Resources.Load<GameObject>("Prefabs/Missile");
         //phaser = Resources.Load<GameObject>("Prefabs/Phaser");
-        ship = GetComponent<LocalPlayerShip>();
+        //ship = GetComponent<LocalPlayerShip>();
         projectileSound = GetComponent<AudioSource>();
         projectileSound.clip = projectileClip;
     }

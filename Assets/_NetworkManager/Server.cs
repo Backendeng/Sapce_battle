@@ -76,7 +76,7 @@ public class Server : MonoBehaviour {
     // Update is called once per frame
     private void FixedUpdate ()
     {
-        Debug.Log("============================================================>> frame: " + Time.frameCount + " time: " + Time.time + " realtime: " + Time.realtimeSinceStartup);
+        //Debug.Log("============================================================>> frame: " + Time.frameCount + " time: " + Time.time + " realtime: " + Time.realtimeSinceStartup);
         Logger.Log(Time.time, Time.realtimeSinceStartup, -1, "frame", Time.frameCount.ToString());
 
         Listen();//first listen
@@ -105,7 +105,7 @@ public class Server : MonoBehaviour {
                 case NetworkEventType.Nothing:         //1
                     break;
                 case NetworkEventType.ConnectEvent:    //2
-                    Debug.Log("incoming connection event received id: " + recConnectionId);
+                    //Debug.Log("incoming connection event received id: " + recConnectionId);
                     ProccessConnectionRequest(recConnectionId);
                     break;
                 case NetworkEventType.DataEvent:       //3
@@ -257,8 +257,8 @@ public class Server : MonoBehaviour {
             return;
         nextSendTime = Time.time + sendRate;
 
-        Debug.Log("====================send interval: " + (Time.time - lastSend) + " time since last rec: "+ (Time.time - timeSinceRec) +" "+ (Time.time - timeSinceRec1) +" " + (Time.time - timeSinceRec2));
-        Debug.Log("====================real send interval: " + (Time.realtimeSinceStartup - lastreal));
+        //Debug.Log("====================send interval: " + (Time.time - lastSend) + " time since last rec: "+ (Time.time - timeSinceRec) +" "+ (Time.time - timeSinceRec1) +" " + (Time.time - timeSinceRec2));
+        //Debug.Log("====================real send interval: " + (Time.realtimeSinceStartup - lastreal));
         lastSend = Time.time;
         lastreal = Time.realtimeSinceStartup;
 

@@ -8,7 +8,7 @@ public class Projectile : NetworkEntity {
     
     private float timeout = 2.0f;
     private float destroyTime;
-    private Rigidbody rigidBody;
+    //private Rigidbody rigidBody;
 
     public GameObject missileExplosion;
     public GameObject PT_Explosion;
@@ -20,7 +20,7 @@ public class Projectile : NetworkEntity {
         base.Start();
         GetComponent<Rigidbody>().velocity = transform.forward * speed;
         destroyTime = Time.time + timeout;
-        rigidBody = GetComponent<Rigidbody>();
+        //rigidBody = GetComponent<Rigidbody>();
     }
 
     private void Update() {

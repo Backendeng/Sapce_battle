@@ -6,7 +6,7 @@ using UnityEngine.Networking;
 
 public class Client : MonoBehaviour {
 
-    public string serverIP = "127.0.0.1";
+    public static string serverIP = "127.0.0.1";
     byte error;
     int unreliableChannelId;
     int reliableChannelId;
@@ -15,7 +15,7 @@ public class Client : MonoBehaviour {
     int connectionId;
 
     int clientID = -1;
-    public int ClientID { get { return clientID; } }
+    
 
     bool playerAvatarCreated = false;
 
@@ -24,6 +24,7 @@ public class Client : MonoBehaviour {
     int dataSize;
 
     Dictionary<int, NetworkEntity> netEntities = new Dictionary<int, NetworkEntity>();
+    public Dictionary<int, GameObject> mockProjectiles = new Dictionary<int, GameObject>();
 
     //PUT THIS INTO A DICT AND THEN processEntityCreated can use it instead of a switch clause
     public GameObject localPlayer;         // player prefab
@@ -32,11 +33,13 @@ public class Client : MonoBehaviour {
     public GameObject astroid;
     public GameObject projectile;
 
-    public Dictionary<int, GameObject> mockProjectiles = new Dictionary<int, GameObject>();
 
+    public int ClientID { get { return clientID; } }
+    public static string ServerIP { get { return serverIP; } set { serverIP = value; } }
 
     // Use this for initialization
     void Start() {
+        Debug.Log("starting client with ip = " + serverIP);
         Logger.AddPrefix("Client");
         NetworkTransport.Init();
         Connect();
@@ -56,7 +59,7 @@ public class Client : MonoBehaviour {
         Debug.Log("Socket Open. SocketID is: " + hostId);
 
         connectionId = NetworkTransport.Connect(hostId, serverIP, outPort, 0, out error);
-        Debug.Log("Connected to server. ConnectionId: " + connectionId);
+        Debug.Log("Connecting to server. ConnectionId: " + connectionId);
     }
 
     public void Disconnect() {
@@ -136,9 +139,12 @@ public class Client : MonoBehaviour {
                     }
                     break;
                 case NetworkEventType.DisconnectEvent:
-                    if (recHostId == hostId &&
-                      recConnectionId == connectionId) {
+                    if (recHostId == hostId && recConnectionId == connectionId) {
                         Debug.Log("Connected, error:" + error.ToString());
+                        if (error == 6) {
+                            MainMenu.ErrorNum = 6;
+                            MainMenu.LoadScene(0);
+                        }
                     }
                     break;
             } // end of switch case

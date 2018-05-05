@@ -15,14 +15,17 @@ public class ShipShootingClient : MonoBehaviour {
     // Shooting : Phaser
     public GameObject phaser;
     public ParticleSystem phaserSparks;
-    float rayRange = 500f;
+    float rayRange = 1000f;
 
     //LocalPlayerShip ship;
+
     protected Client clientController;
     protected int entityID;
 
     private AudioSource projectileSound;
     public AudioClip projectileClip;
+
+    private Camera playerCamera;
 
     private void Awake() {
 
@@ -31,6 +34,8 @@ public class ShipShootingClient : MonoBehaviour {
         //ship = GetComponent<LocalPlayerShip>();
         projectileSound = GetComponent<AudioSource>();
         projectileSound.clip = projectileClip;
+
+        playerCamera = GetComponentInChildren<Camera>();
     }
 
     public void Init(Client clientController, int entityID) {
@@ -55,7 +60,9 @@ public class ShipShootingClient : MonoBehaviour {
 
     private void ShootMissile(Vector3 pos, Quaternion rot) {
         int netTimeStamp = NetworkTransport.GetNetworkTimestamp();
-        clientController.SendShotToHost((byte)NetworkEntity.ObjType.Missile, pos, rot, (byte)NetworkEntity.ObjType.Missile, netTimeStamp);
+        int targetId = ShootRay();
+        Debug.Log("Hit id: " + targetId);
+        clientController.SendMissileToHost((byte)NetworkEntity.ObjType.Missile, pos, rot, targetId, netTimeStamp);
         GetComponent<AudioSource>().Play();
     }
 
@@ -73,16 +80,21 @@ public class ShipShootingClient : MonoBehaviour {
         clientController.SendShotToHost((byte)NetworkEntity.ObjType.Projectile, pos, rot, (byte)NetworkEntity.ObjType.Projectile, (int)netTimeStamp);
     }
 
-    private void ShootRay() {
-        /*
+    private int ShootRay() {
+        
         RaycastHit hit;
-        //GetComponent<LineRenderer>().enabled = true;
-        GameObject phaser1 = Instantiate(phaser, shotSpawn);
-        if (Physics.Raycast(shotSpawn.position, ship.playerCamera.transform.forward, out hit, rayRange)) {
+       // GetComponent<LineRenderer>().enabled = true;
+       
+        if (Physics.Raycast(shotSpawn.position, playerCamera.transform.forward, out hit, rayRange)) {
 
             Debug.Log("Hit: " + hit.transform.name);
+            NetworkEntity targetEntity = hit.transform.GetComponentInParent<NetworkEntity>();
+            if (targetEntity != null)
+                return targetEntity.EntityID;
+            else
+                return -1;
         }
-        */
+        return -1;
     }
 
 

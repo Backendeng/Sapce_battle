@@ -7,6 +7,7 @@ public class LocalPlayerShip : PlayerShip {
     public GameObject shadowPrefab;
     private Transform shadow;
     private NetworkEntity InterShadow;
+
     private ShipShootingClient shooting;
 
     private float lastReturnedInputTime;
@@ -88,7 +89,6 @@ public class LocalPlayerShip : PlayerShip {
             return;
         nextSendTime = Time.fixedTime + 0.06f;
         //Debug.Log("DDDD sent " + Time.fixedTime);///////////////////
-
         clientController.SendStateToHost(entityID, pos, rot, vel);
 
     }

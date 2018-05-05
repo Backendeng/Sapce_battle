@@ -48,16 +48,24 @@ public class Logger {
     private static int lastId = 0;
     private static string fileName = "Log(" + DateTime.Now.ToString("y-M-dd-HHmm") + ").csv";
     private static Dictionary<float, LogEvent> events = new Dictionary<float, LogEvent>();
+    private static bool logEnabled = false;
+
+    public static bool LogEnabled {
+        set { logEnabled = value; }
+    }
 
     public static void AddPrefix(string pre) {
         fileName = pre + fileName;
     }
 
     public static void Log(float time, float rtime, int Id, string type, string value) {
-        events.Add(++lastId, new LogEvent(time, rtime, Id, type, value));
+        if (logEnabled)
+            events.Add(++lastId, new LogEvent(time, rtime, Id, type, value));
     }
 
     public static void OutputToFile() {
+        if (!logEnabled)
+            return;
         string path = Directory.GetCurrentDirectory();
         List<string> lines = new List<string>();
      
@@ -72,6 +80,9 @@ public class Logger {
     }
 
     public static void OutputInterpolationDEBUGToFile() {
+        if (!logEnabled)
+            return;
+
         string path = Directory.GetCurrentDirectory();
         List<string> interpLines = new List<string>();
 

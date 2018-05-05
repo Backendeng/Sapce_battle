@@ -34,9 +34,11 @@ public class Client : MonoBehaviour {
 
     public Dictionary<int, GameObject> mockProjectiles = new Dictionary<int, GameObject>();
 
+    public bool logEnable = false;
 
     // Use this for initialization
     void Start() {
+        Logger.LogEnabled = logEnable;
         Logger.AddPrefix("Client");
         NetworkTransport.Init();
         Connect();

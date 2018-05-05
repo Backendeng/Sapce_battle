@@ -34,11 +34,13 @@ public class Server : MonoBehaviour {
     EntityManager entityManager;
 
     //debug
-    private float lastSendTime; 
+    private float lastSendTime;
+    public bool logEnable = false;
 
     // Use this for initialization
     void Start ()
     {
+        Logger.LogEnabled = logEnable;
         Logger.AddPrefix("Server");
         NetworkTransport.Init();
 
@@ -153,10 +155,6 @@ public class Server : MonoBehaviour {
 
     private void ProccessStateMessage(NetMsg msg, int recConnectionId) {
         //process message and send pos and rot to playerObject on this server 
-
-        timeSinceRec2 = timeSinceRec1;///////////////////////////////////////////
-        timeSinceRec1 = timeSinceRec;///////////////////////////////////////////
-        timeSinceRec = Time.time;///////////////////////////////////////////
        
         Debug.Log("rec ts: " + ((SC_MovementData)msg).TimeStamp);///////////////////////////////////////////////
         NetworkEntity entity = connectedPlayers[recConnectionId].GetComponent<NetworkEntity>();
@@ -206,7 +204,7 @@ public class Server : MonoBehaviour {
 			Debug.LogError("Entity Creation failed");
 
 		entityManager.netEntities[newEntityID].GetComponent<Missile>().ClientID = clientID; // mark the owner of this missile
-        if (msg.TargetId > 0)
+        if (msg.TargetId > 0)////more proofing needed
             entityManager.netEntities[newEntityID].GetComponent<Missile>().Target = entityManager.netEntities[msg.TargetId].transform; // mark the target of this missile
         
         SC_EntityCreated mssg = new SC_EntityCreated(newEntityID, msg.TimeStamp, msg.Position, msg.Rotation, clientID, (byte)NetworkEntity.ObjType.Missile);
@@ -255,24 +253,14 @@ public class Server : MonoBehaviour {
 
     private float lastSend;
     private float lastreal;
-    private float timeSinceRec;
-    private float timeSinceRec1;
-    private float timeSinceRec2;
     //this is called once every sendRate time and puts the positions of all entities on the queue
     private float nextSendTime = 0;
     private void StageAllEntities() {
-        /*   if (timeStep < rate) {
-               timeStep++;
-               return;
-           }
-           timeStep = 0;
-           */
-
         if (Time.time < nextSendTime) 
             return;
         nextSendTime = Time.time + sendRate;
 
-        //Debug.Log("====================send interval: " + (Time.time - lastSend) + " time since last rec: "+ (Time.time - timeSinceRec) +" "+ (Time.time - timeSinceRec1) +" " + (Time.time - timeSinceRec2));
+        //Debug.Log("====================send interval: " + (Time.time - lastSend));
         //Debug.Log("====================real send interval: " + (Time.realtimeSinceStartup - lastreal));
         lastSend = Time.time;
         lastreal = Time.realtimeSinceStartup;

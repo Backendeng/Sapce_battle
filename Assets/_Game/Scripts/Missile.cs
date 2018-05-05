@@ -2,7 +2,7 @@
 using UnityEngine;
 
 public class Missile : NetworkEntity {
-    public float speed = 100f;
+    public float speed = 50f;
     public GameObject missileExplosion;
     public float timeout = 5.0f;
     public static float LERP_MUL = 3f;
@@ -27,11 +27,7 @@ public class Missile : NetworkEntity {
     }
 
     private void Update() {
-		if (isServer) {
-            transform.LookAt(target);
-            rigid_body.AddRelativeForce(Vector3.forward * speed, ForceMode.Force);
-            return;
-		}
+		
         if (incomingQueue.Count == 0)
             return;
         NetMsg netMessage = incomingQueue.Dequeue();
@@ -40,48 +36,75 @@ public class Missile : NetworkEntity {
                 MoveProjUsingReceivedServerData((SC_MovementData)netMessage);
                 break;
             case (byte)NetMsg.MsgType.SC_EntityDestroyed:
+                Debug.Log("Missile Destroyed " + entityID);
                 Destroy(gameObject);
                 break;
             default:
                 Debug.Log("ERROR! RemoteProjectile on Client reveived an invalid NetMsg message. NetMsg Type: " + netMessage.Type);
                 break;
         }
+
+    }
+
+    private void FixedUpdate() {
+        if (isServer) {
+            if (target == null)
+                return;
+            transform.LookAt(target);
+            rigid_body.AddRelativeForce(Vector3.forward * speed, ForceMode.Force);
+        }
     }
 
     private void MoveProjUsingReceivedServerData(SC_MovementData message) {
-        //transform.position = Vector3.Lerp(transform.position, message.Position, LERP_MUL * Time.deltaTime);
-        //transform.rotation = Quaternion.Lerp(transform.rotation, message.Rotation, LERP_MUL * Time.deltaTime);
         GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
     }
 
-    private void Awake() {
-      //  Destroy(gameObject, timeout);
-    }
-
-    public void OnBecameInvisible() {
-        //Destroy(gameObject);
-    }
-
-    // when the missile hits something
+    
     void OnTriggerEnter(Collider other) {
-        // ignore bullet to bullet collision
-        if (other.name == "Missile")
-            return;
 
-        // ignore collision with boundary or other projectiles
-        if (other.name == "Boundary")
-            return;
+         if (//other.CompareTag("Projectile") || // ignore bullet to bullet collision
+             other.CompareTag("Boundary") ) // ignore collision with boundary
+             // || other.CompareTag("Player") && clientID == other.gameObject.GetComponent<PlayerShip>().ClientID) // ignore self harming!
+         {
+             return;
+         }
+ 
+        NetworkEntity hitObj = other.gameObject.GetComponent<NetworkEntity>();
+        if (hitObj != null)
+            Debug.Log("missile hit entity = " + hitObj.EntityID);
+        else
+            Debug.Log("missile hit obj = " + other.name);
 
-        if (missileExplosion)
-            Instantiate(missileExplosion, transform.position, transform.rotation);
+        if (!isServer) { // do local effect only
+            Debug.Log("BOOM " + EntityID);
+           // Destroy(Instantiate(missileExplosion, transform.position, Quaternion.identity), 1);  seems that we dont need to explode also on client  (tested localy)
+            return;
+        }
+
+        // On Server:
 
         if (other.CompareTag("Player")) {
-            // make hitting effects
-            //Instantiate(playerExplosion, other.transform.position, other.transform.rotation);
+            Debug.Log("Missile hit: player with client id = " + other.gameObject.GetComponent<PlayerShip>().ClientID);
+            //gameController.AddScore(scoreValue);
         }
-        //gameController.AddScore(scoreValue);
+        Explode();
+    }
 
-        //Destroy(gameObject);
+    private void Explode() {
+        // On Server:
+      
+        Destroy(Instantiate(missileExplosion, transform.position, Quaternion.identity), 1);// cosmetic
+        //GetComponentInChildren<TrailRenderer>().enabled = false;
+        GetComponent<CapsuleCollider>().enabled = false;
+
+        serverController.DestroyEntity(entityID); 
+    }
+
+    private void OnDestroy() {
+        if (!isServer) { // if the projectile was destroyed before it did an explosion effect on the client, do it now.
+            Destroy(Instantiate(missileExplosion, transform.position, Quaternion.identity), 1);// whats wrong with spawning new objects in onDestroy?
+            return;
+        }
     }
 
 }

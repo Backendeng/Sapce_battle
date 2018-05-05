@@ -7,6 +7,7 @@ public class LocalPlayerShip : PlayerShip {
     public GameObject shadowPrefab;
     private Transform shadow;
     private NetworkEntity InterShadow;
+
     private ShipShootingClient shooting;
 
     private float lastReturnedInputTime;

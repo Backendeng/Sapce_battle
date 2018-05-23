@@ -5,7 +5,12 @@ using System;
 using System.IO;
 
 public class Logger {
-    
+
+    private static int lastId = 0;
+    private static string fileName = "Log(" + DateTime.Now.ToString("y-M-dd-HHmm") + ").csv";
+    private static Dictionary<float, LogEvent> events = new Dictionary<float, LogEvent>();
+    private static bool logEnabled = false;
+
     class LogEvent {
         float time;
         float realTime;
@@ -45,10 +50,6 @@ public class Logger {
         }
 
     };
-    private static int lastId = 0;
-    private static string fileName = "Log(" + DateTime.Now.ToString("y-M-dd-HHmm") + ").csv";
-    private static Dictionary<float, LogEvent> events = new Dictionary<float, LogEvent>();
-    private static bool logEnabled = false;
 
     public static bool LogEnabled {
         set { logEnabled = value; }

@@ -7,30 +7,37 @@ public class MainMenu : MonoBehaviour {
 
     public GameObject PlayMenuObj;
     public GameObject MainMenuObj;
+    public GameObject SettingsMenuObj;
     public InputField ipInputField;
-    public Text inputErrorText;
+    public Text playMenuStatusText;
 
-    private static int errorNum;
+    private bool pingResult = false;
+    private bool pinging;
+    private static int errorNum = 0;
     public static int ErrorNum { get { return errorNum; } set { errorNum = value; } }
 
     public void Start() {
-        if (!ipInputField || !inputErrorText) {
+        if (!ipInputField || !playMenuStatusText) {
             Debug.LogError("required fields weren't found");
         }
 
-        if (errorNum == 6) {
+        if (errorNum == 0) {
+            MainMenuObj.SetActive(true);
+            PlayMenuObj.SetActive(false);
+            SettingsMenuObj.SetActive(false);
+
+        }
+        else if (errorNum == 6) {
             MainMenuObj.SetActive(false);
             PlayMenuObj.SetActive(true);
-            inputErrorText.text = "Connection Timed Out";
+            playMenuStatusText.text = "Connection Timed Out";
+            errorNum = 0;
         }
 
     }
 
     public void Update() {
-        
-        if (PlayMenuObj.activeSelf == false) {
-            inputErrorText.text = "";
-        }
+  
     }
 
     public static void LoadScene(int scene) {
@@ -42,29 +49,44 @@ public class MainMenu : MonoBehaviour {
     }
 
     public void StartGame() {
-        inputErrorText.text = "";
+        
+        playMenuStatusText.text = "";
         string ipAddress = ipInputField.text;
         if (ValidateIPv4(ipAddress) == false) {
-            inputErrorText.text = "Invalid IP Address";
+            playMenuStatusText.text = "Invalid IP Address";
             return;
         }
-        
-        
-        //StartCoroutine(PingUpdate(ipAddress));
-
-
+        /*
+        pinging = true;
+        StartCoroutine(PingUpdate(ipAddress));
+        while (pinging == true) { }; // no no no!
+        if (pingResult == false) {
+            return;
+        }*/
+        PlayMenuObj.SetActive(false);
         Client.ServerIP = ipAddress;
         SceneManager.LoadScene(2);
+    }
+
+    public void OnOpenPlayMenu() {
+        playMenuStatusText.text = "";
     }
 
     System.Collections.IEnumerator PingUpdate(string ipAddress) {
         Ping serverPing = new Ping(ipAddress);
         yield return new WaitForSeconds(1f);
 
-        inputErrorText.text = serverPing.time.ToString();
+        playMenuStatusText.text = serverPing.time.ToString();
 
         if (serverPing.isDone == false) {
-            inputErrorText.text = "Ping Failed.";
+            playMenuStatusText.text = "Ping Failed.";
+            pingResult = false;
+            pinging = false;
+        }
+        else {
+            playMenuStatusText.text = "Ping Returned. Connecting...";
+            pingResult = true;
+            pinging = false;
         }
     }
 
@@ -83,4 +105,5 @@ public class MainMenu : MonoBehaviour {
     public void HostGame() {
         SceneManager.LoadScene(1);
     }
+
 }

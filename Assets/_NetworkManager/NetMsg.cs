@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,6 +17,7 @@ public abstract class NetMsg {
         CS_InputData,
         CS_CreationRequest,
 		CS_MissileRequest,
+        SC_PlayerData,
     }
 
     public NetMsg(float timeStamp) {
@@ -140,4 +141,17 @@ public class CS_MissileRequest : NetMsg {
 		this.rotation = rotation;
 		this.targetId = targetId;
 	}
+}
+
+public class SC_PlayerData : NetMsg {
+    public int ClientID { get; private set; }
+    public int Health { get; private set; }
+    public int Score { get; private set; }
+
+    public SC_PlayerData(int clientID, float timeStamp, int health, int score) : base(timeStamp) {
+        msgType = (byte)MsgType.SC_PlayerData;
+        this.ClientID = clientID;
+        this.Health = health;
+        this.Score = score;
+    }
 }

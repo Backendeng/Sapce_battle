@@ -6,6 +6,8 @@ using UnityEngine.Networking;
 
 public class Client : MonoBehaviour {
 
+    public GameManager gameManager;
+
     public static string serverIP = "127.0.0.1";
     byte error;
     int unreliableChannelId;
@@ -33,14 +35,12 @@ public class Client : MonoBehaviour {
     public GameObject astroid;
     public GameObject projectile;
 
-    public bool logEnable = false;
-
     public int ClientID { get { return clientID; } }
     public static string ServerIP { get { return serverIP; } set { serverIP = value; } }
+    public bool PlayerAvatarCreated { get { return playerAvatarCreated; } }
 
     // Use this for initialization
     void Start() {
-        Logger.LogEnabled = logEnable;
         Logger.AddPrefix("Client");
         NetworkTransport.Init();
         Connect();
@@ -136,16 +136,19 @@ public class Client : MonoBehaviour {
                     byte type = msg.Type;
                     switch (type) {
                         case (byte)NetMsg.MsgType.SC_AllocClientID:
-                            ProccessAllocClientID(msg);
+                            ProcessAllocClientID(msg);
                             break;
                         case (byte)NetMsg.MsgType.SC_EntityCreated://BUG: 2nd player gets ERROR, update for netEntity that does not exist in client . maybe he gets state updates for enteties before he created them?
-                            ProccessEntityCreated(msg);
+                            ProcessEntityCreated(msg);
                             break;
                         case (byte)NetMsg.MsgType.SC_MovementData:
-                            ProccessMovementData(msg);
+                            ProcessMovementData(msg);
+                            break;
+                        case (byte)NetMsg.MsgType.SC_PlayerData:
+                            ProcessPlayerData(msg);
                             break;
                         case (byte)NetMsg.MsgType.SC_EntityDestroyed:
-                            ProccessEntityDestroyed(msg);
+                            ProcessEntityDestroyed(msg);
                             break;
                     }
                     break;
@@ -164,7 +167,7 @@ public class Client : MonoBehaviour {
 
     }
 
-    private void ProccessAllocClientID(NetMsg msg) {
+    private void ProcessAllocClientID(NetMsg msg) {
         SC_AllocClientID allocIdMsg = (SC_AllocClientID)msg;
 
         clientID = allocIdMsg.ClientID;
@@ -178,11 +181,11 @@ public class Client : MonoBehaviour {
 
     }
 
-    private void ProccessEntityCreated(NetMsg msg) {
+    private void ProcessEntityCreated(NetMsg msg) {
         SC_EntityCreated createMsg = (SC_EntityCreated)msg;
         int type = createMsg.ObjectType;
         GameObject newObject = null;
-        Debug.Log("Entity Created, ofType: " + type);
+        //Debug.Log("Entity Created, ofType: " + type);
         switch (type) {
             case (byte)NetworkEntity.ObjType.Player:
                 if (clientID == createMsg.ClientID) { 
@@ -228,7 +231,7 @@ public class Client : MonoBehaviour {
         return proj;
     }
 
-    private void ProccessMovementData(NetMsg msg) {
+    private void ProcessMovementData(NetMsg msg) {
         // player creation msg is sent after the other creation nessages when starting this client, so when hes created we can receive updates
         if (!playerAvatarCreated)
             return;
@@ -240,7 +243,7 @@ public class Client : MonoBehaviour {
         Logger.Log(Time.time, Time.realtimeSinceStartup, moveMsg.EntityID, "recState", moveMsg.TimeStamp.ToString());
     }
 
-    private void ProccessEntityDestroyed(NetMsg msg) {
+    private void ProcessEntityDestroyed(NetMsg msg) {
         SC_EntityDestroyed destroyMsg = (SC_EntityDestroyed)msg;
         if (netEntities.ContainsKey(destroyMsg.EntityID)) {
             netEntities[destroyMsg.EntityID].AddRecMessage(destroyMsg);
@@ -249,6 +252,11 @@ public class Client : MonoBehaviour {
         }
         else
             Debug.Log("ERROR, destroy for netEntity that does not exist in client with entityId:" + destroyMsg.EntityID);
+    }
+
+    private void ProcessPlayerData(NetMsg msg) {
+        SC_PlayerData playerDataMsg = (SC_PlayerData)msg;
+        gameManager.UpdatePlayerData(playerDataMsg.ClientID, playerDataMsg.Health, playerDataMsg.Score);
     }
 
 }

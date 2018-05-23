@@ -8,7 +8,7 @@ using UnityEngine;
 
 public class RemotePlayerShipServer : PlayerShip {
     
-    private Target target;
+    //private Target target;
     private bool dead = false;
     private ShipShootingServer shooting;
 
@@ -18,14 +18,14 @@ public class RemotePlayerShipServer : PlayerShip {
         base.Start();
 
         // target init
-        target = GetComponent<Target>();
-        target.Init(serverController, entityID, clientID); // clientID is assigned in Server script @ ProccessAllocClientID
+        //target = GetComponent<Target>();
+        //target.Init(serverController, entityID, clientID, this); // clientID is assigned in Server script @ ProccessAllocClientID
     }
 
     private void FixedUpdate() {
         HandleIncomingMessages();
 
-        UpdateGameData();
+        //UpdateGameData();
     }
 
     public override Vector3 GetVelocity() {
@@ -60,19 +60,18 @@ public class RemotePlayerShipServer : PlayerShip {
         GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
 
         AddSnapshotToQueue(message.TimeStamp, message.Position, message.Rotation, message.Velocity);
-        Debug.Log("registered ts "+ lastReceivedStateTime);////////////////////////////////////////////
+        //Debug.Log("registered ts "+ lastReceivedStateTime);////////////////////////////////////////////
     }
     private void UpdateGameData() {
-        if (target.Health == 0 && dead == false) {
+        /*
+        if (Health == 0 && dead == false) {
             Destroy(Instantiate(ShipExplosion, transform.position, Quaternion.identity), 1);
             GetComponentInChildren<MeshRenderer>().enabled = false;
             GetComponent<CapsuleCollider>().enabled = false;
             GetComponent<BoxCollider>().enabled = false;
             GetComponent<TrailRenderer>().enabled = false;
             dead = true;
-        }
-
-
+        }*/
     }
     // we run this till we get null
     public override SC_MovementData GetNextSnapshot(int entityId) {

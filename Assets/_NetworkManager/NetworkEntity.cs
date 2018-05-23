@@ -11,7 +11,9 @@ public class NetworkEntity : MonoBehaviour {
 
     protected GameObject networkControllerObj;
     protected Server serverController;
+    public Server ServerController { get { return serverController; } }
     protected Client clientController;
+    public Client ClientController { get { return clientController; } }
     protected int entityID = -1;
     protected bool isServer;
 

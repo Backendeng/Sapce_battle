@@ -1,12 +1,10 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using UnityEngine.Networking;
 
 public class Server : MonoBehaviour {
 
+    public GameManager gameManager;
     public float sendRate = 0.05f;
     private int timeStep = 0;
     public int rate = 2;//2 for 0.06f 
@@ -35,12 +33,10 @@ public class Server : MonoBehaviour {
 
     //debug
     private float lastSendTime;
-    public bool logEnable = false;
 
     // Use this for initialization
     void Start ()
     {
-        Logger.LogEnabled = logEnable;
         Logger.AddPrefix("Server");
         NetworkTransport.Init();
 
@@ -54,12 +50,21 @@ public class Server : MonoBehaviour {
         int maxConnections = 10;
         HostTopology topology = new HostTopology(config, maxConnections);
 
-        hostId = NetworkTransport.AddHost(topology, inPort);
+        hostId = NetworkTransport.AddHost(topology, inPort); // TODO: add proofing. gives error if port is occupied.
         Debug.Log("Socket Open. SocketId is: " + hostId);
 
 
         entityManager = new EntityManager();
         InitializeWorld();
+    }
+
+    public void EnqueueReliable(NetMsg message) {
+        outgoingReliable.Enqueue(message);
+    }
+
+    public void CloseServer() {
+        NetworkTransport.RemoveHost(hostId);
+        Debug.Log("Socked " + hostId + " Closed.");
     }
 
     void InitializeWorld() {
@@ -155,17 +160,21 @@ public class Server : MonoBehaviour {
 
     private void ProccessStateMessage(NetMsg msg, int recConnectionId) {
         //process message and send pos and rot to playerObject on this server 
-       
-        Debug.Log("rec ts: " + ((SC_MovementData)msg).TimeStamp);///////////////////////////////////////////////
+        if (!connectedPlayers.ContainsKey(recConnectionId)) {
+            Debug.LogWarning("clientID = " + recConnectionId + "does not exist in the connected players dict!");
+            return;
+        }
+        //Debug.Log("rec ts: " + ((SC_MovementData)msg).TimeStamp);///////////////////////////////////////////////
         NetworkEntity entity = connectedPlayers[recConnectionId].GetComponent<NetworkEntity>();
         entity.AddRecMessage(msg);
         Logger.Log(Time.time, Time.realtimeSinceStartup, entity.EntityID, "rec", ((SC_MovementData)msg).TimeStamp.ToString());
     }
 
     private void ProccessAllocClientID(SC_AllocClientID msg, int recConnectionId) {
-
+        gameManager.AddPlayer(recConnectionId);
         //send all netEntites to new player 
         SendAllEntitiesToNewClient(recConnectionId);
+        gameManager.SendAllGameDataToNewClient(recConnectionId);
 
         int entityId;
         GameObject newPlayer = entityManager.CreateEntity(remotePlayer, playerSpawn.position, playerSpawn.rotation, (byte)NetworkEntity.ObjType.Player, out entityId);
@@ -175,11 +184,15 @@ public class Server : MonoBehaviour {
         //broadcast new entity to all
         SC_EntityCreated msg1 = new SC_EntityCreated(entityId, Time.time, playerSpawn.position, playerSpawn.rotation, recConnectionId, (byte)NetworkEntity.ObjType.Player);
         outgoingReliable.Enqueue(msg1);
+
+        Debug.Log("Player with client id = " + recConnectionId + " joined the game.");
     }
 
     private void ProccessDisconnection(int recConnectionId) {
-        if (!connectedPlayers.ContainsKey(recConnectionId))
+        if (!connectedPlayers.ContainsKey(recConnectionId)) {
+            Debug.LogError("clientID = " + recConnectionId + "does not exist in the connected players dict!");
             return;
+        }
 
         int entityIdToDestroy = connectedPlayers[recConnectionId].GetComponent<NetworkEntity>().EntityID;
 
@@ -274,8 +287,8 @@ public class Server : MonoBehaviour {
             if(entity.Value.ObjectType == (byte)NetworkEntity.ObjType.Player) {
                 SC_MovementData msg = entity.Value.GetNextSnapshot(entity.Key);
                 while (msg != null) {
-                    Debug.Log("sent ts: "+ msg.TimeStamp);///////////////////////////////////////////////
-                    Logger.Log(Time.time, Time.realtimeSinceStartup, entity.Key, "sent", msg.TimeStamp.ToString());
+                    //Debug.Log("sent ts: "+ msg.TimeStamp);///////////////////////////////////////////////
+                    //Logger.Log(Time.time, Time.realtimeSinceStartup, entity.Key, "sent", msg.TimeStamp.ToString());
                     outgoingUnReliable.Enqueue(msg);
                     msg = entity.Value.GetNextSnapshot(entity.Key);
                 }

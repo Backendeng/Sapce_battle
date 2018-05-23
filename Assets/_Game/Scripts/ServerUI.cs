@@ -1,11 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class ServerUI : MonoBehaviour {
 
     private Text ipAddressText;
+    public GameObject EscapeMenu;
+    public Server serverController;
 
-    // Use this for initialization
     void Start () {
         GameObject ipField = GameObject.Find("ipAddressText");
         if (ipField) {
@@ -17,10 +19,23 @@ public class ServerUI : MonoBehaviour {
 
         ipAddressText.text = string.Format("Host Lan IP Address: {0}", Network.player.ipAddress.ToString() );
 
+        EscapeMenu.SetActive(false);
     }
 	
-	// Update is called once per frame
 	void Update () {
-		
-	}
+        if (Input.GetKeyDown(KeyCode.Escape)) {
+            if (EscapeMenu.activeSelf) {
+                EscapeMenu.SetActive(false);
+            }
+            else {
+                EscapeMenu.SetActive(true);
+            }
+        }
+    }
+
+    public void QuitServer() {
+        // do some stuff before closing server instance
+        serverController.CloseServer();
+        SceneManager.LoadScene(0);
+    }
 }

@@ -115,6 +115,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100016, guid: 2d387835a17b2bd4fa7cf1be325a974e, type: 3}
   m_StaticBatchInfo:
@@ -169,8 +170,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: daf7d49bc5b34bf4ba578980b4785b7b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 100
-  missileExplosion: {fileID: 0}
+  speed: 50
+  missileExplosion: {fileID: 1283523661780226, guid: 17bbd929a091d5f48b2dad85d116f09d,
+    type: 2}
   timeout: 10
 --- !u!136 &136981066823891890
 CapsuleCollider:
@@ -179,7 +181,7 @@ CapsuleCollider:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1617560382120252}
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_Enabled: 1
   m_Radius: 0.16255414
   m_Height: 0.6188678

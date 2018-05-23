@@ -13,32 +13,28 @@ public class MessagesHandler {
 
         switch (message.Type) {
             case (byte)NetMsg.MsgType.SC_EntityCreated:
-                //jsonMsg = JsonConvert.SerializeObject((SC_EntityCreated)message);
                 bytesMessage = PackEntityCreatedMsg((SC_EntityCreated)message);
                 return bytesMessage;
                 //break;
             case (byte)NetMsg.MsgType.SC_EntityDestroyed:
-                //jsonMsg = JsonConvert.SerializeObject((SC_EntityDestroyed)message);
                 bytesMessage = PackEntityDestroyedMsg((SC_EntityDestroyed)message);
                 return bytesMessage;
                 //break;
             case (byte)NetMsg.MsgType.SC_MovementData:
-                //jsonMsg = JsonConvert.SerializeObject( (SC_MovementData)message );
                 bytesMessage = PackMovementMsg((SC_MovementData)message);
                 return bytesMessage;
-            //break;
+                //break;
             case (byte)NetMsg.MsgType.CS_CreationRequest:
-                //jsonMsg = JsonConvert.SerializeObject( (CS_ShootMsg)message );
                 bytesMessage = PackCreationRequestMsg((CS_CreationRequest)message);
                 return bytesMessage;
 			case (byte)NetMsg.MsgType.CS_MissileRequest:
-				//jsonMsg = JsonConvert.SerializeObject( (CS_ShootMsg)message );
 				bytesMessage = PackMissileRequestMsg((CS_MissileRequest)message);
 				return bytesMessage;
-            //break;
-            case (byte)NetMsg.MsgType.CS_InputData:
-                jsonMsg = JsonConvert.SerializeObject((CS_InputData)message);
-                break;
+                //break;
+            case (byte)NetMsg.MsgType.SC_PlayerData:
+                bytesMessage = PackPlayerDataMsg((SC_PlayerData)message);
+                return bytesMessage;
+                //break;
             case (byte)NetMsg.MsgType.SC_AllocClientID:
                 jsonMsg = JsonConvert.SerializeObject((SC_AllocClientID)message);
                 break;
@@ -64,27 +60,22 @@ public class MessagesHandler {
         byte msgType = packedMessage[0];
         switch (msgType) {
             case (byte)NetMsg.MsgType.SC_EntityCreated:
-                //unpackedMessage = JsonConvert.DeserializeObject<SC_EntityCreated>(jsonMsg);
                 unpackedMessage = UnpackEntityCreatedMsg(packedMessage);
                 break;
             case (byte)NetMsg.MsgType.SC_EntityDestroyed:
-                //unpackedMessage = JsonConvert.DeserializeObject<SC_EntityDestroyed>(jsonMsg);
                 unpackedMessage = UnpackEntityDestroyedMsg(packedMessage);
                 break;
             case (byte)NetMsg.MsgType.SC_MovementData:
-                //unpackedMessage = JsonConvert.DeserializeObject<SC_MovementData>(jsonMsg);
                 unpackedMessage = UnpackMovementMsg(packedMessage);
                 break;
             case (byte)NetMsg.MsgType.CS_CreationRequest:
-                //unpackedMessage = JsonConvert.DeserializeObject<CS_ShootMsg>(jsonMsg);
                 unpackedMessage = UnpackCreationRequestMsg(packedMessage);
                 break;
 			case (byte)NetMsg.MsgType.CS_MissileRequest:
-				//unpackedMessage = JsonConvert.DeserializeObject<CS_ShootMsg>(jsonMsg);
 				unpackedMessage = UnpackMissileRequestMsg(packedMessage);
 				break;
-            case (byte)NetMsg.MsgType.CS_InputData:
-                unpackedMessage = JsonConvert.DeserializeObject<CS_InputData>(jsonMsg);
+            case (byte)NetMsg.MsgType.SC_PlayerData:
+                unpackedMessage = UnpackPlayerDataMsg(packedMessage);
                 break;
             case (byte)NetMsg.MsgType.SC_AllocClientID:
                 unpackedMessage = JsonConvert.DeserializeObject<SC_AllocClientID>(jsonMsg);
@@ -321,6 +312,36 @@ public class MessagesHandler {
         int entityID = System.BitConverter.ToInt32(packedMessage, 5);
 
         SC_EntityDestroyed unpacked = new SC_EntityDestroyed(entityID, timeStamp);
+
+        return unpacked;
+    }
+
+    private static byte[] PackPlayerDataMsg(SC_PlayerData message) {
+        byte[] packedMessage = new byte[16 + headerSize];
+        packedMessage[0] = message.Type;
+
+        byte[] timeStamp = System.BitConverter.GetBytes(message.TimeStamp);   // 1
+        byte[] clientID = System.BitConverter.GetBytes(message.ClientID);     // 5
+        byte[] health = System.BitConverter.GetBytes(message.Health);     // 9
+        byte[] score = System.BitConverter.GetBytes(message.Score);     // 13
+
+
+        System.Buffer.BlockCopy(timeStamp, 0, packedMessage, 1, 4);
+        System.Buffer.BlockCopy(clientID, 0, packedMessage, 5, 4);
+        System.Buffer.BlockCopy(health, 0, packedMessage, 9, 4);
+        System.Buffer.BlockCopy(score, 0, packedMessage, 13, 4);
+
+        return packedMessage;
+    }
+
+    private static SC_PlayerData UnpackPlayerDataMsg(byte[] packedMessage) {
+
+        float timeStamp = System.BitConverter.ToSingle(packedMessage, 1);
+        int clientID = System.BitConverter.ToInt32(packedMessage, 5);
+        int health = System.BitConverter.ToInt32(packedMessage, 9);
+        int score = System.BitConverter.ToInt32(packedMessage, 13);
+
+        SC_PlayerData unpacked = new SC_PlayerData(clientID, timeStamp, health, score);
 
         return unpacked;
     }

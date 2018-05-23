@@ -10,6 +10,9 @@ using UnityEngine;
 public abstract class PlayerShip : NetworkEntity
 {
     protected int clientID = -1;
+    public int Health { get; set; }
+    private int initialHealth = 100;
+    public int Score { get; set; }
 
     public bool isPlayer = true;
     protected static PlayerShip activeShip;
@@ -47,5 +50,6 @@ public abstract class PlayerShip : NetworkEntity
     protected void Awake() {
         input = GetComponent<PlayerShipInput>();
         physics = GetComponent<PlayerShipPhysics>();
+        Health = initialHealth;
     }
 }

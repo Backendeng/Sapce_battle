@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 [RequireComponent(typeof(ShipShootingClient))]
 
@@ -14,7 +14,8 @@ public class LocalPlayerShip : PlayerShip {
     private float latency;
 
     public float sendStateRate = 0.05f;
-   
+    public static bool showUnsmoothedShadow = false;
+    public static bool showInterpolatedShadow = false;   
 
     private new void Awake() {
         base.Awake();
@@ -26,9 +27,10 @@ public class LocalPlayerShip : PlayerShip {
         if (isPlayer)
             activeShip = this;
 
-        if (shadowPrefab != null)
+        if (shadowPrefab != null && showUnsmoothedShadow)
             shadow = Instantiate(shadowPrefab, new Vector3(), new Quaternion()).transform;
-        if (interShadowPrefab != null)
+
+        if (interShadowPrefab != null && showInterpolatedShadow)
             InterShadow = Instantiate(interShadowPrefab, new Vector3(), new Quaternion()).GetComponent<NetworkEntity>();
 
         // shooting init
@@ -45,8 +47,6 @@ public class LocalPlayerShip : PlayerShip {
 
         // update the server with our position
         SendStateToServer(transform.position, transform.rotation, Velocity);
-
-        
     }
 
 
@@ -98,8 +98,8 @@ public class LocalPlayerShip : PlayerShip {
             NetMsg netMessage = incomingQueue.Dequeue();
             switch (netMessage.Type) {
                 case (byte)NetMsg.MsgType.SC_MovementData:
-                    MoveShadow((SC_MovementData)netMessage);
-                    MoveInterShadow((SC_MovementData)netMessage);
+                    if (showUnsmoothedShadow) MoveShadow((SC_MovementData)netMessage);
+                    if (showInterpolatedShadow) MoveInterShadow((SC_MovementData)netMessage);
                     break;
                 case (byte)NetMsg.MsgType.SC_EntityDestroyed:
                     Destroy(gameObject);
@@ -114,24 +114,11 @@ public class LocalPlayerShip : PlayerShip {
     private void MoveShadow(SC_MovementData message) {
         Vector3 pos = this.gameObject.GetComponent<Transform>().position;
         Quaternion rot = this.gameObject.GetComponent<Transform>().rotation;
-        if (shadow != null) {
-            shadow.GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
-        }
-        else {
-          //  Debug.LogWarning("No shadow prefab connected to LocalPlayerShip");
-        }
-        
+        shadow.GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
     }
 
     private void MoveInterShadow(SC_MovementData message) {
-        if (InterShadow != null) {
-            InterShadow.AddRecMessage(message);
-        }
-        else {
-        //    Debug.LogWarning("No InterShadow prefab connected to LocalPlayerShip");
-        }
-
-
+        InterShadow.AddRecMessage(message);
     }
 
 }

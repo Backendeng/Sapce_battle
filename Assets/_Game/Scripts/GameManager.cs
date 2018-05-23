@@ -11,6 +11,8 @@ public class GameManager : MonoBehaviour {
 
     private int initialHealth = 100;
 
+    
+
     private class PlayerData {
         public int Health { get; set; }
         public int Score { get; set; }
@@ -18,6 +20,7 @@ public class GameManager : MonoBehaviour {
     };
 
     private Dictionary<int, PlayerData> PlayerDataDict = new Dictionary<int, PlayerData>();
+    Dictionary<int, PlayerShip> PlayerShipsDict = new Dictionary<int, PlayerShip>(); // For Client Use Only
 
     void Start () {
         // setting up serverController / clientController referecnce 
@@ -68,14 +71,24 @@ public class GameManager : MonoBehaviour {
         }
     }
 
-    public void AddPlayer(int clientID) {
+    public void AddPlayerData(int clientID) {
+        // Called On Server Only
         if (PlayerDataDict.ContainsKey(clientID)) {
             Debug.LogWarning("PlayerDataDict already contains player data with client id = " + clientID);
             return;
         }
         PlayerData playerData = new PlayerData(initialHealth, 0);
         PlayerDataDict.Add(clientID, playerData);
+    }
 
+    public void AddPlayerShip(int clientID, GameObject shipObj) {
+        // Called On Client Only
+        if (PlayerShipsDict.ContainsKey(clientID)) {
+            Debug.LogWarning("PlayerShipsDict already contains player ship with client id = " + clientID);
+            return;
+        }
+        PlayerShipsDict.Add(clientID, shipObj.GetComponent<PlayerShip>());
+        Debug.Log("ship was added to PlayerShipsDict for client id = " + clientID);
     }
 
     // called on server when updating, and on client when receiving SC_PlayerData message from server
@@ -89,10 +102,25 @@ public class GameManager : MonoBehaviour {
             PlayerDataDict.Add(clientID, playerData);
         }
 
-        if (!isServer && PlayerShip.ActiveShip && PlayerShip.ActiveShip.ClientID == clientID) {
-            PlayerShip.ActiveShip.Health = health;
-            PlayerShip.ActiveShip.Score = score;
-            Debug.Log("Updating local player ship data: health = " + health + " , score = " + score);
+        if (!isServer) {
+            if (!PlayerShip.ActiveShip) // Active Ship yet to be initiated.
+                return;
+
+            if (PlayerShip.ActiveShip.ClientID == clientID) {
+                PlayerShip.ActiveShip.Health = health;
+                PlayerShip.ActiveShip.Score = score;
+                Debug.Log("Updating local player ship data: health = " + health + " , score = " + score);
+            }
+            else {
+                if (!PlayerShipsDict.ContainsKey(clientID)) {
+                    Debug.LogWarning("PlayerShipsDict doesn't contain the ship of client id = " + clientID);
+                    return;
+                }
+                PlayerShip ship = PlayerShipsDict[clientID];
+                ship.Health = health;
+                ship.Score = score;
+                Debug.Log("Updating remote player ship data: health = " + health + " , score = " + score);
+            }
         }
 
         if (isServer && health == 0) {

@@ -25,13 +25,6 @@ public abstract class PlayerShip : NetworkEntity
 
     public GameObject ShipExplosion;
 
-
-    // Getters for external objects
-    public bool UsingMouseInput
-    {
-        get { return input.useMouseInput; }
-    }
-
     public Vector3 Velocity
     {
         get { return physics.Rigidbody.velocity; }
@@ -44,7 +37,10 @@ public abstract class PlayerShip : NetworkEntity
 	
 	private void Update ()
     {
-
+        if (Health == 0) { // TEMP
+            Destroy(Instantiate(ShipExplosion, transform.position, Quaternion.identity), 3);
+            Health = 1;
+        }
     }
 
     protected void Awake() {

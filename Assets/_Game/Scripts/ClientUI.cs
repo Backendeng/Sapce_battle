@@ -27,9 +27,11 @@ public class ClientUI : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.Escape)) {
             if (EscapeMenu.activeSelf) {
                 EscapeMenu.SetActive(false);
+                Cursor.visible = false;
             }
             else {
                 EscapeMenu.SetActive(true);
+                Cursor.visible = true;
             }
         }
         
@@ -45,13 +47,6 @@ public class ClientUI : MonoBehaviour {
                 HUD.SetActive(true);
                 StartScreen.SetActive(false);
                 started = true;
-                /*
-                GameObject localPlayerShipObj = GameObject.Find("LocalPlayerShip");
-                if (localPlayerShipObj == null) {
-                    Debug.LogError("couldn't find LocalPlayerShip for the game manager");
-                }
-                gameManager.localPlayerShip = localPlayerShipObj.GetComponent<LocalPlayerShip>();
-                */
             }
         }
         

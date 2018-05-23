@@ -5,7 +5,7 @@ using UnityEngine;
 public class PlayerShipInput : MonoBehaviour {
 
     [Tooltip("use mouse and mousewheel for ship input. otherwise, uses regular control input")]
-    public bool useMouseInput = false;
+    public static bool useMouseInput = true;
 
     [Tooltip("add roll when using yaw")]
     public bool addRoll = true;

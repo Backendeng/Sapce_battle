@@ -32,6 +32,8 @@ public class MainMenu : MonoBehaviour {
             PlayMenuObj.SetActive(true);
             playMenuStatusText.text = "Connection Timed Out";
             errorNum = 0;
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
         }
 
     }

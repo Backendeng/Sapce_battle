@@ -171,13 +171,14 @@ public class Server : MonoBehaviour {
     }
 
     private void ProccessAllocClientID(SC_AllocClientID msg, int recConnectionId) {
-        gameManager.AddPlayer(recConnectionId);
+        gameManager.AddPlayerData(recConnectionId);
         //send all netEntites to new player 
         SendAllEntitiesToNewClient(recConnectionId);
         gameManager.SendAllGameDataToNewClient(recConnectionId);
 
         int entityId;
         GameObject newPlayer = entityManager.CreateEntity(remotePlayer, playerSpawn.position, playerSpawn.rotation, (byte)NetworkEntity.ObjType.Player, out entityId);
+        entityManager.netEntities[entityId].ClientID = recConnectionId;
         newPlayer.GetComponent<RemotePlayerShipServer>().ClientID = recConnectionId;
         connectedPlayers[recConnectionId] = newPlayer;
 
@@ -312,8 +313,11 @@ public class Server : MonoBehaviour {
         foreach (KeyValuePair<int, NetworkEntity> entity in entityManager.netEntities) {
             Vector3 pos = entity.Value.gameObject.GetComponent<Transform>().position;
             Quaternion rot = entity.Value.gameObject.GetComponent<Transform>().rotation;
-
-            SC_EntityCreated msg = new SC_EntityCreated(entity.Key, Time.time, pos, rot, -1, entity.Value.ObjectType);
+            int clientID = -1;
+            if (entity.Value.ObjectType == (byte)NetworkEntity.ObjType.Player) {
+                clientID = entity.Value.ClientID;
+            }
+            SC_EntityCreated msg = new SC_EntityCreated(entity.Key, Time.time, pos, rot, clientID, entity.Value.ObjectType);
             byte[] buffer = MessagesHandler.NetMsgPack(msg);
             NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
         }

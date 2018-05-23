@@ -66,6 +66,8 @@ public class NetworkEntity : MonoBehaviour {
         set { entityID = value; }
     }
 
+    public int ClientID { get; set; } // valid only for ObjType: Player
+
     public void Start() {
         // setting up serverController / clientController referecnce 
         networkControllerObj = GameObject.Find("ServerNetworkController");

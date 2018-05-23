@@ -1,12 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameSettings : MonoBehaviour {
     private bool loggingEnabled = false;
     private bool showUnsmoothedShadowEnabled = false;
     private bool showInterpolatedShadowEnabled = false;
+    private static bool useXboxController = false;
     
+    public static bool UseMouseInput { get { return !useXboxController; } }
 
     // Use this for initialization
     void Start () {
@@ -20,7 +23,7 @@ public class GameSettings : MonoBehaviour {
 
     
 
-    public void toggleSaveLogs() {
+    public void ToggleSaveLogs() {
         if (loggingEnabled) {
             loggingEnabled = false;
         }
@@ -28,9 +31,10 @@ public class GameSettings : MonoBehaviour {
             loggingEnabled = true;
         }
         Logger.LogEnabled = loggingEnabled;
+        Debug.Log("saving logs is: " + loggingEnabled);
     }
 
-    public void toggleUnsmoothedShadow() {
+    public void ToggleUnsmoothedShadow() {
         if (showUnsmoothedShadowEnabled) {
             showUnsmoothedShadowEnabled = false;
         }
@@ -38,9 +42,10 @@ public class GameSettings : MonoBehaviour {
             showUnsmoothedShadowEnabled = true;
         }
         LocalPlayerShip.showUnsmoothedShadow = showUnsmoothedShadowEnabled;
+        Debug.Log("show unsmoothed shadow is: " + showUnsmoothedShadowEnabled);
     }
 
-    public void toggleInterpolatedShadow() {
+    public void ToggleInterpolatedShadow() {
         if (showInterpolatedShadowEnabled) {
             showInterpolatedShadowEnabled = false;
         }
@@ -48,6 +53,19 @@ public class GameSettings : MonoBehaviour {
             showInterpolatedShadowEnabled = true;
         }
         LocalPlayerShip.showInterpolatedShadow = showInterpolatedShadowEnabled;
+        Debug.Log("show lerped shadow is: " + showInterpolatedShadowEnabled);
+    }
+
+    public void ToggleControls() {
+        if (useXboxController) {
+            useXboxController = false;
+
+        }
+        else {
+            useXboxController = true;
+        }
+        PlayerShipInput.useMouseInput = !useXboxController;
+        Debug.Log("using mouse input is: " + !useXboxController);
     }
 
 

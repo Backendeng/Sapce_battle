@@ -34,7 +34,7 @@ public class Projectile : NetworkEntity {
                 MoveProjUsingReceivedServerData((SC_MovementData)netMessage);
                 break;
             case (byte)NetMsg.MsgType.SC_EntityDestroyed:
-                Destroy(gameObject);
+                DestroyProjectile();
                 break;
             default:
                 Debug.Log("ERROR! Projectile on Client reveived an invalid NetMsg message. NetMsg Type: " + netMessage.Type);
@@ -87,11 +87,14 @@ public class Projectile : NetworkEntity {
         active = false;
     }
 
-    private void OnDestroy() {
+    private void DestroyProjectile() {
         if (!isServer && hit && active) { // if the projectile was destroyed before it did an explosion effect on the client, do it now.
             Destroy(Instantiate(PT_Explosion, transform.position, Quaternion.identity), 1);
+            Destroy(gameObject);
             return;
         }
+        else {
+            Destroy(gameObject);
+        }
     }
-
 }

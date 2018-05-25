@@ -236,7 +236,7 @@ TrailRenderer:
   m_ReflectionProbeUsage: 0
   m_RenderingLayerMask: 4294967295
   m_Materials:
-  - {fileID: 2100000, guid: cef9d7f352743bd4083dd5f21f84a1ac, type: 2}
+  - {fileID: 2100000, guid: 29252d90c31883745b4be86514f4cad5, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

@@ -72,7 +72,7 @@ public class RemotePlayerShipClient : PlayerShip {
 
         if (Health == 0) { // TODO: TEMP.
             Destroy(Instantiate(ShipExplosion, transform.position, Quaternion.identity), 3);
-            Health = 1;
+            Health = 1; // this is not the way to do this. just temp. remove later.
         }
     }
 

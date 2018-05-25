@@ -8,7 +8,8 @@ public class GameSettings : MonoBehaviour {
     private bool showUnsmoothedShadowEnabled = false;
     private bool showInterpolatedShadowEnabled = false;
     private static bool useXboxController = false;
-    
+    private static bool useAutoPilot = false;
+
     public static bool UseMouseInput { get { return !useXboxController; } }
 
     public void ToggleSaveLogs() {
@@ -54,6 +55,17 @@ public class GameSettings : MonoBehaviour {
         }
         PlayerShipInput.useMouseInput = !useXboxController;
         Debug.Log("using mouse input is: " + !useXboxController);
+    }
+
+    public void ToggleAutoPilot() {
+        if (useAutoPilot) {
+            useAutoPilot = false;
+        }
+        else {
+            useAutoPilot = true;
+        }
+        PlayerShipInput.useAutoPilot = useAutoPilot;
+        Debug.Log("using autopilot is: ");
     }
 
 

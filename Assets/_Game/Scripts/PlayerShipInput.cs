@@ -7,6 +7,9 @@ public class PlayerShipInput : MonoBehaviour {
     [Tooltip("use mouse and mousewheel for ship input. otherwise, uses regular control input")]
     public static bool useMouseInput = true;
 
+    [Tooltip("useautomatic ship input. overrides player controls")]
+    public static bool useAutoPilot = false;
+
     [Tooltip("add roll when using yaw")]
     public bool addRoll = true;
     [Tooltip("amount of roll added when using yaw")]
@@ -31,9 +34,18 @@ public class PlayerShipInput : MonoBehaviour {
     public float throttle;
 
 
+
 	// Update is called once per frame
 	private void Update ()
     {
+        if (useAutoPilot) {
+            yaw = 0.05f;
+            throttle = 1.0f;
+            roll = 0;
+            pitch = 0;
+            return;
+        }
+
 		if (useMouseInput)
         {
             SetStickCommandsUsingMouse();

@@ -33,7 +33,7 @@ public class Missile : NetworkEntity {
                 break;
             case (byte)NetMsg.MsgType.SC_EntityDestroyed:
                 Debug.Log("Missile Destroyed " + EntityID);
-                Destroy(gameObject);
+                DestroyMissile();
                 break;
             default:
                 Debug.Log("ERROR! RemoteProjectile on Client reveived an invalid NetMsg message. NetMsg Type: " + netMessage.Type);
@@ -44,10 +44,13 @@ public class Missile : NetworkEntity {
 
     private void FixedUpdate() {
         if (isServer) {
-            if (target == null)
+            if (target == null) { // TODO: handle case when target is suddenly gone
                 return;
+            }
             transform.LookAt(target);
-            rigid_body.AddRelativeForce(Vector3.forward * speed, ForceMode.Force);
+         
+            rigid_body.velocity = transform.forward * speed; 
+          
         }
     }
 
@@ -96,10 +99,14 @@ public class Missile : NetworkEntity {
         serverController.DestroyEntity(EntityID); 
     }
 
-    private void OnDestroy() {
+    private void DestroyMissile() {
         if (!isServer) { // if the projectile was destroyed before it did an explosion effect on the client, do it now.
             Destroy(Instantiate(missileExplosion, transform.position, Quaternion.identity), 1);// whats wrong with spawning new objects in onDestroy?
+            Destroy(gameObject);
             return;
+        }
+        else {
+            Destroy(gameObject);
         }
     }
 

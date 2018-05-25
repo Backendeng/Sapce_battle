@@ -47,12 +47,16 @@ public class MainMenu : MonoBehaviour {
         
         playMenuStatusText.text = "";
         string ipAddress = ipInputField.text;
-        if (ValidateIPv4(ipAddress) == false) {
+        if (ipAddress != "" && ValidateIPv4(ipAddress) == false) {
             playMenuStatusText.text = "Invalid IP Address";
             return;
         }
         PlayMenuObj.SetActive(false);
-        Client.ServerIP = ipAddress;
+        if (ipAddress == "") {
+            Client.ServerIP = "127.0.0.1";
+        } else {
+            Client.ServerIP = ipAddress;
+        }
         SceneManager.LoadScene(2);
     }
 

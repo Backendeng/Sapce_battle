@@ -58,7 +58,6 @@ GameObject:
   - component: {fileID: 96184013700674404}
   - component: {fileID: 65106169617045604}
   - component: {fileID: 114912840389327646}
-  - component: {fileID: 114006789475518004}
   - component: {fileID: 114460209427699318}
   - component: {fileID: 114034978615472292}
   m_Layer: 0
@@ -373,17 +372,6 @@ TrailRenderer:
     generateLightingData: 0
   m_MinVertexDistance: 0.1
   m_Autodestruct: 0
---- !u!114 &114006789475518004
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1973235223465584}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d9e550c2fcc57dd468b9bfa7075811a2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &114034978615472292
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -421,7 +409,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14513635602402e49a4bcadbbf3aca20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isPlayer: 0
   ShipExplosion: {fileID: 1283523661780226, guid: 17bbd929a091d5f48b2dad85d116f09d,
     type: 2}
 --- !u!114 &114912840389327646
@@ -435,7 +422,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00990a6dfaa626a43935b2e10648502d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  useMouseInput: 0
   addRoll: 1
   rollMul: 0.5
   mouseStickSensitivity: 0.5

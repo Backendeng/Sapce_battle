@@ -15,26 +15,21 @@ public class MessagesHandler {
             case (byte)NetMsg.MsgType.SC_EntityCreated:
                 bytesMessage = PackEntityCreatedMsg((SC_EntityCreated)message);
                 return bytesMessage;
-                //break;
             case (byte)NetMsg.MsgType.SC_EntityDestroyed:
                 bytesMessage = PackEntityDestroyedMsg((SC_EntityDestroyed)message);
                 return bytesMessage;
-                //break;
             case (byte)NetMsg.MsgType.SC_MovementData:
                 bytesMessage = PackMovementMsg((SC_MovementData)message);
                 return bytesMessage;
-                //break;
             case (byte)NetMsg.MsgType.CS_CreationRequest:
                 bytesMessage = PackCreationRequestMsg((CS_CreationRequest)message);
                 return bytesMessage;
 			case (byte)NetMsg.MsgType.CS_MissileRequest:
 				bytesMessage = PackMissileRequestMsg((CS_MissileRequest)message);
 				return bytesMessage;
-                //break;
             case (byte)NetMsg.MsgType.SC_PlayerData:
                 bytesMessage = PackPlayerDataMsg((SC_PlayerData)message);
                 return bytesMessage;
-                //break;
             case (byte)NetMsg.MsgType.SC_AllocClientID:
                 jsonMsg = JsonConvert.SerializeObject((SC_AllocClientID)message);
                 break;
@@ -118,7 +113,6 @@ public class MessagesHandler {
         System.Buffer.BlockCopy(velocity_x, 0, packedMessage, 37, 4);
         System.Buffer.BlockCopy(velocity_y, 0, packedMessage, 41, 4);
         System.Buffer.BlockCopy(velocity_z, 0, packedMessage, 45, 4);
-
 
         return packedMessage;
     }

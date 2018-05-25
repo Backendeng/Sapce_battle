@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class Target : MonoBehaviour {
     private Server serverController;
-    public GameManager gameManager;
-    public PlayerShip playerShip;
+    private GameManager gameManager;
+    private PlayerShip playerShip;
     private int clientID = -1; // default value for non-client network entities with a target script
     private int entityID;
 
@@ -32,7 +32,7 @@ public class Target : MonoBehaviour {
         // hit by a projectile of another player
         if (other.CompareTag("Projectile") && other.GetComponent<Projectile>().ClientID != clientID) {
             Debug.Log("Target was hit: entityID = " + entityID + ", clientID = " + clientID);
-            TakeDamage(10);
+            TakeDamage(Projectile.Damage);
         }
     }
 }

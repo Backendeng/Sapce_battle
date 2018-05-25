@@ -47,7 +47,7 @@ public class Server : MonoBehaviour {
         Debug.Log("unreliableChannelId open id: " + unreliableChannelId);
 
 
-        int maxConnections = 10;
+        int maxConnections = 20;
         HostTopology topology = new HostTopology(config, maxConnections);
 
         hostId = NetworkTransport.AddHost(topology, inPort); // TODO: add proofing. gives error if port is occupied.
@@ -56,6 +56,17 @@ public class Server : MonoBehaviour {
 
         entityManager = new EntityManager();
         InitializeWorld();
+    }
+
+    private void FixedUpdate() {
+        //Debug.Log("============================================================>> frame: " + Time.frameCount + " time: " + Time.time + " realtime: " + Time.realtimeSinceStartup);
+        Logger.Log(Time.time, Time.realtimeSinceStartup, -1, "frame", Time.frameCount.ToString());
+
+        Listen();//first listen
+        StageAllEntities();// put all entity positions and rotations on queue
+        BroadcastAllMessages(outgoingUnReliable, unreliableChannelId);//then broadcast unreliable
+        BroadcastAllMessages(outgoingReliable, reliableChannelId);//then broadcast reliable
+
     }
 
     public void EnqueueReliable(NetMsg message) {
@@ -78,19 +89,6 @@ public class Server : MonoBehaviour {
             SC_EntityCreated msg1 = new SC_EntityCreated(id, Time.time, tr.position, tr.rotation, -1, entity.GetComponent<NetworkEntity>().ObjectType);
             outgoingReliable.Enqueue(msg1);
         }
-    }
-
-    // Update is called once per frame
-    private void FixedUpdate ()
-    {
-        //Debug.Log("============================================================>> frame: " + Time.frameCount + " time: " + Time.time + " realtime: " + Time.realtimeSinceStartup);
-        Logger.Log(Time.time, Time.realtimeSinceStartup, -1, "frame", Time.frameCount.ToString());
-
-        Listen();//first listen
-        StageAllEntities();// put all entity positions and rotations on queue
-        BroadcastAllMessages(outgoingUnReliable, unreliableChannelId);//then broadcast unreliable
-        BroadcastAllMessages(outgoingReliable, reliableChannelId);//then broadcast reliable
-
     }
 
     void OnApplicationQuit() {

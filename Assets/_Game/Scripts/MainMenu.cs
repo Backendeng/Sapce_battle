@@ -11,8 +11,6 @@ public class MainMenu : MonoBehaviour {
     public InputField ipInputField;
     public Text playMenuStatusText;
 
-    private bool pingResult = false;
-    private bool pinging;
     private static int errorNum = 0;
     public static int ErrorNum { get { return errorNum; } set { errorNum = value; } }
 
@@ -27,7 +25,7 @@ public class MainMenu : MonoBehaviour {
             SettingsMenuObj.SetActive(false);
 
         }
-        else if (errorNum == 6) {
+        else if (errorNum == 6) { // Connection Timeout
             MainMenuObj.SetActive(false);
             PlayMenuObj.SetActive(true);
             playMenuStatusText.text = "Connection Timed Out";
@@ -35,11 +33,6 @@ public class MainMenu : MonoBehaviour {
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
         }
-
-    }
-
-    public void Update() {
-  
     }
 
     public static void LoadScene(int scene) {
@@ -58,13 +51,6 @@ public class MainMenu : MonoBehaviour {
             playMenuStatusText.text = "Invalid IP Address";
             return;
         }
-        /*
-        pinging = true;
-        StartCoroutine(PingUpdate(ipAddress));
-        while (pinging == true) { }; // no no no!
-        if (pingResult == false) {
-            return;
-        }*/
         PlayMenuObj.SetActive(false);
         Client.ServerIP = ipAddress;
         SceneManager.LoadScene(2);
@@ -72,24 +58,6 @@ public class MainMenu : MonoBehaviour {
 
     public void OnOpenPlayMenu() {
         playMenuStatusText.text = "";
-    }
-
-    System.Collections.IEnumerator PingUpdate(string ipAddress) {
-        Ping serverPing = new Ping(ipAddress);
-        yield return new WaitForSeconds(1f);
-
-        playMenuStatusText.text = serverPing.time.ToString();
-
-        if (serverPing.isDone == false) {
-            playMenuStatusText.text = "Ping Failed.";
-            pingResult = false;
-            pinging = false;
-        }
-        else {
-            playMenuStatusText.text = "Ping Returned. Connecting...";
-            pingResult = true;
-            pinging = false;
-        }
     }
 
     public bool ValidateIPv4(string ipString) {

@@ -11,18 +11,6 @@ public class GameSettings : MonoBehaviour {
     
     public static bool UseMouseInput { get { return !useXboxController; } }
 
-    // Use this for initialization
-    void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
-
-    
-
     public void ToggleSaveLogs() {
         if (loggingEnabled) {
             loggingEnabled = false;

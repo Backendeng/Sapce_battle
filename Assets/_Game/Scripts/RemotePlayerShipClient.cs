@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -38,7 +38,7 @@ public class RemotePlayerShipClient : PlayerShip {
         MoveShipUsingReceivedServerData();//lerp
     }
     */
-        float lastRecTime = -1;
+    float lastRecTime = -1;
     private void FixedUpdate() {
         
        // Debug.Log("Dpos: " + Vector3.Magnitude(transform.position - lastPos));
@@ -70,6 +70,10 @@ public class RemotePlayerShipClient : PlayerShip {
 
         MoveShipUsingReceivedServerData();//lerp
 
+        if (Health == 0) { // TODO: TEMP.
+            Destroy(Instantiate(ShipExplosion, transform.position, Quaternion.identity), 3);
+            Health = 1;
+        }
     }
 
     private void SetShipState(SC_MovementData msg) {

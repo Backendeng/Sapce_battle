@@ -1,31 +1,30 @@
 using UnityEngine;
 
+
 public class Projectile : NetworkEntity {
-    private int clientID = 0; // owner
-    private static float speed = 400f;
-    private bool active = true;
-    private bool hit = false;
-    
-    private float timeout = 2.0f;
-    private float destroyTime;
-    //private Rigidbody rigidBody;
 
     public GameObject missileExplosion;
     public GameObject PT_Explosion;
 
+    public static readonly int Damage = 10;
+    private static readonly float speed = 400f;
+    
+    private bool active = true;
+    private bool hit = false;
+    private readonly float timeout = 2.0f;
+    private float destroyTime;
+
     public static float Speed { get { return speed; } }
-    public int ClientID { get { return clientID; } set { clientID = value; } }
 
     public new void Start() {
         base.Start();
         GetComponent<Rigidbody>().velocity = transform.forward * speed;
         destroyTime = Time.time + timeout;
-        //rigidBody = GetComponent<Rigidbody>();
     }
 
     private void Update() {
         if (isServer && Time.time > destroyTime && active) {
-            serverController.DestroyEntity(entityID);
+            serverController.DestroyEntity(EntityID);
         }
         if (incomingQueue.Count == 0)
             return;
@@ -52,11 +51,10 @@ public class Projectile : NetworkEntity {
 
         if (other.CompareTag("Projectile") || // ignore bullet to bullet collision
             other.CompareTag("Boundary") || // ignore collision with boundary
-            other.CompareTag("Player") && clientID == other.gameObject.GetComponent<PlayerShip>().ClientID) // ignore self harming!
+            other.CompareTag("Player") && ClientID == other.gameObject.GetComponent<PlayerShip>().ClientID) // ignore self harming!
         {
             return;
         }
-
         hit = true;
 
         if (!isServer) { // do local effect only
@@ -74,19 +72,18 @@ public class Projectile : NetworkEntity {
             //gameController.AddScore(scoreValue);
         }
 
-        if (clientID != -1) {
+        if (ClientID != 0) {
             Explode();
         }
     }
 
     private void Explode() {
         // On Server:
-
         Destroy(Instantiate(PT_Explosion, transform.position, Quaternion.identity), 1);
         GetComponentInChildren<TrailRenderer>().enabled = false;
         GetComponent<SphereCollider>().enabled = false;
 
-        serverController.DestroyEntity(entityID);
+        serverController.DestroyEntity(EntityID);
         active = false;
     }
 

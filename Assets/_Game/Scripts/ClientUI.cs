@@ -49,14 +49,11 @@ public class ClientUI : MonoBehaviour {
                 started = true;
             }
         }
-        
-        
     }
 
 
     public void QuitGame() {
         // do some stuff before closing client instance
-
         SceneManager.LoadScene(0);
     }
 }

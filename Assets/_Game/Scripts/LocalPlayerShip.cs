@@ -24,8 +24,7 @@ public class LocalPlayerShip : PlayerShip {
     private new void Start() {
         base.Start();
 
-        if (isPlayer)
-            activeShip = this;
+        activeShip = this;
 
         if (shadowPrefab != null && showUnsmoothedShadow)
             shadow = Instantiate(shadowPrefab, new Vector3(), new Quaternion()).transform;
@@ -33,12 +32,12 @@ public class LocalPlayerShip : PlayerShip {
         if (interShadowPrefab != null && showInterpolatedShadow)
             InterShadow = Instantiate(interShadowPrefab, new Vector3(), new Quaternion()).GetComponent<NetworkEntity>();
 
+        ClientID = clientController.ClientID;
+
         // shooting init
         shooting = GetComponent<ShipShootingClient>();
-        shooting.Init(clientController, entityID);
-
-        clientID = clientController.ClientID;
-
+        shooting.Init(clientController, EntityID);
+        
     }
 
     private void FixedUpdate() {
@@ -62,6 +61,10 @@ public class LocalPlayerShip : PlayerShip {
         // shooting
         shooting.HandleShooting();
 
+        if (Health == 0) { // TODO: TEMP!!!
+            Destroy(Instantiate(ShipExplosion, transform.position, Quaternion.identity), 3);
+            Health = 1; // this is not the way to do this. just temp. remove later.
+        }
     }
 
     /*
@@ -89,7 +92,7 @@ public class LocalPlayerShip : PlayerShip {
             return;
         nextSendTime = Time.fixedTime + 0.06f;
         //Debug.Log("DDDD sent " + Time.fixedTime);///////////////////
-        clientController.SendStateToHost(entityID, pos, rot, vel);
+        clientController.SendStateToHost(EntityID, pos, rot, vel);
 
     }
 

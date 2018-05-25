@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -16,21 +16,16 @@ public class PlayerShipPhysics : MonoBehaviour {
 
     [Tooltip("multiplier for all forces. can be used to keep force numbers smaller and more readable")]
     public float forceMultiplier = 100.0f;
-
-    private Rigidbody rigid_body;
-    public Rigidbody Rigidbody
-    {
-        get { return rigid_body; }
-    }
     
-
     private Vector3 appliedLinearForce = Vector3.zero;
     private Vector3 appliedAngularForce = Vector3.zero;
 
+    public Rigidbody Rigidbody { get; private set; }
+
     void Awake ()
     {
-        rigid_body = GetComponent<Rigidbody>();
-        if (rigid_body == null)
+        Rigidbody = GetComponent<Rigidbody>();
+        if (Rigidbody == null)
         {
             Debug.LogWarning(name + ": PlayerShipPhysics has no rigidbody.");
         }
@@ -38,10 +33,10 @@ public class PlayerShipPhysics : MonoBehaviour {
 
     void FixedUpdate()
     {
-        if (rigid_body != null)
+        if (Rigidbody != null)
         {
-            rigid_body.AddRelativeForce(appliedLinearForce * forceMultiplier, ForceMode.Force);
-            rigid_body.AddRelativeTorque(appliedAngularForce * forceMultiplier, ForceMode.Force);
+            Rigidbody.AddRelativeForce(appliedLinearForce * forceMultiplier, ForceMode.Force);
+            Rigidbody.AddRelativeTorque(appliedAngularForce * forceMultiplier, ForceMode.Force);
         }
     }
 

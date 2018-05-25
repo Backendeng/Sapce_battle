@@ -13,7 +13,6 @@ public class MouseCrosshair : MonoBehaviour
         crosshair.enabled = PlayerShipInput.useMouseInput;
 
         if (crosshair.enabled) {
-
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Confined;
         }
@@ -23,8 +22,7 @@ public class MouseCrosshair : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
+    private void Update() {
         crosshair.transform.position = Input.mousePosition;
     }
 }

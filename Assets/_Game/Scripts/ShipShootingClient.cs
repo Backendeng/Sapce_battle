@@ -3,51 +3,38 @@ using UnityEngine.Networking;
 
 public class ShipShootingClient : MonoBehaviour {
 
+    protected Client clientController;
+
+    private AudioSource projectileSound;
+    private Camera playerCamera;
+
+    public AudioClip projectileClip;
+    public GameObject projectile;   // projectile prefab
+    public GameObject missile;      // missile prefab
+    public Transform shotSpawn;     // shooting spawn location
+
     [Header("Shooting")]
     private float fireRate1 = 0.1f;
     private float nextFire1;
     private float fireRate2 = 0.5f;
     private float nextFire2;
-    public GameObject projectile;   // projectile prefab
-    public GameObject missile;      // missile prefab
-    public Transform shotSpawn;     // shooting spawn location
+    private readonly float rayRange = 1000f;
 
-    // Shooting : Phaser
-    public GameObject phaser;
-    public ParticleSystem phaserSparks;
-    float rayRange = 1000f;
-
-    //LocalPlayerShip ship;
-
-    protected Client clientController;
-    protected int entityID;
-
-    private AudioSource projectileSound;
-    public AudioClip projectileClip;
-
-    private Camera playerCamera;
-
+    
     private void Awake() {
-
-        //missile = Resources.Load<GameObject>("Prefabs/Missile");
-        //phaser = Resources.Load<GameObject>("Prefabs/Phaser");
-        //ship = GetComponent<LocalPlayerShip>();
         projectileSound = GetComponent<AudioSource>();
         projectileSound.clip = projectileClip;
-
         playerCamera = GetComponentInChildren<Camera>();
     }
 
     public void Init(Client clientController, int entityID) {
         this.clientController = clientController;
-        this.entityID = entityID;
     }
 
     public void HandleShooting() {
         // Secondary Shot - Missiles
         if (Time.time > nextFire2 && (Input.GetButtonDown("LeftTrigger") || Input.GetMouseButtonDown(1))) {
             nextFire2 = Time.time + fireRate2;
-            //Instantiate(shot, shotSpawn.position, shotSpawn.rotation);
             ShootMissile(shotSpawn.position, shotSpawn.rotation);
             
         }
@@ -68,15 +55,10 @@ public class ShipShootingClient : MonoBehaviour {
 
     private void ShootProjectile(Vector3 pos, Quaternion rot) {
         float netTimeStamp = NetworkTransport.GetNetworkTimestamp(); // NetworkTimeStamp is int, but we use float because NetMsg uses float for time stamps.
-        // instantiate a mock projectile to simulate the shooting instantly on the client side
-        GameObject mockProjectile = Instantiate(projectile, pos, rot);
+        GameObject mockProjectile = Instantiate(projectile, pos, rot); // destroyed when the real projectile from the server is instantiated.
         projectileSound.Play();
-        //GetComponent<AudioSource>().Play();
-        // mark as mock projectile (locally simulated untill the real projectile is instantiated)
-        mockProjectile.GetComponent<Projectile>().ClientID = -1;
-        // add to local dict, so mock projectile could be found and destroyed when the real projectile from the server is instantiated.
+        mockProjectile.GetComponent<Projectile>().ClientID = -1; // // mark as mock projectile (locally simulated untill the real projectile is instantiated)
         clientController.mockProjectiles.Add((int)netTimeStamp, mockProjectile);
-        // send request to the server for the real thing
         clientController.SendShotToHost((byte)NetworkEntity.ObjType.Projectile, pos, rot, (byte)NetworkEntity.ObjType.Projectile, (int)netTimeStamp);
     }
 

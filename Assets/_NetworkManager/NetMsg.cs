@@ -108,7 +108,7 @@ public class SC_AllocClientID : NetMsg {
         msgType = (byte)MsgType.SC_AllocClientID;
     }
 }
-//chsnge name to request Shot
+// TODO: change name to request Shot
 public class CS_CreationRequest : NetMsg {
     protected byte objectType;
     protected Vector3 position;

@@ -6,21 +6,19 @@ public class GameManager : MonoBehaviour {
     private GameObject networkControllerObj;
     private Client clientController;
     private Server serverController;
-    //public LocalPlayerShip localPlayerShip;
+
     private bool isServer;
+    private readonly int initialHealth = 100;
 
-    private int initialHealth = 100;
+    private Dictionary<int, PlayerData> PlayerDataDict = new Dictionary<int, PlayerData>();
+    private Dictionary<int, PlayerShip> PlayerShipsDict = new Dictionary<int, PlayerShip>(); // For Client Use Only
 
-    
 
     private class PlayerData {
         public int Health { get; set; }
         public int Score { get; set; }
         public PlayerData(int health, int score) { Health = health; Score = score; }
     };
-
-    private Dictionary<int, PlayerData> PlayerDataDict = new Dictionary<int, PlayerData>();
-    Dictionary<int, PlayerShip> PlayerShipsDict = new Dictionary<int, PlayerShip>(); // For Client Use Only
 
     void Start () {
         // setting up serverController / clientController referecnce 
@@ -44,10 +42,6 @@ public class GameManager : MonoBehaviour {
             else {
                 Debug.LogWarning("ERROR! networkController not found for the Game Manager");
             }
-        }
-
-        if (!isServer) {
-
         }
     }
 

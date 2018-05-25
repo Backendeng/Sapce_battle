@@ -2,20 +2,16 @@
 using UnityEngine;
 
 public class Missile : NetworkEntity {
-    public float speed = 50f;
+
     public GameObject missileExplosion;
-    public float timeout = 5.0f;
-    public static float LERP_MUL = 3f;
 
     private Rigidbody rigid_body;
-
-    private int clientID = 0; // owner
-    public int ClientID { get { return clientID; } set { clientID = value; } }
-
     private Transform target;
-	public Transform Target {
-		set { target = value; }
-	}
+    
+    public float speed = 50f;
+    public float timeout = 5.0f;
+    public static float LERP_MUL = 3f;
+	public Transform Target { set { target = value; } }
 
     public new void Start() {
         base.Start();
@@ -36,7 +32,7 @@ public class Missile : NetworkEntity {
                 MoveProjUsingReceivedServerData((SC_MovementData)netMessage);
                 break;
             case (byte)NetMsg.MsgType.SC_EntityDestroyed:
-                Debug.Log("Missile Destroyed " + entityID);
+                Debug.Log("Missile Destroyed " + EntityID);
                 Destroy(gameObject);
                 break;
             default:
@@ -64,7 +60,7 @@ public class Missile : NetworkEntity {
 
          if (//other.CompareTag("Projectile") || // ignore bullet to bullet collision
              other.CompareTag("Boundary") ) // ignore collision with boundary
-             // || other.CompareTag("Player") && clientID == other.gameObject.GetComponent<PlayerShip>().ClientID) // ignore self harming!
+             // || other.CompareTag("Player") && ClientID == other.gameObject.GetComponent<PlayerShip>().ClientID) // ignore self harming!
          {
              return;
          }
@@ -97,7 +93,7 @@ public class Missile : NetworkEntity {
         //GetComponentInChildren<TrailRenderer>().enabled = false;
         GetComponent<CapsuleCollider>().enabled = false;
 
-        serverController.DestroyEntity(entityID); 
+        serverController.DestroyEntity(EntityID); 
     }
 
     private void OnDestroy() {

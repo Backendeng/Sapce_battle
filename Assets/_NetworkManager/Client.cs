@@ -8,32 +8,28 @@ public class Client : MonoBehaviour {
 
     public GameManager gameManager;
 
-    public static string serverIP = "127.0.0.1";
-    byte error;
-    int unreliableChannelId;
-    int reliableChannelId;
-    int hostId;
-    int outPort = 8888;
-    int connectionId;
-
-    int clientID = -1;
-    
-
-    bool playerAvatarCreated = false;
-
-    static int bufferSize = 1024;
-    byte[] recBuffer = new byte[bufferSize];
-    int dataSize;
-
-    Dictionary<int, NetworkEntity> netEntities = new Dictionary<int, NetworkEntity>();
-    public Dictionary<int, GameObject> mockProjectiles = new Dictionary<int, GameObject>();
-
     //PUT THIS INTO A DICT AND THEN processEntityCreated can use it instead of a switch clause
     public GameObject localPlayer;         // player prefab
     public GameObject remotePlayer;
     public GameObject missile;
     public GameObject astroid;
     public GameObject projectile;
+
+    private static string serverIP = "127.0.0.1";
+    private static int outPort = 8888;
+    private byte error;
+    private int unreliableChannelId;
+    private int reliableChannelId;
+    private int hostId;
+    private int connectionId;
+    private int clientID = -1;
+    private bool playerAvatarCreated = false;
+    private static readonly int bufferSize = 1024;
+    private byte[] recBuffer = new byte[bufferSize];
+    private int dataSize;
+
+    private Dictionary<int, NetworkEntity> netEntities = new Dictionary<int, NetworkEntity>();
+    public Dictionary<int, GameObject> mockProjectiles = new Dictionary<int, GameObject>();
 
     public int ClientID { get { return clientID; } }
     public static string ServerIP { get { return serverIP; } set { serverIP = value; } }
@@ -44,6 +40,12 @@ public class Client : MonoBehaviour {
         Logger.AddPrefix("Client");
         NetworkTransport.Init();
         Connect();
+    }
+
+    private void Update() {
+        //   Debug.Log("============================================================>> frame: " + Time.frameCount + " time: " + Time.time + " realtime: " + Time.realtimeSinceStartup);
+        Logger.Log(Time.time, Time.realtimeSinceStartup, -1, "frame", Time.frameCount.ToString());
+        Listen();
     }
 
     public void Connect() {
@@ -99,13 +101,6 @@ public class Client : MonoBehaviour {
 			Debug.LogError("SendcreateMissileToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
 		Logger.Log(Time.time, Time.realtimeSinceStartup, -1, "sendMissile", Time.fixedTime.ToString());
 	}
-
-    // Update is called once per frame
-    private void Update() {
-     //   Debug.Log("============================================================>> frame: " + Time.frameCount + " time: " + Time.time + " realtime: " + Time.realtimeSinceStartup);
-        Logger.Log(Time.time, Time.realtimeSinceStartup, -1, "frame", Time.frameCount.ToString());
-        Listen();
-    }
 
     void OnApplicationQuit() {
         Logger.OutputToFile();

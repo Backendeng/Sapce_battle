@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -7,28 +7,32 @@ using UnityEngine.Networking;
 
 public class NetworkEntity : MonoBehaviour {
 
-    protected Queue<NetMsg> incomingQueue = new Queue<NetMsg>();
-
     protected GameObject networkControllerObj;
     protected Server serverController;
-    public Server ServerController { get { return serverController; } }
     protected Client clientController;
-    public Client ClientController { get { return clientController; } }
-    protected int entityID = -1;
-    protected bool isServer;
 
+    public int EntityID { get; set; }
+    protected bool isServer;
     protected float lastReceivedStateTime;
+    private readonly int historySize = 200;
+    public int ClientID { get; set; } // valid only for ObjType: Player
+
+    protected Queue<NetMsg> incomingQueue = new Queue<NetMsg>();
+    protected Queue<StateSnapshot> snapshotQueue = new Queue<StateSnapshot>();
+    private List<StateSnapshot> History = new List<StateSnapshot>();
+
     public float LastReceivedStateTime { get { return lastReceivedStateTime; } }
+    public Server ServerController { get { return serverController; } }
+    public Client ClientController { get { return clientController; } }
 
     protected Vector3 lastReceivedVelocity;
     public Vector3 LastReceivedVelocity() {
         return lastReceivedVelocity;
     }
 
+    public byte ObjectType { get; set; }
     protected float lastSentStateTime = -1;
-    public float LastSentStateTime { get { return lastSentStateTime; }
-                                       set { lastSentStateTime = value; }}
-
+    public float LastSentStateTime { get { return lastSentStateTime; } set { lastSentStateTime = value; } }
 
     public enum ObjType : byte {
         Player,
@@ -36,12 +40,7 @@ public class NetworkEntity : MonoBehaviour {
         Astroid,
         Projectile,
     }
-    protected byte objectType;
-    public byte ObjectType {
-        get { return objectType; }
-        set { objectType = value; }
-    }
-
+    
     // History
     protected class StateSnapshot {
         public float time;
@@ -56,17 +55,6 @@ public class NetworkEntity : MonoBehaviour {
             this.velocity = velocity;
         }
     }
-    private List<StateSnapshot> History = new List<StateSnapshot>();
-    private static int historySize = 200;
-
-    protected Queue<StateSnapshot> snapshotQueue = new Queue<StateSnapshot>();
-
-    public int EntityID {
-        get { return entityID; }
-        set { entityID = value; }
-    }
-
-    public int ClientID { get; set; } // valid only for ObjType: Player
 
     public void Start() {
         // setting up serverController / clientController referecnce 
@@ -75,7 +63,7 @@ public class NetworkEntity : MonoBehaviour {
             isServer = true;
             serverController = networkControllerObj.GetComponent<Server>();
             if (serverController == null) {
-                Debug.LogError("server controller wasn't found for network entity = " + entityID);
+                Debug.LogError("server controller wasn't found for network entity = " + EntityID);
             }
         }
         else {
@@ -84,11 +72,11 @@ public class NetworkEntity : MonoBehaviour {
                 isServer = false;
                 clientController = networkControllerObj.GetComponent<Client>();
                 if (clientController == null) {
-                    Debug.LogError("client controller wasn't found for network entity = " + entityID);
+                    Debug.LogError("client controller wasn't found for network entity = " + EntityID);
                 }
             }
             else {
-                Debug.LogWarning("ERROR! networkController not found for network entity = " + entityID);
+                Debug.LogWarning("ERROR! networkController not found for network entity = " + EntityID);
             }
         }
 
@@ -97,7 +85,7 @@ public class NetworkEntity : MonoBehaviour {
 
     private void FixedUpdate() {
         if (incomingQueue.Count > 100) {
-            Debug.LogWarning("Warning: incomingQueue size > 100 for network entity = " + entityID);
+            Debug.LogWarning("Warning: incomingQueue size > 100 for network entity = " + EntityID);
             incomingQueue.Dequeue();
         }
     }
@@ -131,10 +119,6 @@ public class NetworkEntity : MonoBehaviour {
 
     public virtual Vector3 GetVelocity() {
         return GetComponent<Rigidbody>().velocity; // overridden in RemotePlayerShip to return last received velocity (because it's rigid body has 0 velocity)
-    }
-
-    private void OnDestroy() {
-
     }
 
     public virtual SC_MovementData GetNextSnapshot(int entityId) { return null; }

@@ -4,14 +4,11 @@ using UnityEngine;
 
 public class Astroid : NetworkEntity {
 
-    // Use this for initialization
     new void Start () {
         base.Start();
-        ObjectType = (byte)NetworkEntity.ObjType.Astroid;
-
+        ObjectType = (byte)ObjType.Astroid;
     }
 
-    // Update is called once per frame
     private void Update() {
         if (isServer)
             return;

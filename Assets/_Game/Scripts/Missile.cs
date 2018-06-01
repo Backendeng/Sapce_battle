@@ -4,26 +4,34 @@ using UnityEngine;
 public class Missile : NetworkEntity {
 
     public GameObject missileExplosion;
+    private float explosionRadius = 35.0f;
+    private float explosionPower = 20.0f;
 
     private Rigidbody rigid_body;
     private Transform target;
     
     public float speed = 50f;
     public float timeout = 5.0f;
-    public static float LERP_MUL = 3f;
+    private float destroyTime;
+   
 	public Transform Target { set { target = value; } }
 
     public new void Start() {
         base.Start();
         if (isServer) {
+            destroyTime = Time.time + timeout;
             rigid_body = GetComponent<Rigidbody>();
             if (target == null)
             	GetComponent<Rigidbody>().velocity = transform.forward * speed;
+        } else {
+          //  GetComponent<CapsuleCollider>().enabled = false;
         }
     }
 
     private void Update() {
-		
+        if (isServer && Time.time > destroyTime) {
+            Explode();
+        }
         if (incomingQueue.Count == 0)
             return;
         NetMsg netMessage = incomingQueue.Dequeue();
@@ -58,7 +66,41 @@ public class Missile : NetworkEntity {
         GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
     }
 
-    
+    private bool exploaded = false;
+    void Explode() {
+        if (exploaded)
+            return;
+        exploaded = true;
+
+        Vector3 explosionPos = transform.position;
+        Collider[] colliders = Physics.OverlapSphere(explosionPos, explosionRadius);
+        //Debug.Log("Expl cnt " + colliders.Length);
+        foreach (Collider hit in colliders) {
+          //  Debug.Log("EXPL HIT" + hit.name);
+            if (hit.CompareTag("Player")) {// explosion may hit multiple times. do something with target here
+            //    Debug.Log("Expl hit: player with client id = " + hit.gameObject.GetComponent<PlayerShip>().ClientID);
+                hit.gameObject.GetComponent<Target>().TakeDamage(25);
+                continue;
+            }
+
+            Rigidbody rb = hit.GetComponent<Rigidbody>();
+            if (rb == rigid_body) { // ignore the exploding missile
+                continue;
+            }
+
+            if (hit.CompareTag("Missile")) {
+                hit.GetComponent<Missile>().Explode();
+                continue;
+            }
+            if (rb != null) {
+                rb.AddExplosionForce(explosionPower, explosionPos, explosionRadius, 0, ForceMode.Impulse); // players should not be effected
+            }
+        }
+        GetComponent<CapsuleCollider>().enabled = false;
+        serverController.DestroyEntity(EntityID);//nullreff here
+    }
+
+ 
     void OnTriggerEnter(Collider other) {
 
          if (//other.CompareTag("Projectile") || // ignore bullet to bullet collision
@@ -69,45 +111,33 @@ public class Missile : NetworkEntity {
          }
  
         NetworkEntity hitObj = other.gameObject.GetComponent<NetworkEntity>();
-        if (hitObj != null)
+       /* if (hitObj != null)
             Debug.Log("missile hit entity = " + hitObj.EntityID);
         else
             Debug.Log("missile hit obj = " + other.name);
-
+            */
         if (!isServer) { // do local effect only
-            Debug.Log("BOOM " + EntityID);
            // Destroy(Instantiate(missileExplosion, transform.position, Quaternion.identity), 1);  seems that we dont need to explode also on client  (tested localy)
             return;
         }
 
         // On Server:
 
+        // direct hit
         if (other.CompareTag("Player")) {
-            Debug.Log("Missile hit: player with client id = " + other.gameObject.GetComponent<PlayerShip>().ClientID);
+            //Debug.Log("Missile hit: player with client id = " + other.gameObject.GetComponent<PlayerShip>().ClientID);
             //gameController.AddScore(scoreValue);
         }
+
         Explode();
     }
 
-    private void Explode() {
-        // On Server:
-      
-        Destroy(Instantiate(missileExplosion, transform.position, Quaternion.identity), 1);// cosmetic
-        //GetComponentInChildren<TrailRenderer>().enabled = false;
-        GetComponent<CapsuleCollider>().enabled = false;
-
-        serverController.DestroyEntity(EntityID); 
-    }
+    
 
     private void DestroyMissile() {
-        if (!isServer) { // if the projectile was destroyed before it did an explosion effect on the client, do it now.
-            Destroy(Instantiate(missileExplosion, transform.position, Quaternion.identity), 1);// whats wrong with spawning new objects in onDestroy?
-            Destroy(gameObject);
-            return;
-        }
-        else {
-            Destroy(gameObject);
-        }
+        Destroy(Instantiate(missileExplosion, transform.position, Quaternion.identity), 2); // on client and server.
+        Destroy(gameObject);
+    
     }
 
 }

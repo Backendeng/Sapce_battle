@@ -277,7 +277,7 @@ public class Server : MonoBehaviour {
         lastSend = Time.time;
         lastreal = Time.realtimeSinceStartup;
 
-        foreach (KeyValuePair<int, NetworkEntity> entity in entityManager.netEntities) {
+        foreach (KeyValuePair<int, NetworkEntity> entity in entityManager.netEntities) {// nullref
             if (entity.Value == null) {
                 Debug.LogWarning("trying to access entity that's missing from the netEntities dictionary");
                 continue;

@@ -73,7 +73,7 @@ GameObject:
   - component: {fileID: 114884468079137414}
   m_Layer: 0
   m_Name: Missile
-  m_TagString: Bullet
+  m_TagString: Missile
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -333,6 +333,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   missileExplosion: {fileID: 1283523661780226, guid: 17bbd929a091d5f48b2dad85d116f09d,
     type: 2}
+  explosionRadius: 10
+  explosionPower: 10
   speed: 60
   timeout: 10
 --- !u!136 &136981066823891890

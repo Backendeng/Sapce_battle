@@ -22,7 +22,8 @@ public abstract class PlayerShip : NetworkEntity {
     public static PlayerShip ActiveShip { get { return activeShip; } }
     public Vector3 Velocity { get { return physics.Rigidbody.velocity; } }
     public float Throttle { get { return input.throttle; } }
-	
+    public float Boost { get; set; }
+
     protected void Awake() {
         input = GetComponent<PlayerShipInput>();
         physics = GetComponent<PlayerShipPhysics>();

@@ -15,7 +15,11 @@ public class LocalPlayerShip : PlayerShip {
 
     public float sendStateRate = 0.05f;
     public static bool showUnsmoothedShadow = false;
-    public static bool showInterpolatedShadow = false;   
+    public static bool showInterpolatedShadow = false;
+
+    public float boost_energy;
+    private float boost_per_sec = 15f;
+    public bool boosting = false;
 
     private new void Awake() {
         base.Awake();
@@ -23,7 +27,7 @@ public class LocalPlayerShip : PlayerShip {
 
     private new void Start() {
         base.Start();
-
+        boost_energy = 100f;
         activeShip = this;
 
         if (shadowPrefab != null && showUnsmoothedShadow)
@@ -50,9 +54,24 @@ public class LocalPlayerShip : PlayerShip {
 
 
     private void Update() {
-
         // get player input for movement
-        Vector3 linearInput = new Vector3(0.0f, 0.0f, input.throttle);
+        float throttle = input.throttle;
+
+        if (input.boost_pressed && boost_energy > 0) {
+            boosting = true;
+            throttle *= 1.5f;
+            boost_energy -= Time.deltaTime * boost_per_sec;
+        } else {
+            boosting = false;
+        }
+        
+        if (!input.boost_pressed && boost_energy < 100f)
+            boost_energy += Time.deltaTime * boost_per_sec;
+
+        // boost_energy = Mathf.Round(Mathf.Clamp(boost_energy, 0f, 100f));
+        Boost = Mathf.Round(boost_energy);
+
+        Vector3 linearInput = new Vector3(0.0f, 0.0f, throttle);
         Vector3 angularInput = new Vector3(input.pitch, input.yaw, input.roll);
 
         // apply movement physics using player input

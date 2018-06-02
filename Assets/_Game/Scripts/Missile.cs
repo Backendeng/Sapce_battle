@@ -16,6 +16,9 @@ public class Missile : NetworkEntity {
    
 	public Transform Target { set { target = value; } }
 
+    private bool isTargetingPlayer = false;
+    public bool IsTargetingPlayer { set { isTargetingPlayer = value; } get { return isTargetingPlayer; }  }
+
     public new void Start() {
         base.Start();
         if (isServer) {
@@ -137,7 +140,6 @@ public class Missile : NetworkEntity {
     private void DestroyMissile() {
         Destroy(Instantiate(missileExplosion, transform.position, Quaternion.identity), 2); // on client and server.
         Destroy(gameObject);
-    
     }
 
 }

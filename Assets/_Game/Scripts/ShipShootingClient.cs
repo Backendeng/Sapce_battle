@@ -90,7 +90,7 @@ public class ShipShootingClient : MonoBehaviour {
         foreach (KeyValuePair<int, PlayerShip> kvp in clientController.gameManager.PlayerShipsDict) {
             Vector3 playerScreenPos = playerCamera.WorldToScreenPoint(kvp.Value.transform.position);
             float dist = Vector3.Distance((Vector2)playerScreenPos, screenCenter);
-           // Debug.Log("debug dist " + dist + " playerpos " + playerScreenPos + " center " + screenCenter + " rad " + lockRadius);///////////
+            Debug.Log("debug dist " + dist + " playerpos " + playerScreenPos + " center " + screenCenter + " rad " + lockRadius);///////////
             if (dist > lockRadius)
                 continue;
             if (dist < minDist) {

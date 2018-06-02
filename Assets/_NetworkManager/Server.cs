@@ -216,10 +216,12 @@ public class Server : MonoBehaviour {
 			Debug.LogError("Entity Creation failed");
 
 		entityManager.netEntities[newEntityID].GetComponent<Missile>().ClientID = clientID; // mark the owner of this missile
-        if (msg.TargetId > 0)////more proofing needed
+        int targetClientId = -1;
+        if (msg.TargetId > 0) {////more proofing needed
             entityManager.netEntities[newEntityID].GetComponent<Missile>().Target = entityManager.netEntities[msg.TargetId].transform; // mark the target of this missile
-        
-        SC_EntityCreated mssg = new SC_EntityCreated(newEntityID, msg.TimeStamp, msg.Position, msg.Rotation, clientID, (byte)NetworkEntity.ObjType.Missile);
+            targetClientId = entityManager.netEntities[msg.TargetId].EntityID;
+        }
+        SC_EntityCreated mssg = new SC_EntityCreated(newEntityID, msg.TimeStamp, msg.Position, msg.Rotation, targetClientId, (byte)NetworkEntity.ObjType.Missile);
 		outgoingReliable.Enqueue(mssg);
 	}
 

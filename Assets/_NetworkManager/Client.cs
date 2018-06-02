@@ -194,6 +194,8 @@ public class Client : MonoBehaviour {
                 break;
             case (byte)NetworkEntity.ObjType.Missile:
                 newObject = Instantiate(missile, createMsg.Position, createMsg.Rotation);
+                if(createMsg.ClientID == clientID) // check if this player is the target of this missile
+                    newObject.GetComponent<Missile>().IsTargetingPlayer = true;
                 break;
             case (byte)NetworkEntity.ObjType.Astroid:
                 newObject = Instantiate(astroid, createMsg.Position, createMsg.Rotation);
@@ -254,6 +256,16 @@ public class Client : MonoBehaviour {
     private void ProcessPlayerData(NetMsg msg) {
         SC_PlayerData playerDataMsg = (SC_PlayerData)msg;
         gameManager.UpdatePlayerData(playerDataMsg.ClientID, playerDataMsg.Health, playerDataMsg.Score);
+    }
+
+    public bool IsMissileLockedOnPlayer() {
+        foreach(KeyValuePair<int, NetworkEntity> entity in netEntities) {
+            if (entity.Value.ObjectType == (byte)NetworkEntity.ObjType.Missile) {
+                if (entity.Value.GetComponent<Missile>().IsTargetingPlayer)
+                    return true;
+            }
+        }
+        return false;
     }
 
 }

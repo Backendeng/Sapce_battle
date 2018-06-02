@@ -113,7 +113,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1001 &321685523
+--- !u!1001 &178107349
 Prefab:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -210,6 +210,16 @@ Prefab:
       propertyPath: m_Pivot.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 114975836674782334, guid: 9932130896e352c4aa9c4ad2a86e0055,
+        type: 2}
+      propertyPath: gameManager
+      value: 
+      objectReference: {fileID: 537925729}
+    - target: {fileID: 114975836674782334, guid: 9932130896e352c4aa9c4ad2a86e0055,
+        type: 2}
+      propertyPath: clientController
+      value: 
+      objectReference: {fileID: 676016149}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 9932130896e352c4aa9c4ad2a86e0055, type: 2}
   m_IsPrefabParent: 0
@@ -595,6 +605,7 @@ MonoBehaviour:
   StartScreen: {fileID: 810514515}
   EscapeMenu: {fileID: 450076270}
   HUD: {fileID: 1396356852}
+  hudUI: {fileID: 970770341}
   escapeMenuStatusText: {fileID: 1255223920}
   gameManager: {fileID: 537925729}
 --- !u!224 &899270521
@@ -657,6 +668,12 @@ Prefab:
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: ae3ec6138e3e8324cb1da1812ee580f5, type: 2}
   m_IsPrefabParent: 0
+--- !u!114 &970770341 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114975836674782334, guid: 9932130896e352c4aa9c4ad2a86e0055,
+    type: 2}
+  m_PrefabInternal: {fileID: 178107349}
+  m_Script: {fileID: 11500000, guid: 64a52cde727ba6542a8a2e45c402ff0b, type: 3}
 --- !u!1 &1155377224
 GameObject:
   m_ObjectHideFlags: 0
@@ -817,7 +834,7 @@ CanvasRenderer:
 GameObject:
   m_PrefabParentObject: {fileID: 1517080665834106, guid: 9932130896e352c4aa9c4ad2a86e0055,
     type: 2}
-  m_PrefabInternal: {fileID: 321685523}
+  m_PrefabInternal: {fileID: 178107349}
 --- !u!1 &1437334165
 GameObject:
   m_ObjectHideFlags: 0

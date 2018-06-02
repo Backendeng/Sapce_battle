@@ -17,9 +17,9 @@ public abstract class PlayerShip : NetworkEntity {
     public int Health { get; set; }
     private readonly int initialHealth = 100;
     public int Score { get; set; }
-    protected static PlayerShip activeShip;
+    protected static LocalPlayerShip activeShip;
 
-    public static PlayerShip ActiveShip { get { return activeShip; } }
+    public static LocalPlayerShip ActiveShip { get { return activeShip; } }
     public Vector3 Velocity { get { return physics.Rigidbody.velocity; } }
     public float Throttle { get { return input.throttle; } }
     public float Boost { get; set; }

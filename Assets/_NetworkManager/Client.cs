@@ -258,6 +258,15 @@ public class Client : MonoBehaviour {
         gameManager.UpdatePlayerData(playerDataMsg.ClientID, playerDataMsg.Health, playerDataMsg.Score);
     }
 
+    public int GetShipClientID(int entityID) {
+        if (netEntities.ContainsKey(entityID)) {
+            return netEntities[entityID].ClientID;
+        }
+        else {
+            return -1;
+        }
+    }
+
     public bool IsMissileLockedOnPlayer() {
         foreach(KeyValuePair<int, NetworkEntity> entity in netEntities) {
             if (entity.Value.ObjectType == (byte)NetworkEntity.ObjType.Missile) {

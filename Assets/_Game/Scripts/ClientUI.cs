@@ -8,8 +8,10 @@ public class ClientUI : MonoBehaviour {
     public GameObject StartScreen;
     public GameObject EscapeMenu;
     public GameObject HUD;
+    public HudUI hudUI;
     public Text escapeMenuStatusText;
     public GameManager gameManager;
+    
 
     private bool started = false;
     private float stopConnectionTime;

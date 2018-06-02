@@ -27,8 +27,8 @@ public class LocalPlayerShip : PlayerShip {
 
     private new void Start() {
         base.Start();
-        boost_energy = 100f;
         activeShip = this;
+        boost_energy = 100f;
 
         if (shadowPrefab != null && showUnsmoothedShadow)
             shadow = Instantiate(shadowPrefab, new Vector3(), new Quaternion()).transform;

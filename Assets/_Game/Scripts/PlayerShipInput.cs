@@ -32,6 +32,7 @@ public class PlayerShipInput : MonoBehaviour {
     public float strafe; // ?
     [Range(0, 1)]
     public float throttle;
+    public bool boost_pressed = false;
 
 
 
@@ -69,6 +70,13 @@ public class PlayerShipInput : MonoBehaviour {
                 roll = 0;
             }
         }
+
+        if (Input.GetKey(KeyCode.Space)) {
+            boost_pressed = true;
+        } else {
+            boost_pressed = false;
+        }
+
 	}
 
     private void SetStickCommandsUsingMouse()

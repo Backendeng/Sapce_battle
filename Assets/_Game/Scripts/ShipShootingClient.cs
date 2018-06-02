@@ -14,17 +14,31 @@ public class ShipShootingClient : MonoBehaviour {
     public Transform shotSpawn;     // shooting spawn location
 
     [Header("Shooting")]
-    private float fireRate1 = 0.1f;
+    private readonly float fireRate1 = 0.1f;
     private float nextFire1;
-    private float fireRate2 = 0.5f;
+    private readonly float fireRate2 = 0.5f;
     private float nextFire2;
     private readonly float rayRange = 1000f;
+    private int energy = 100;
+    private int maxEnergy = 100;
+    private readonly float energyChargeRate = 0.1f;
+    private float nextEnergyCharge;
+    private int energyDrain = 5;
+
+    public int Energy { get { return energy; } }
 
     
     private void Awake() {
         projectileSound = GetComponent<AudioSource>();
         projectileSound.clip = projectileClip;
         playerCamera = GetComponentInChildren<Camera>();
+    }
+
+    public void Update() {
+        if (Time.time > nextEnergyCharge && energy < maxEnergy) {
+            nextEnergyCharge = Time.time + energyChargeRate;
+            energy++;
+        }
     }
 
     public void Init(Client clientController, int entityID) {
@@ -39,7 +53,7 @@ public class ShipShootingClient : MonoBehaviour {
             
         }
         // Primary Shot - Projectile
-        if (Time.time > nextFire1 && (Input.GetButton("RightTrigger") || Input.GetMouseButton(0))) {
+        if (Time.time > nextFire1 && energy > energyDrain && (Input.GetButton("RightTrigger") || Input.GetMouseButton(0))) {
             nextFire1 = Time.time + fireRate1;
             ShootProjectile(shotSpawn.position, shotSpawn.rotation);
         }
@@ -60,6 +74,7 @@ public class ShipShootingClient : MonoBehaviour {
         mockProjectile.GetComponent<Projectile>().ClientID = -1; // // mark as mock projectile (locally simulated untill the real projectile is instantiated)
         clientController.mockProjectiles.Add((int)netTimeStamp, mockProjectile);
         clientController.SendShotToHost((byte)NetworkEntity.ObjType.Projectile, pos, rot, (byte)NetworkEntity.ObjType.Projectile, (int)netTimeStamp);
+        energy -= energyDrain;
     }
 
     private int ShootRay() {

@@ -189,6 +189,7 @@ public class Client : MonoBehaviour {
                 } else {
                     newObject = Instantiate(remotePlayer, createMsg.Position, createMsg.Rotation);//remotePlayer
                 }
+                newObject.GetComponent<PlayerShip>().ClientID = createMsg.ClientID;
                 gameManager.AddPlayerShip(createMsg.ClientID, newObject);
                 break;
             case (byte)NetworkEntity.ObjType.Missile:

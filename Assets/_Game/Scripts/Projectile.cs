@@ -48,7 +48,6 @@ public class Projectile : NetworkEntity {
 
     // when the missile hits something
     void OnTriggerEnter(Collider other) {
-
         if (other.CompareTag("Projectile") || // ignore bullet to bullet collision
             other.CompareTag("Boundary") || // ignore collision with boundary
             other.CompareTag("Player") && ClientID == other.gameObject.GetComponent<PlayerShip>().ClientID) // ignore self harming!

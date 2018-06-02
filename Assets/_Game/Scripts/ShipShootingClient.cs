@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Networking;
+using System.Collections.Generic;
 
 public class ShipShootingClient : MonoBehaviour {
 
@@ -12,6 +13,12 @@ public class ShipShootingClient : MonoBehaviour {
     public GameObject projectile;   // projectile prefab
     public GameObject missile;      // missile prefab
     public Transform shotSpawn;     // shooting spawn location
+
+    private float lockRadius;
+    private Vector2 screenCenter;
+    public int lockTargetID = -1;
+    private float lockTime = 7f;
+    private float unlockTime = 0f;
 
     [Header("Shooting")]
     private readonly float fireRate1 = 0.1f;
@@ -32,12 +39,19 @@ public class ShipShootingClient : MonoBehaviour {
         projectileSound = GetComponent<AudioSource>();
         projectileSound.clip = projectileClip;
         playerCamera = GetComponentInChildren<Camera>();
+        lockRadius = (130f / 1080f) * Screen.height;
+        screenCenter = new Vector2(Screen.width / 2, Screen.height / 2);
     }
 
     public void Update() {
+       
         if (Time.time > nextEnergyCharge && energy < maxEnergy) {
             nextEnergyCharge = Time.time + energyChargeRate;
             energy++;
+        }
+        if (Time.time > unlockTime) {
+            unlockTime = Time.time + lockTime;
+            lockTargetID = -1;
         }
     }
 
@@ -47,10 +61,12 @@ public class ShipShootingClient : MonoBehaviour {
 
     public void HandleShooting() {
         // Secondary Shot - Missiles
-        if (Time.time > nextFire2 && (Input.GetButtonDown("LeftTrigger") || Input.GetMouseButtonDown(1))) {
+        if ((Input.GetButtonDown("LeftTrigger") || Input.GetMouseButtonDown(1))) {
+            lockTargetID = LockOnTarget();
+        }
+        if (Time.time > nextFire2 && (Input.GetButtonUp("LeftTrigger") || Input.GetMouseButtonUp(1))) {
             nextFire2 = Time.time + fireRate2;
             ShootMissile(shotSpawn.position, shotSpawn.rotation);
-            
         }
         // Primary Shot - Projectile
         if (Time.time > nextFire1 && energy > energyDrain && (Input.GetButton("RightTrigger") || Input.GetMouseButton(0))) {
@@ -61,10 +77,30 @@ public class ShipShootingClient : MonoBehaviour {
 
     private void ShootMissile(Vector3 pos, Quaternion rot) {
         int netTimeStamp = NetworkTransport.GetNetworkTimestamp();
-        int targetId = ShootRay();
+        int targetId = lockTargetID;
         Debug.Log("Hit id: " + targetId);
         clientController.SendMissileToHost((byte)NetworkEntity.ObjType.Missile, pos, rot, targetId, netTimeStamp);
         GetComponent<AudioSource>().Play();
+    }
+
+    private int LockOnTarget() {
+        
+        int nearest = -1;
+        float minDist = playerCamera.pixelWidth;
+        foreach (KeyValuePair<int, PlayerShip> kvp in clientController.gameManager.PlayerShipsDict) {
+            Vector3 playerScreenPos = playerCamera.WorldToScreenPoint(kvp.Value.transform.position);
+            float dist = Vector3.Distance((Vector2)playerScreenPos, screenCenter);
+           // Debug.Log("debug dist " + dist + " playerpos " + playerScreenPos + " center " + screenCenter + " rad " + lockRadius);///////////
+            if (dist > lockRadius)
+                continue;
+            if (dist < minDist) {
+                minDist = dist;
+                nearest = kvp.Value.EntityID;
+                Debug.Log("Lock " + nearest);
+            }
+               
+        }
+        return nearest;
     }
 
     private void ShootProjectile(Vector3 pos, Quaternion rot) {

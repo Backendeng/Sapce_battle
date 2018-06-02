@@ -11,7 +11,7 @@ public class GameManager : MonoBehaviour {
     private readonly int initialHealth = 100;
 
     private Dictionary<int, PlayerData> PlayerDataDict = new Dictionary<int, PlayerData>();
-    private Dictionary<int, PlayerShip> PlayerShipsDict = new Dictionary<int, PlayerShip>(); // For Client Use Only
+    public Dictionary<int, PlayerShip> PlayerShipsDict = new Dictionary<int, PlayerShip>(); // For Client Use Only
 
 
     private class PlayerData {

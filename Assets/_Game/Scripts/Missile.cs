@@ -19,6 +19,11 @@ public class Missile : NetworkEntity {
     private bool isTargetingPlayer = false;
     public bool IsTargetingPlayer { set { isTargetingPlayer = value; } get { return isTargetingPlayer; }  }
 
+    // Lerping State
+    public bool doLerp = false;
+    
+    MovementInterpolator movementInterpolator;
+
     public new void Start() {
         base.Start();
         if (isServer) {
@@ -27,7 +32,8 @@ public class Missile : NetworkEntity {
             if (target == null)
             	GetComponent<Rigidbody>().velocity = transform.forward * speed;
         } else {
-          //  GetComponent<CapsuleCollider>().enabled = false;
+            movementInterpolator = new MovementInterpolator(transform, EntityID);
+            //  GetComponent<CapsuleCollider>().enabled = false;
         }
     }
 
@@ -40,7 +46,8 @@ public class Missile : NetworkEntity {
         NetMsg netMessage = incomingQueue.Dequeue();
         switch (netMessage.Type) {
             case (byte)NetMsg.MsgType.SC_MovementData:
-                MoveProjUsingReceivedServerData((SC_MovementData)netMessage);
+                MoveProjUsingReceivedServerData((SC_MovementData)netMessage);// set state not interpolated
+                movementInterpolator.RecUpdate((SC_MovementData)netMessage);
                 break;
             case (byte)NetMsg.MsgType.SC_EntityDestroyed:
                 Debug.Log("Missile Destroyed " + EntityID);
@@ -50,6 +57,8 @@ public class Missile : NetworkEntity {
                 Debug.Log("ERROR! RemoteProjectile on Client reveived an invalid NetMsg message. NetMsg Type: " + netMessage.Type);
                 break;
         }
+
+        
 
     }
 
@@ -63,9 +72,16 @@ public class Missile : NetworkEntity {
             rigid_body.velocity = transform.forward * speed; 
           
         }
+
+        if (!isServer && doLerp)
+            movementInterpolator.InterpolateMovement();
     }
 
     private void MoveProjUsingReceivedServerData(SC_MovementData message) {
+        if (doLerp) {
+            return;
+        }
+
         GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
     }
 

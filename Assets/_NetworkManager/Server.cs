@@ -201,6 +201,8 @@ public class Server : MonoBehaviour {
 
         connectedPlayers.Remove(recConnectionId);//end connection
         entityManager.RemoveEntity(entityIdToDestroy);
+
+        gameManager.RemovePlayer(recConnectionId);
     }
 
 	private void CreateRequestedMissile(CS_MissileRequest msg, int clientID) {
@@ -331,6 +333,11 @@ public class Server : MonoBehaviour {
         entityManager.RemoveEntity(entityID);
     }
 
+    public void SendMsgToClient(int clientID, NetMsg msg) {
+        byte error;
+        byte[] buffer = MessagesHandler.NetMsgPack(msg);
+        NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
+    }
 }
 
  

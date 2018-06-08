@@ -17,7 +17,7 @@ public class ShipShootingClient : MonoBehaviour {
     private float lockRadius;
     private Vector2 screenCenter;
     public int lockTargetID = -1;
-    private float lockTime = 7f;
+    private float lockTime = 5f;
     private float unlockTime = 0f;
 
     [Header("Shooting")]
@@ -50,7 +50,6 @@ public class ShipShootingClient : MonoBehaviour {
             energy++;
         }
         if (Time.time > unlockTime) {
-            unlockTime = Time.time + lockTime;
             lockTargetID = -1;
         }
     }
@@ -63,10 +62,12 @@ public class ShipShootingClient : MonoBehaviour {
         // Secondary Shot - Missiles
         if ((Input.GetButtonDown("LeftTrigger") || Input.GetMouseButtonDown(1))) {
             lockTargetID = LockOnTarget();
+            unlockTime = Time.time + lockTime;
         }
         if (Time.time > nextFire2 && (Input.GetButtonUp("LeftTrigger") || Input.GetMouseButtonUp(1))) {
             nextFire2 = Time.time + fireRate2;
             ShootMissile(shotSpawn.position, shotSpawn.rotation);
+            unlockTime = Time.time + Missile.timeout + 2f;
         }
         // Primary Shot - Projectile
         if (Time.time > nextFire1 && energy > energyDrain && (Input.GetButton("RightTrigger") || Input.GetMouseButton(0))) {
@@ -101,6 +102,21 @@ public class ShipShootingClient : MonoBehaviour {
                
         }
         return nearest;
+    }
+
+    public Vector3 TargetScreenPoint() {
+        if (lockTargetID == -1) {
+            return Vector3.zero;
+        }
+
+        int targetClientID = clientController.GetShipClientID(lockTargetID);
+
+        if (!clientController.gameManager.PlayerShipsDict.ContainsKey(targetClientID)) {
+            Debug.LogWarning("locked target wasn't found in PlayerShipDict. EntityID = " + lockTargetID + " , ClientID = " + targetClientID);
+            return Vector3.zero;
+        }
+
+        return playerCamera.WorldToScreenPoint(clientController.gameManager.PlayerShipsDict[targetClientID].transform.position);
     }
 
     private void ShootProjectile(Vector3 pos, Quaternion rot) {

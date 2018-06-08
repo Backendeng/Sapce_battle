@@ -204,8 +204,13 @@ public class Client : MonoBehaviour {
                 newObject = OnReceivedProjectileCreation(createMsg);
                 break;
         }
-        if (newObject != null)
-            newObject.GetComponent<NetworkEntity>().EntityID = createMsg.EntityID;
+        if (newObject != null) {
+            NetworkEntity newNetEntity = newObject.GetComponent<NetworkEntity>();
+            newNetEntity.EntityID = createMsg.EntityID;
+            newNetEntity.ObjectType = (byte)type;
+            newNetEntity.ClientID = createMsg.ClientID;
+        }
+            
         else
             Debug.LogError("Entity Creation failed, id: " + createMsg.EntityID);
         netEntities.Add(createMsg.EntityID, newObject.GetComponent<NetworkEntity>());
@@ -245,7 +250,11 @@ public class Client : MonoBehaviour {
     private void ProcessEntityDestroyed(NetMsg msg) {
         SC_EntityDestroyed destroyMsg = (SC_EntityDestroyed)msg;
         if (netEntities.ContainsKey(destroyMsg.EntityID)) {
-            netEntities[destroyMsg.EntityID].AddRecMessage(destroyMsg);
+            NetworkEntity netEntityToDestroy = netEntities[destroyMsg.EntityID];
+            if (netEntityToDestroy.ObjectType == (byte)NetworkEntity.ObjType.Player) {
+                gameManager.RemovePlayer(netEntityToDestroy.ClientID);
+            }
+            netEntityToDestroy.AddRecMessage(destroyMsg);
             netEntities.Remove(destroyMsg.EntityID);
             //Debug.Log("Entity Destroyed, id: " + destroyMsg.EntityID);
         }

@@ -34,6 +34,6 @@ public class Target : MonoBehaviour {
             Debug.Log("Target was hit: entityID = " + entityID + ", clientID = " + clientID);
             TakeDamage(Projectile.Damage);
         }
-        Debug.Log("Target was hit" + other.name);/////TODO: error
+        Debug.Log("Target was hit " + other.name);/////TODO: error
     }
 }

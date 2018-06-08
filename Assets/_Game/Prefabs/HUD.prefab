@@ -484,7 +484,7 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-  m_Sprite: {fileID: 21300000, guid: 76d5a67a453abcd4b8d78951185e69c5, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 46462ebecc4b77a4c96e9935dd40beac, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -827,6 +827,7 @@ MonoBehaviour:
   EnemyTarget: {fileID: 1590625527708796}
   EnemyHealthBarImage: {fileID: 114424787714326376}
   EnemyText: {fileID: 114294396666649678}
+  LockedTargetCircle: {fileID: 114181417253815062}
 --- !u!222 &222038462923728798
 CanvasRenderer:
   m_ObjectHideFlags: 1

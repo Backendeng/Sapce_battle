@@ -73,6 +73,19 @@ public class GameManager : MonoBehaviour {
         }
         PlayerData playerData = new PlayerData(initialHealth, 0);
         PlayerDataDict.Add(clientID, playerData);
+        Debug.Log("Adding Player to PlayerDataDict. player id = " + clientID);
+    }
+
+    public void RemovePlayer(int clientID) {
+        if (isServer) {
+            PlayerDataDict.Remove(clientID);
+        }
+        else {
+            PlayerDataDict.Remove(clientID);
+            PlayerShipsDict.Remove(clientID);
+        }
+        Debug.Log("Removed player with ClientID = " + clientID + " from the Game Manager.");
+        Debug.Log("PlayerDataDict.ContainsKey(" + clientID + ") = " + PlayerDataDict.ContainsKey(clientID));
     }
 
     public void AddPlayerShip(int clientID, GameObject shipObj) {
@@ -87,6 +100,7 @@ public class GameManager : MonoBehaviour {
 
     // called on server when updating, and on client when receiving SC_PlayerData message from server
     public void UpdatePlayerData(int clientID, int health, int score) {
+        // Update PlayerDataDict
         if (PlayerDataDict.ContainsKey(clientID)) {
             PlayerDataDict[clientID].Health = health;
             PlayerDataDict[clientID].Score = score;
@@ -95,7 +109,7 @@ public class GameManager : MonoBehaviour {
             PlayerData playerData = new PlayerData(health, score);
             PlayerDataDict.Add(clientID, playerData);
         }
-
+        // Update PlayerShip Fields
         if (!isServer) {
             if (!PlayerShip.ActiveShip) // Active Ship yet to be initiated.
                 return;
@@ -143,7 +157,8 @@ public class GameManager : MonoBehaviour {
 
         foreach (KeyValuePair<int, PlayerData> kvp in PlayerDataDict) {
             SC_PlayerData playerDataMessage = new SC_PlayerData(kvp.Key, Time.time, kvp.Value.Health, kvp.Value.Score);
-            serverController.EnqueueReliable(playerDataMessage);
+            serverController.SendMsgToClient(clientID, playerDataMessage);
+            //Debug.Log("SendAllGameDataToNewClient: sending data of clientID = " + kvp.Key);
         }
     }
 

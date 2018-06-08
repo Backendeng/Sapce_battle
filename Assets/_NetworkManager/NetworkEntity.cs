@@ -35,6 +35,7 @@ public class NetworkEntity : MonoBehaviour {
     public float LastSentStateTime { get { return lastSentStateTime; } set { lastSentStateTime = value; } }
 
     public enum ObjType : byte {
+        None,
         Player,
         Missile,
         Astroid,

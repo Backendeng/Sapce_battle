@@ -21,6 +21,7 @@ public class HudUI : MonoBehaviour {
     public GameObject EnemyTarget;
     public Image EnemyHealthBarImage;
     public Text EnemyText;
+    public Image LockedTargetCircle;
 
     private Text text;
 
@@ -41,6 +42,8 @@ public class HudUI : MonoBehaviour {
         if (!shipShooting) {
             Debug.LogError("ShipShootingClient wasn't found");
         }
+        LockedTargetCircle.enabled = false;
+        EnemyTarget.SetActive(false);
     }
 
     void Update()
@@ -51,6 +54,10 @@ public class HudUI : MonoBehaviour {
         SetHealthBar(PlayerShip.ActiveShip.Health);
         SetEnergyBar(PlayerShip.ActiveShip.GetComponent<ShipShootingClient>().Energy);
         UpdateEnemyTarget();
+        
+        if (LockedTargetCircle.enabled) {
+            LockedTargetCircle.transform.position = shipShooting.TargetScreenPoint();
+        }
     }
 
     private void SetHealthBar(int health) {
@@ -66,6 +73,7 @@ public class HudUI : MonoBehaviour {
     private void UpdateEnemyTarget() {
         if (shipShooting.lockTargetID == -1) {
             EnemyTarget.SetActive(false);
+            LockedTargetCircle.enabled = false;
             return;
         }
         int targetClientID = clientController.GetShipClientID(shipShooting.lockTargetID);
@@ -77,5 +85,8 @@ public class HudUI : MonoBehaviour {
         EnemyTarget.SetActive(true);
         EnemyHealthBarImage.fillAmount = gameManager.GetHealth(targetClientID) / 100f;
         EnemyText.text = string.Format("TARGET LOCKED:\nENEMY: {0}", "<NAME>"); // TODO: get name here from game manager
+
+        LockedTargetCircle.enabled = true;
+
     }
 }

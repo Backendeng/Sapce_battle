@@ -220,6 +220,19 @@ Prefab:
       propertyPath: clientController
       value: 
       objectReference: {fileID: 676016149}
+    - target: {fileID: 1116491363014180, guid: 9932130896e352c4aa9c4ad2a86e0055, type: 2}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114181417253815062, guid: 9932130896e352c4aa9c4ad2a86e0055,
+        type: 2}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1590625527708796, guid: 9932130896e352c4aa9c4ad2a86e0055, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 9932130896e352c4aa9c4ad2a86e0055, type: 2}
   m_IsPrefabParent: 0

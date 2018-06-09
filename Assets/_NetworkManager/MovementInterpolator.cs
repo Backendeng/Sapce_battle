@@ -27,6 +27,7 @@ public class MovementInterpolator {
     private float lastUpdateTimestamp;
     private float lastExtrapolationTimestamp;
     private int firstRecCount = 6;
+    private bool doExtraploation = true;
 
     //stats
     private bool useAvgDelayToCatchup = true;
@@ -163,6 +164,8 @@ public class MovementInterpolator {
   
     //// strangly enough we get wait more for new updates when shooting etc...
     private bool tryToExtrapolateMovement(StateSnapshot updateA) {
+        if (!doExtraploation)
+            return false;
         if (avgDelay() < targetInterpolationDelay - recRate / 2)
             return false;
         lerpDeltaTime = recRate;

@@ -39,6 +39,10 @@ public class Missile : NetworkEntity {
             //  GetComponent<CapsuleCollider>().enabled = false;
         }
         created = true;
+
+        if(!isServer && isTargetingPlayer) { //  lock warnning for local player 
+            clientController.gameManager.LocalPlayerLockCounter++;
+        }
     }
 
     private void Update() {
@@ -160,6 +164,11 @@ public class Missile : NetworkEntity {
     private void DestroyMissile() {
         Destroy(Instantiate(missileExplosion, transform.position, Quaternion.identity), 2); // on client and server.
         Destroy(gameObject);
+
+        if (!isServer && isTargetingPlayer) { //  lock warnning for local player 
+            clientController.gameManager.LocalPlayerLockCounter--;
+        }
+
     }
 
 }

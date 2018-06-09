@@ -15,6 +15,8 @@ public class GameManager : MonoBehaviour {
     private Dictionary<int, int> ClientsDict = new Dictionary<int, int>(); // (ClientID, PlayerID)
     private Dictionary<int, int> PlayersDict = new Dictionary<int, int>(); // (PlayerID, ClientID)
 
+    private int localPlayerLockCounter = 0;
+    public int LocalPlayerLockCounter { set { localPlayerLockCounter = value; } get { return localPlayerLockCounter; } }
 
     private class PlayerData {
         public int Health { get; set; }
@@ -194,4 +196,4 @@ public class GameManager : MonoBehaviour {
     }
 
 
-}
+    }

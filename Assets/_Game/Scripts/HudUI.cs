@@ -48,9 +48,14 @@ public class HudUI : MonoBehaviour {
 
     void Update()
     {
-        if (PlayerShip.ActiveShip != null) {
+        if (PlayerShip.ActiveShip != null && gameManager.LocalPlayerLockCounter == 0) {
             text.text = string.Format("SPEED: {0}\nBOOST: {1}\nDEATHS: {2}", PlayerShip.ActiveShip.Velocity.magnitude.ToString("000"), PlayerShip.ActiveShip.Boost, 0 /* TODO: get deaths here */);
         }
+
+        if(PlayerShip.ActiveShip != null && gameManager.LocalPlayerLockCounter > 0) {
+            text.text = string.Format("SPEED: {0}\nBOOST: {1}\nDEATHS: {2}\nLOCKED!", PlayerShip.ActiveShip.Velocity.magnitude.ToString("000"), PlayerShip.ActiveShip.Boost, 0 /* TODO: get deaths here */);
+        }
+
         SetHealthBar(PlayerShip.ActiveShip.Health);
         SetEnergyBar(PlayerShip.ActiveShip.GetComponent<ShipShootingClient>().Energy);
         UpdateEnemyTarget();

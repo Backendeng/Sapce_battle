@@ -34,13 +34,16 @@ public class Logger {
             string ret;
             switch (evtType) {
                 case "recState":
-                    ret = time + "," + value + "," + "," + "," + Id;
+                    ret = time + "," + value + "," + "," + "," + "," + Id;
                     break;
                 case "Interpolation":
-                    ret = time + "," + "," + value + "," + "," + Id;
+                    ret = time + "," + "," + value + "," + "," + "," + Id;
                     break;
                 case "InterpolationSTALL":
-                    ret = time + "," + "," + "," +value + "," + Id;
+                    ret = time + "," + "," + "," +value + "," + "," + Id;
+                    break;
+                case "Extrapolation":
+                    ret = time + "," + "," + "," + "," + value + "," + Id;
                     break;
                 default:
                     ret = "";
@@ -87,7 +90,7 @@ public class Logger {
         string path = Directory.GetCurrentDirectory();
         List<string> interpLines = new List<string>();
 
-        interpLines.Add("time, recTS, interpolationTS, stallTS, id");
+        interpLines.Add("time, recTS, interpolationTS, stallTS, ExtrapolationTS, id");
 
         foreach (KeyValuePair<float, LogEvent> entry in events) {
             string l = entry.Value.InterpolationDebugLine();

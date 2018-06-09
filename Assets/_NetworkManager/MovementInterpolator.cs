@@ -25,6 +25,7 @@ public class MovementInterpolator {
     private int currPtr = -1;
     private int lastPtr = -1;
     private float lastUpdateTimestamp;
+    private float lastExtrapolationTimestamp;
     private int firstRecCount = 6;
 
     //stats
@@ -56,6 +57,8 @@ public class MovementInterpolator {
             return;
         if (msg.TimeStamp < lastUpdateTimestamp + Time.fixedDeltaTime / 2)
             return;
+        if (msg.TimeStamp < lastExtrapolationTimestamp + Time.fixedDeltaTime / 2)//throw away extrapolated slots
+            return;
 
         if (firstRecCount > 0) {
             firstRecCount--;
@@ -64,7 +67,6 @@ public class MovementInterpolator {
         lastPtr = (lastPtr + 1) % buffSize;
         serverUpdates[lastPtr] = new StateSnapshot(msg.TimeStamp, msg.Position, msg.Rotation, msg.Velocity);
         lastUpdateTimestamp = msg.TimeStamp;
-
     }
 
 
@@ -80,24 +82,26 @@ public class MovementInterpolator {
         interpolationDelays[(currPtr + 1) % buffSize] = (lastUpdateTimestamp - updateA.time);
        // Debug.Log("delay idx" + ((currPtr + 1) % buffSize) + " delay "+ interpolationDelays[(currPtr + 1) % buffSize]);
        // Debug.Log("avg delay " + avgDelay() );
-        
        // Debug.Log("stalles idx" + ((currPtr + 1) % buffSize) + " idstall " + stalled[(currPtr + 1) % buffSize]);
      
-        if (updateB != null && updateB.time < updateA.time) {/// NULL REF EXP
+        if (updateB != null && updateB.time < updateA.time) {
         //    Debug.LogWarning("stallTime: "+Time.time+" No new lerp position, last valid pos: " + updateA.time + " time since last rec: "+ (Time.time - lastRecTime));
-            Logger.Log(Time.time, Time.realtimeSinceStartup, entityId, "InterpolationSTALL", updateA.time.ToString());
+            
             stalled[(currPtr + 1) % buffSize] = 1;
             Debug.Log("stalled");
 
-            tryToExtrapolateMovement(updateA);
+            bool didExtrapolation = tryToExtrapolateMovement(updateA);
+            if (!didExtrapolation)
+                Logger.Log(Time.time, Time.realtimeSinceStartup, entityId, "InterpolationSTALL", updateA.time.ToString());
+
             return;
         }
         currPtr = (currPtr + 1) % buffSize;
 
-        if (tryToCatchUp(updateA.time, updateB.time))///NULL REF EXP
+        if (tryToCatchUp(updateA.time, updateB.time))///NULL REF EXP // consequtive catch ups (eliminated with edge case checking?)
             return;
 
-        lerpDeltaTime = updateB.time - updateA.time;/// NUL REF EXP
+        lerpDeltaTime = updateB.time - updateA.time;
 
         float lastTs = serverUpdates[lastPtr].time;///////////
                                                    // Debug.Log("lerpSetTime: " + Time.time + " state: " +" A: "+ updateA.time + " B: "+ updateB.time + " last: "+ lastTs +" dt " + lerpDeltaTime + " intDelay " + (lastUpdateTimestamp - updateA.time));
@@ -107,7 +111,6 @@ public class MovementInterpolator {
 
         lerpStartRot = updateA.rotation;
         lerpEndRot = updateB.rotation;
-
     }
 
     public void InterpolateMovement() {
@@ -122,43 +125,43 @@ public class MovementInterpolator {
         if (lerpPercentage >= 0.95f) {
             //Debug.Log("updating lerp params " + "dt since last lerpStart: " + (Time.time - lastLerp));
 
-            GetNextInterpolationParameters();
+            GetNextInterpolationParameters();// if stalled and not extrapolated we should return here?(set percentage 1?)
             lerpPercentage = 0;
 
         }
 
         transform.position = Vector3.Lerp(lerpStartPos, lerpEndPos, lerpPercentage);
         transform.rotation = Quaternion.Slerp(lerpStartRot, lerpEndRot, lerpPercentage);
-
         // Debug.Log("Interpolating pos " + lerpPercentage);
 
     }
     private int warmup = 10;
     private bool tryToCatchUp(float timeA, float timeB) {
         float delay = 0;
+        float immediateDelay = (lastUpdateTimestamp - timeA) - Time.fixedDeltaTime / 2;
         if (warmup > 0 || !useAvgDelayToCatchup) {
-            delay = (lastUpdateTimestamp - timeA) - Time.fixedDeltaTime / 2;
+            delay = immediateDelay;
             warmup--;
         }
         else {
             delay = avgDelay() - recRate / 2;
         }
 
+        if (immediateDelay < recRate) // edge case where looking at the avg brings us too close
+            return false;
       
         if (delay > targetInterpolationDelay) { //make sure were not behind interpolationDelay
             if (timeB - timeA < recRate + Time.fixedDeltaTime / 2) {//slot size + fixedDelta / 2
-                                                                                  // Debug.Log("Catching up to interp delay " + (lastUpdateTimestamp - updateA.time)+" from "+ updateA.time + " debug " + interpolationDelay + " " + (Time.fixedDeltaTime / 2));
+             // Debug.Log("Catching up to interp delay " + (lastUpdateTimestamp - updateA.time)+" from "+ updateA.time + " debug " + interpolationDelay + " " + (Time.fixedDeltaTime / 2));
                 GetNextInterpolationParameters();
                 Debug.Log("CatchingUp");
-                return true;/// posibly we need to allow for a small gap before catching up. sometimes 1 pack arrives early and there is no need to catch up
-            }//==> we need to keep some sort of stats that help us decide when to do this,(and extrapolate sometimes?) and not like this
+                return true;
+            }
         }
         return false;
     }
-    ///IMPORTENT: localy when not extrapolating we get good sync, catching up may skew it but the stall seems to resync it.(sometimes)
-    ///// also we stall mainly when we wait a long time to get recs, which is probably normal. + after catching up
+  
     //// strangly enough we get wait more for new updates when shooting etc...
-    /// maybe we need a mechanisem that takes into consideration the avg wait time or new updates?
     private bool tryToExtrapolateMovement(StateSnapshot updateA) {
         if (avgDelay() < targetInterpolationDelay - recRate / 2)
             return false;
@@ -168,9 +171,9 @@ public class MovementInterpolator {
         Debug.LogWarning(" extrapolating till " + (updateA.time + lerpDeltaTime)); //TODO extrapolate rotation
         Logger.Log(Time.time, Time.realtimeSinceStartup, entityId, "Extrapolation", updateA.time.ToString());
         lastPtr = (lastPtr + 1) % buffSize;
-        serverUpdates[(currPtr + 2) % buffSize] = new StateSnapshot(updateA.time + lerpDeltaTime, updateA.position, updateA.rotation, updateA.velocity); // next snapshot is bogus , maybe this is wrong. computed interpolation delay is wrong after this
+        serverUpdates[(currPtr + 2) % buffSize] = new StateSnapshot(updateA.time + lerpDeltaTime, updateA.position, updateA.rotation, updateA.velocity); // next snapshot is bogus , maybe this is wrong. computed interpolation delay is wrong after this (is it??)
         currPtr = (currPtr + 1) % buffSize;
-        //lastUpdateTimestamp = updateA.time + lerpDeltaTime;
+        lastExtrapolationTimestamp = updateA.time + lerpDeltaTime;
         return true;
     }
 

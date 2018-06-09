@@ -169,22 +169,22 @@ public class Server : MonoBehaviour {
     }
 
     private void ProccessAllocClientID(SC_AllocClientID msg, int recConnectionId) {
-        gameManager.AddPlayerData(recConnectionId);
         //send all netEntites to new player 
         SendAllEntitiesToNewClient(recConnectionId);
         gameManager.SendAllGameDataToNewClient(recConnectionId);
 
         int entityId;
         GameObject newPlayer = entityManager.CreateEntity(remotePlayer, playerSpawn.position, playerSpawn.rotation, (byte)NetworkEntity.ObjType.Player, out entityId);
-        entityManager.netEntities[entityId].ClientID = recConnectionId;
         newPlayer.GetComponent<RemotePlayerShipServer>().ClientID = recConnectionId;
+        gameManager.AddPlayerData(entityId, recConnectionId);
+        entityManager.netEntities[entityId].ClientID = recConnectionId;
         connectedPlayers[recConnectionId] = newPlayer;
 
         //broadcast new entity to all
         SC_EntityCreated msg1 = new SC_EntityCreated(entityId, Time.time, playerSpawn.position, playerSpawn.rotation, recConnectionId, (byte)NetworkEntity.ObjType.Player);
         outgoingReliable.Enqueue(msg1);
 
-        Debug.Log("Player with client id = " + recConnectionId + " joined the game.");
+        Debug.Log("Player with playerID = " + entityId + ", clientID = " + recConnectionId + " joined the game.");
     }
 
     private void ProccessDisconnection(int recConnectionId) {
@@ -202,7 +202,7 @@ public class Server : MonoBehaviour {
         connectedPlayers.Remove(recConnectionId);//end connection
         entityManager.RemoveEntity(entityIdToDestroy);
 
-        gameManager.RemovePlayer(recConnectionId);
+        gameManager.RemovePlayer(entityIdToDestroy);
     }
 
 	private void CreateRequestedMissile(CS_MissileRequest msg, int clientID) {
@@ -217,13 +217,13 @@ public class Server : MonoBehaviour {
 		if (newObject == null || newEntityID == -1)
 			Debug.LogError("Entity Creation failed");
 
-		entityManager.netEntities[newEntityID].GetComponent<Missile>().ClientID = clientID; // mark the owner of this missile
-        int targetClientId = -1;
+        entityManager.netEntities[newEntityID].GetComponent<Missile>().OwnerID = gameManager.GetPlayerID(clientID);// mark the owner of this missile
+        int tergetPlayerID = -1;
         if (msg.TargetId > 0) {////more proofing needed
             entityManager.netEntities[newEntityID].GetComponent<Missile>().Target = entityManager.netEntities[msg.TargetId].transform; // mark the target of this missile
-            targetClientId = entityManager.netEntities[msg.TargetId].EntityID;
+            tergetPlayerID = msg.TargetId;
         }
-        SC_EntityCreated mssg = new SC_EntityCreated(newEntityID, msg.TimeStamp, msg.Position, msg.Rotation, targetClientId, (byte)NetworkEntity.ObjType.Missile);
+        SC_EntityCreated mssg = new SC_EntityCreated(newEntityID, msg.TimeStamp, msg.Position, msg.Rotation, tergetPlayerID, (byte)NetworkEntity.ObjType.Missile);
 		outgoingReliable.Enqueue(mssg);
 	}
 
@@ -239,9 +239,9 @@ public class Server : MonoBehaviour {
 		if (newObject == null || newEntityID == -1)
 			Debug.LogError("Entity Creation failed");
 
-		entityManager.netEntities[newEntityID].GetComponent<Projectile>().ClientID = clientID; // mark the owner of this projectile
+		entityManager.netEntities[newEntityID].GetComponent<Projectile>().OwnerID = gameManager.GetPlayerID(clientID); // mark the owner of this projectile
 
-		SC_EntityCreated mssg = new SC_EntityCreated(newEntityID, msg.TimeStamp, msg.Position, msg.Rotation, clientID, (byte)NetworkEntity.ObjType.Projectile);
+		SC_EntityCreated mssg = new SC_EntityCreated(newEntityID, msg.TimeStamp, msg.Position, msg.Rotation, clientID/*no use*/, (byte)NetworkEntity.ObjType.Projectile);
 		outgoingReliable.Enqueue(mssg);
 	}
 
@@ -336,7 +336,7 @@ public class Server : MonoBehaviour {
     public void SendMsgToClient(int clientID, NetMsg msg) {
         byte error;
         byte[] buffer = MessagesHandler.NetMsgPack(msg);
-        NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
+        NetworkTransport.Send(hostId, clientID, reliableChannelId, buffer, buffer.Length, out error);
     }
 }
 

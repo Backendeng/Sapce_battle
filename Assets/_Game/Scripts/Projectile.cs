@@ -6,6 +6,8 @@ public class Projectile : NetworkEntity {
     public GameObject missileExplosion;
     public GameObject PT_Explosion;
 
+    public int OwnerID { get; set; }
+
     public static readonly int Damage = 10;
     private static readonly float speed = 400f;
     
@@ -50,29 +52,29 @@ public class Projectile : NetworkEntity {
     void OnTriggerEnter(Collider other) {
         if (other.CompareTag("Projectile") || // ignore bullet to bullet collision
             other.CompareTag("Boundary") || // ignore collision with boundary
-            other.CompareTag("Player") && ClientID == other.gameObject.GetComponent<PlayerShip>().ClientID) // ignore self harming!
+            other.CompareTag("Player") && OwnerID == other.gameObject.GetComponent<PlayerShip>().PlayerID) // ignore self harming!
         {
             return;
         }
         hit = true;
-
+        /*
         if (!isServer) { // do local effect only
             Destroy(Instantiate(PT_Explosion, transform.position, Quaternion.identity), 1);
             active = false;
             return;
-        }
+        }*/
 
         // On Server:
+        if (isServer) {
+            //Debug.Log("Projectile hit: " + other.name + ", tag:" + other.tag);
 
-        //Debug.Log("Projectile hit: " + other.name + ", tag:" + other.tag);
-
-        if (other.CompareTag("Player")) {
-            Debug.Log("Projectile hit: player with client id = " + other.gameObject.GetComponent<PlayerShip>().ClientID);
-            //gameController.AddScore(scoreValue);
-        }
-
-        if (ClientID != 0) {
-            Explode();
+            if (other.CompareTag("Player")) {
+                //Debug.Log("Projectile hit: player with playerID = " + other.gameObject.GetComponent<PlayerShip>().PlayerID);
+                //gameManager.AddScore(OwnerID, scoreValue);
+            }
+            if (OwnerID != 0) {
+                Explode();
+            }
         }
     }
 

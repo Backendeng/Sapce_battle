@@ -13,8 +13,9 @@ public class Missile : NetworkEntity {
     private readonly float speed = 50f;
     public static readonly float timeout = 10f;
     private float destroyTime;
-   
-	public Transform Target { set { target = value; } }
+
+    public int OwnerID { get; set; }
+    public Transform Target { set { target = value; } }
 
     private bool isTargetingPlayer = false;
     public bool IsTargetingPlayer { set { isTargetingPlayer = value; } get { return isTargetingPlayer; }  }
@@ -59,8 +60,6 @@ public class Missile : NetworkEntity {
                 Debug.Log("ERROR! RemoteProjectile on Client reveived an invalid NetMsg message. NetMsg Type: " + netMessage.Type);
                 break;
         }
-
-        
 
     }
 

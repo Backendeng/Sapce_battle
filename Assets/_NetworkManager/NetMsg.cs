@@ -144,14 +144,14 @@ public class CS_MissileRequest : NetMsg {
 }
 
 public class SC_PlayerData : NetMsg {
-    public int ClientID { get; private set; }
+    public int PlayerID { get; private set; }
     public int Health { get; private set; }
     public int Score { get; private set; }
 
-    public SC_PlayerData(int clientID, float timeStamp, int health, int score) : base(timeStamp) {
+    public SC_PlayerData(int playerID, float timeStamp, int health, int score) : base(timeStamp) {
         msgType = (byte)MsgType.SC_PlayerData;
-        this.ClientID = clientID;
-        this.Health = health;
-        this.Score = score;
+        PlayerID = playerID;
+        Health = health;
+        Score = score;
     }
 }

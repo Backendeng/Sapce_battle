@@ -47,7 +47,7 @@ public class RemotePlayerShipClient : PlayerShip {
         }
 
         if(doLerp)
-            movementInterpolator.InterpolateMovement();//lerp
+            movementInterpolator.InterpolateMovement();//lerp // NULLREF
 
         if (Health == 0) { // TODO: TEMP.
             Destroy(Instantiate(ShipExplosion, transform.position, Quaternion.identity), 3);

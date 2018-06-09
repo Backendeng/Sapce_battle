@@ -85,19 +85,18 @@ public class ShipShootingClient : MonoBehaviour {
     }
 
     private int LockOnTarget() {
-        
         int nearest = -1;
         float minDist = playerCamera.pixelWidth;
         foreach (KeyValuePair<int, PlayerShip> kvp in clientController.gameManager.PlayerShipsDict) {
             Vector3 playerScreenPos = playerCamera.WorldToScreenPoint(kvp.Value.transform.position);
             float dist = Vector3.Distance((Vector2)playerScreenPos, screenCenter);
-            Debug.Log("debug dist " + dist + " playerpos " + playerScreenPos + " center " + screenCenter + " rad " + lockRadius);///////////
+            //Debug.Log("debug dist " + dist + " playerpos " + playerScreenPos + " center " + screenCenter + " rad " + lockRadius);///////////
             if (dist > lockRadius)
                 continue;
             if (dist < minDist) {
                 minDist = dist;
-                nearest = kvp.Value.EntityID;
-                Debug.Log("Lock " + nearest);
+                nearest = kvp.Value.PlayerID;
+                Debug.Log("Locked on playerID = " + nearest);
             }
                
         }
@@ -106,24 +105,23 @@ public class ShipShootingClient : MonoBehaviour {
 
     public Vector3 TargetScreenPoint() {
         if (lockTargetID == -1) {
+            Debug.Log("lockTargetID == -1, can't set locking circle");
             return Vector3.zero;
         }
 
-        int targetClientID = clientController.GetShipClientID(lockTargetID);
-
-        if (!clientController.gameManager.PlayerShipsDict.ContainsKey(targetClientID)) {
-            Debug.LogWarning("locked target wasn't found in PlayerShipDict. EntityID = " + lockTargetID + " , ClientID = " + targetClientID);
+        if (!clientController.gameManager.PlayerShipsDict.ContainsKey(lockTargetID)) {
+            Debug.LogWarning("locked target wasn't found in PlayerShipDict. locked PlayerID = " + lockTargetID);
             return Vector3.zero;
         }
 
-        return playerCamera.WorldToScreenPoint(clientController.gameManager.PlayerShipsDict[targetClientID].transform.position);
+        return playerCamera.WorldToScreenPoint(clientController.gameManager.PlayerShipsDict[lockTargetID].transform.position);
     }
 
     private void ShootProjectile(Vector3 pos, Quaternion rot) {
         float netTimeStamp = NetworkTransport.GetNetworkTimestamp(); // NetworkTimeStamp is int, but we use float because NetMsg uses float for time stamps.
         GameObject mockProjectile = Instantiate(projectile, pos, rot); // destroyed when the real projectile from the server is instantiated.
         projectileSound.Play();
-        mockProjectile.GetComponent<Projectile>().ClientID = -1; // // mark as mock projectile (locally simulated untill the real projectile is instantiated)
+        mockProjectile.GetComponent<Projectile>().OwnerID = -1; // // mark as mock projectile (locally simulated untill the real projectile is instantiated)
         clientController.mockProjectiles.Add((int)netTimeStamp, mockProjectile);
         clientController.SendShotToHost((byte)NetworkEntity.ObjType.Projectile, pos, rot, (byte)NetworkEntity.ObjType.Projectile, (int)netTimeStamp);
         energy -= energyDrain;

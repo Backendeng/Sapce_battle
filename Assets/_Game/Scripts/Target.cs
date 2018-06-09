@@ -5,13 +5,13 @@ public class Target : MonoBehaviour {
     private GameManager gameManager;
     private PlayerShip playerShip;
     private int clientID = -1; // default value for non-client network entities with a target script
-    private int entityID;
+    private int playerID;
 
     public void Start() {
         playerShip = GetComponentInParent<PlayerShip>();
         serverController = playerShip.ServerController;
         clientID = playerShip.ClientID;
-        entityID = playerShip.EntityID;
+        playerID = playerShip.PlayerID;
         gameManager = serverController.gameManager;
 
         if (!playerShip || !serverController || !gameManager) {
@@ -24,16 +24,17 @@ public class Target : MonoBehaviour {
         if (health > 0) {
             health = Mathf.Clamp(health - damage, 0, 100);
             playerShip.Health = health;
-            gameManager.UpdatePlayerHealth(clientID, health);
+            gameManager.UpdatePlayerHealth(playerID, health);
         }
     }
 
     void OnTriggerEnter(Collider other) {
         // hit by a projectile of another player
-        if (other.CompareTag("Projectile") && other.GetComponent<Projectile>().ClientID != clientID) {
-            Debug.Log("Target was hit: entityID = " + entityID + ", clientID = " + clientID);
+        if (other.CompareTag("Projectile") /* && other.GetComponent<Projectile>().OwnerID != playerID */) {
+            Debug.Log("Target was hit by a projectile: playerID = " + playerID + ", clientID = " + clientID);
             TakeDamage(Projectile.Damage);
+            return;
         }
-        Debug.Log("Target was hit " + other.name);/////TODO: error
+        Debug.Log("Target was hit " + other.name + ", tag: " + other.tag);/////TODO: error
     }
 }

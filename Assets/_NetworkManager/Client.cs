@@ -189,8 +189,6 @@ public class Client : MonoBehaviour {
                 } else {
                     newObject = Instantiate(remotePlayer, createMsg.Position, createMsg.Rotation);//remotePlayer
                 }
-                newObject.GetComponent<PlayerShip>().ClientID = createMsg.ClientID;
-                gameManager.AddPlayerShip(createMsg.ClientID, newObject);
                 break;
             case (byte)NetworkEntity.ObjType.Missile:
                 newObject = Instantiate(missile, createMsg.Position, createMsg.Rotation);
@@ -209,8 +207,12 @@ public class Client : MonoBehaviour {
             newNetEntity.EntityID = createMsg.EntityID;
             newNetEntity.ObjectType = (byte)type;
             newNetEntity.ClientID = createMsg.ClientID;
+
+            if (type == (byte)NetworkEntity.ObjType.Player) {
+                gameManager.AddPlayerShip(newNetEntity.EntityID, newObject);
+                gameManager.AddPlayerData(newNetEntity.EntityID, createMsg.ClientID);
+            }
         }
-            
         else
             Debug.LogError("Entity Creation failed, id: " + createMsg.EntityID);
         netEntities.Add(createMsg.EntityID, newObject.GetComponent<NetworkEntity>());
@@ -264,7 +266,7 @@ public class Client : MonoBehaviour {
 
     private void ProcessPlayerData(NetMsg msg) {
         SC_PlayerData playerDataMsg = (SC_PlayerData)msg;
-        gameManager.UpdatePlayerData(playerDataMsg.ClientID, playerDataMsg.Health, playerDataMsg.Score);
+        gameManager.UpdatePlayerData(playerDataMsg.PlayerID, playerDataMsg.Health, playerDataMsg.Score);
     }
 
     public int GetShipClientID(int entityID) {

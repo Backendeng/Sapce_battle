@@ -76,14 +76,9 @@ public class HudUI : MonoBehaviour {
             LockedTargetCircle.enabled = false;
             return;
         }
-        int targetClientID = clientController.GetShipClientID(shipShooting.lockTargetID);
-        
-        if (targetClientID == -1) {
-            Debug.LogError("invalid locked target id");
-        }
 
         EnemyTarget.SetActive(true);
-        EnemyHealthBarImage.fillAmount = gameManager.GetHealth(targetClientID) / 100f;
+        EnemyHealthBarImage.fillAmount = gameManager.GetHealth(shipShooting.lockTargetID) / 100f;
         EnemyText.text = string.Format("TARGET LOCKED:\nENEMY: {0}", "<NAME>"); // TODO: get name here from game manager
 
         LockedTargetCircle.enabled = true;

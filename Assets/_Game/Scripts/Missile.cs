@@ -21,9 +21,10 @@ public class Missile : NetworkEntity {
     public bool IsTargetingPlayer { set { isTargetingPlayer = value; } get { return isTargetingPlayer; }  }
 
     // Lerping State
-    public bool doLerp = false;
+    public bool doLerp = true;
     
     MovementInterpolator movementInterpolator;
+    private bool created = false;
 
     public new void Start() {
         base.Start();
@@ -37,6 +38,7 @@ public class Missile : NetworkEntity {
             movementInterpolator = new MovementInterpolator(transform, EntityID);
             //  GetComponent<CapsuleCollider>().enabled = false;
         }
+        created = true;
     }
 
     private void Update() {
@@ -88,7 +90,7 @@ public class Missile : NetworkEntity {
 
     private bool exploaded = false;
     void Explode() {
-        if (exploaded)
+        if (exploaded || !created)
             return;
         exploaded = true;
 
@@ -117,6 +119,7 @@ public class Missile : NetworkEntity {
             }
         }
         GetComponent<CapsuleCollider>().enabled = false;
+       
         serverController.DestroyEntity(EntityID);//nullreff here
     }
 

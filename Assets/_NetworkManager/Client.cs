@@ -192,7 +192,7 @@ public class Client : MonoBehaviour {
                 break;
             case (byte)NetworkEntity.ObjType.Missile:
                 newObject = Instantiate(missile, createMsg.Position, createMsg.Rotation);
-                if(createMsg.ClientID == clientID) // check if this player is the target of this missile
+                if(createMsg.ClientID == PlayerShip.ActiveShip.EntityID) // check if this player is the target of this missile NOTE: clientID is used for entity ID here
                     newObject.GetComponent<Missile>().IsTargetingPlayer = true;
                 break;
             case (byte)NetworkEntity.ObjType.Astroid:

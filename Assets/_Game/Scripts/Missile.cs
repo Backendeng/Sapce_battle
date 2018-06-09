@@ -20,7 +20,7 @@ public class Missile : NetworkEntity {
     public bool IsTargetingPlayer { set { isTargetingPlayer = value; } get { return isTargetingPlayer; }  }
 
     // Lerping State
-    public bool doLerp = false;
+    public bool doLerp = true;
     
     MovementInterpolator movementInterpolator;
 

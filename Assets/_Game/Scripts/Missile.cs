@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 
 public class Missile : NetworkEntity {
@@ -9,9 +9,9 @@ public class Missile : NetworkEntity {
 
     private Rigidbody rigid_body;
     private Transform target;
-    
-    public float speed = 50f;
-    public float timeout = 5.0f;
+
+    private readonly float speed = 50f;
+    public static readonly float timeout = 10f;
     private float destroyTime;
    
 	public Transform Target { set { target = value; } }
@@ -26,6 +26,7 @@ public class Missile : NetworkEntity {
 
     public new void Start() {
         base.Start();
+
         if (isServer) {
             destroyTime = Time.time + timeout;
             rigid_body = GetComponent<Rigidbody>();
@@ -41,6 +42,7 @@ public class Missile : NetworkEntity {
         if (isServer && Time.time > destroyTime) {
             Explode();
         }
+
         if (incomingQueue.Count == 0)
             return;
         NetMsg netMessage = incomingQueue.Dequeue();

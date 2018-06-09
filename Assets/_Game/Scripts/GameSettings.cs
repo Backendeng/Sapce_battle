@@ -1,71 +1,52 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class GameSettings : MonoBehaviour {
     private bool loggingEnabled = false;
     private bool showUnsmoothedShadowEnabled = false;
     private bool showInterpolatedShadowEnabled = false;
-    private static bool useXboxController = false;
-    private static bool useAutoPilot = false;
+    private bool useXboxController = false;
+    private bool useAutoPilot = false;
 
-    public static bool UseMouseInput { get { return !useXboxController; } }
+    public void Start() {
+        Logger.LogEnabled = loggingEnabled;
+        PlayerShipInput.useAutoPilot = useAutoPilot;
+        LocalPlayerShip.showUnsmoothedShadow = showUnsmoothedShadowEnabled;
+        LocalPlayerShip.showInterpolatedShadow = showInterpolatedShadowEnabled;
+        PlayerShipInput.useMouseInput = !useXboxController;
+    }
 
     public void ToggleSaveLogs() {
-        if (loggingEnabled) {
-            loggingEnabled = false;
-        }
-        else {
-            loggingEnabled = true;
-        }
+        loggingEnabled = !loggingEnabled;
+
         Logger.LogEnabled = loggingEnabled;
         Debug.Log("saving logs is: " + loggingEnabled);
     }
 
     public void ToggleUnsmoothedShadow() {
-        if (showUnsmoothedShadowEnabled) {
-            showUnsmoothedShadowEnabled = false;
-        }
-        else {
-            showUnsmoothedShadowEnabled = true;
-        }
+        showUnsmoothedShadowEnabled = !showUnsmoothedShadowEnabled;
+
         LocalPlayerShip.showUnsmoothedShadow = showUnsmoothedShadowEnabled;
         Debug.Log("show unsmoothed shadow is: " + showUnsmoothedShadowEnabled);
     }
 
     public void ToggleInterpolatedShadow() {
-        if (showInterpolatedShadowEnabled) {
-            showInterpolatedShadowEnabled = false;
-        }
-        else {
-            showInterpolatedShadowEnabled = true;
-        }
+        showInterpolatedShadowEnabled = !showInterpolatedShadowEnabled;
+
         LocalPlayerShip.showInterpolatedShadow = showInterpolatedShadowEnabled;
         Debug.Log("show lerped shadow is: " + showInterpolatedShadowEnabled);
     }
 
     public void ToggleControls() {
-        if (useXboxController) {
-            useXboxController = false;
+        useXboxController = !useXboxController;
 
-        }
-        else {
-            useXboxController = true;
-        }
         PlayerShipInput.useMouseInput = !useXboxController;
         Debug.Log("using mouse input is: " + !useXboxController);
     }
 
     public void ToggleAutoPilot() {
-        if (useAutoPilot) {
-            useAutoPilot = false;
-        }
-        else {
-            useAutoPilot = true;
-        }
+        useAutoPilot = !useAutoPilot;
         PlayerShipInput.useAutoPilot = useAutoPilot;
-        Debug.Log("using autopilot is: ");
+        Debug.Log("using autopilot is: " + useAutoPilot);
     }
 
 

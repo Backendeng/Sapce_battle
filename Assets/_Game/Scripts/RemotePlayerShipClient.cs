@@ -16,7 +16,7 @@ public class RemotePlayerShipClient : PlayerShip {
     MovementInterpolator movementInterpolator;
 
     public new void Start() {
-        base.Start();
+        base.Awake();
         movementInterpolator = new MovementInterpolator(transform, EntityID);
     }
 

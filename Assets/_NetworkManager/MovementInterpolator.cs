@@ -74,45 +74,25 @@ public class MovementInterpolator {
         int nextPtr = (currPtr + 2) % buffSize;
         StateSnapshot updateB = serverUpdates[nextPtr];
 
+        if (updateB == null)
+            return;
         //save stats
         interpolationDelays[(currPtr + 1) % buffSize] = (lastUpdateTimestamp - updateA.time);
        // Debug.Log("delay idx" + ((currPtr + 1) % buffSize) + " delay "+ interpolationDelays[(currPtr + 1) % buffSize]);
        // Debug.Log("avg delay " + avgDelay() );
         
        // Debug.Log("stalles idx" + ((currPtr + 1) % buffSize) + " idstall " + stalled[(currPtr + 1) % buffSize]);
-
-        ///IMPORTENT: localy when not extrapolating we get good sync, catching up may skew it but the stall seems to resync it.(sometimes)
-        ///// also we stall mainly when we wait a long time to get recs, which is probably normal. + after catching up
-        //// strangly enough we get wait more for new updates when shooting etc...
-        /// maybe we need a mechanisem that takes into consideration the avg wait time or new updates?
+     
         if (updateB != null && updateB.time < updateA.time) {/// NULL REF EXP
         //    Debug.LogWarning("stallTime: "+Time.time+" No new lerp position, last valid pos: " + updateA.time + " time since last rec: "+ (Time.time - lastRecTime));
             Logger.Log(Time.time, Time.realtimeSinceStartup, entityId, "InterpolationSTALL", updateA.time.ToString());
             stalled[(currPtr + 1) % buffSize] = 1;
             Debug.Log("stalled");
-         /*   lerpDeltaTime = recRate;
-            lerpStartPos = updateA.position;
-            lerpEndPos = lerpStartPos + lerpDeltaTime*updateA.velocity;
-            Debug.LogWarning(" extrapolating till " + (updateA.time + lerpDeltaTime)); //TODO extrapolate rotation
-           
-            lastPtr = (lastPtr + 1) % buffSize;
-            serverUpdates[nextPtr] = new StateSnapshot(updateA.time + lerpDeltaTime, updateA.position, updateA.rotation, updateA.velocity); // next snapshot is bogus , maybe this is wrong. computed interpolation delay is wrong after this
-            currPtr = (currPtr + 1) % buffSize;
-            lastUpdateTimestamp = updateA.time + lerpDeltaTime;
-           */
-            return;///with extrapolation we decrease interpolationDelay and then start stalling more often, implement wait mecahisem?
+
+            tryToExtrapolateMovement(updateA);
+            return;
         }
         currPtr = (currPtr + 1) % buffSize;
-
-        ///NULL REF EXP
-       /* if ((lastUpdateTimestamp - updateA.time) > (targetInterpolationDelay + Time.fixedDeltaTime / 2)) { //make sure were not behind interpolationDelay
-            if (updateB.time - updateA.time < recRate + Time.fixedDeltaTime / 2) {//slot size + fixedDelta / 2
-                                                                                  // Debug.Log("Catching up to interp delay " + (lastUpdateTimestamp - updateA.time)+" from "+ updateA.time + " debug " + interpolationDelay + " " + (Time.fixedDeltaTime / 2));
-                GetNextInterpolationParameters();
-                return;/// posibly we need to allow for a small gap before catching up. sometimes 1 pack arrives early and there is no need to catch up
-            }//==> we need to keep some sort of stats that help us decide when to do this,(and extrapolate sometimes?) and not like this
-        }
-        */
 
         if (tryToCatchUp(updateA.time, updateB.time))///NULL REF EXP
             return;
@@ -174,6 +154,24 @@ public class MovementInterpolator {
             }//==> we need to keep some sort of stats that help us decide when to do this,(and extrapolate sometimes?) and not like this
         }
         return false;
+    }
+    ///IMPORTENT: localy when not extrapolating we get good sync, catching up may skew it but the stall seems to resync it.(sometimes)
+    ///// also we stall mainly when we wait a long time to get recs, which is probably normal. + after catching up
+    //// strangly enough we get wait more for new updates when shooting etc...
+    /// maybe we need a mechanisem that takes into consideration the avg wait time or new updates?
+    private bool tryToExtrapolateMovement(StateSnapshot updateA) {
+        if (avgDelay() < targetInterpolationDelay - recRate / 2)
+            return false;
+        lerpDeltaTime = recRate;
+        lerpStartPos = updateA.position;
+        lerpEndPos = lerpStartPos + lerpDeltaTime * updateA.velocity;
+        Debug.LogWarning(" extrapolating till " + (updateA.time + lerpDeltaTime)); //TODO extrapolate rotation
+        Logger.Log(Time.time, Time.realtimeSinceStartup, entityId, "Extrapolation", updateA.time.ToString());
+        lastPtr = (lastPtr + 1) % buffSize;
+        serverUpdates[(currPtr + 2) % buffSize] = new StateSnapshot(updateA.time + lerpDeltaTime, updateA.position, updateA.rotation, updateA.velocity); // next snapshot is bogus , maybe this is wrong. computed interpolation delay is wrong after this
+        currPtr = (currPtr + 1) % buffSize;
+        //lastUpdateTimestamp = updateA.time + lerpDeltaTime;
+        return true;
     }
 
     private float avgDelay() {

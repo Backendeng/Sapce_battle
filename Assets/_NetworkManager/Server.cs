@@ -336,7 +336,7 @@ public class Server : MonoBehaviour {
     public void SendMsgToClient(int clientID, NetMsg msg) {
         byte error;
         byte[] buffer = MessagesHandler.NetMsgPack(msg);
-        NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
+        NetworkTransport.Send(hostId, clientID, reliableChannelId, buffer, buffer.Length, out error);
     }
 }
 

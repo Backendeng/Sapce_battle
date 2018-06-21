@@ -85,7 +85,7 @@ public class Client : MonoBehaviour {
 
 	//TODO remove objType
     public void SendShotToHost(byte shotObjType, Vector3 pos, Quaternion rot, byte shotObjectType, int networkTimeStamp) {
-        CS_CreationRequest msg = new CS_CreationRequest(networkTimeStamp, pos, rot, shotObjectType);
+        CS_ProjectileRequest msg = new CS_ProjectileRequest(networkTimeStamp, pos, rot, shotObjectType);
         byte[] buffer = MessagesHandler.NetMsgPack(msg);
         NetworkTransport.Send(hostId, connectionId, unreliableChannelId, buffer, buffer.Length, out error);
         if (error != 0)

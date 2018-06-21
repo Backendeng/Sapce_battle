@@ -124,7 +124,7 @@ public class Server : MonoBehaviour {
                             ProccessAllocClientID((SC_AllocClientID)msg, recConnectionId);
                             break;
                         case (byte)NetMsg.MsgType.CS_CreationRequest://this is a request from client to create a shot TODO: change to shot request
-							CreateRequestedProjectile((CS_CreationRequest)msg, recConnectionId);
+							CreateRequestedProjectile((CS_ProjectileRequest)msg, recConnectionId);
                             break;
 						case (byte)NetMsg.MsgType.CS_MissileRequest://this is a request from client to create a missile
 							CreateRequestedMissile((CS_MissileRequest)msg, recConnectionId);
@@ -227,7 +227,7 @@ public class Server : MonoBehaviour {
 		outgoingReliable.Enqueue(mssg);
 	}
 
-	private void CreateRequestedProjectile(CS_CreationRequest msg, int clientID) {
+	private void CreateRequestedProjectile(CS_ProjectileRequest msg, int clientID) {
 		byte error;
 		int newEntityID = -1;
 		float msgDelayTime = (float)NetworkTransport.GetRemoteDelayTimeMS(hostId, clientID, (int)msg.TimeStamp, out error) / 1000;

@@ -79,11 +79,7 @@ public class MovementInterpolator {
 
         if (updateB == null)
             return;
-        //save stats
-        interpolationDelays[(currPtr + 1) % buffSize] = (lastUpdateTimestamp - updateA.time);
-       // Debug.Log("delay idx" + ((currPtr + 1) % buffSize) + " delay "+ interpolationDelays[(currPtr + 1) % buffSize]);
-       // Debug.Log("avg delay " + avgDelay() );
-       // Debug.Log("stalles idx" + ((currPtr + 1) % buffSize) + " idstall " + stalled[(currPtr + 1) % buffSize]);
+        
      
         if (updateB != null && updateB.time < updateA.time) {
         //    Debug.LogWarning("stallTime: "+Time.time+" No new lerp position, last valid pos: " + updateA.time + " time since last rec: "+ (Time.time - lastRecTime));
@@ -97,6 +93,13 @@ public class MovementInterpolator {
 
             return;
         }
+        extCnt = 0;
+        //save stats
+        interpolationDelays[(currPtr + 1) % buffSize] = (lastUpdateTimestamp - updateA.time);
+        //Debug.Log("delay idx" + ((currPtr + 1) % buffSize) + " delay "+ interpolationDelays[(currPtr + 1) % buffSize]);
+      //   Debug.Log("avg delay " + avgDelay() );
+        // Debug.Log("stalles idx" + ((currPtr + 1) % buffSize) + " idstall " + stalled[(currPtr + 1) % buffSize]);
+
         currPtr = (currPtr + 1) % buffSize;
 
         if (tryToCatchUp(updateA.time, updateB.time))///NULL REF EXP // consequtive catch ups (eliminated with edge case checking?)
@@ -148,30 +151,35 @@ public class MovementInterpolator {
             delay = avgDelay() - recRate / 2;
         }
 
-        if (immediateDelay < recRate) // edge case where looking at the avg brings us too close
+        if (immediateDelay < targetInterpolationDelay) // edge case where looking at the avg brings us too close
             return false;
       
         if (delay > targetInterpolationDelay) { //make sure were not behind interpolationDelay
-            if (timeB - timeA < recRate + Time.fixedDeltaTime / 2) {//slot size + fixedDelta / 2
+        //    if (timeB - timeA < recRate + Time.fixedDeltaTime / 2) {//slot size + fixedDelta / 2
              // Debug.Log("Catching up to interp delay " + (lastUpdateTimestamp - updateA.time)+" from "+ updateA.time + " debug " + interpolationDelay + " " + (Time.fixedDeltaTime / 2));
                 GetNextInterpolationParameters();
                 Debug.Log("CatchingUp");
                 return true;
-            }
+          //  }
         }
         return false;
     }
-  
+
     //// strangly enough we get wait more for new updates when shooting etc...
+    private int extCnt = 0;
+    private int conseqExtrLimit = 2;
     private bool tryToExtrapolateMovement(StateSnapshot updateA) {
         if (!doExtraploation)
             return false;
+        if (extCnt >= conseqExtrLimit)
+            return false;
         if (avgDelay() < targetInterpolationDelay - recRate / 2)
             return false;
+        extCnt++;
         lerpDeltaTime = recRate;
         lerpStartPos = updateA.position;
         lerpEndPos = lerpStartPos + lerpDeltaTime * updateA.velocity;
-        Debug.LogWarning(" extrapolating till " + (updateA.time + lerpDeltaTime)); //TODO extrapolate rotation
+      //  Debug.LogWarning(" extrapolating till " + (updateA.time + lerpDeltaTime)); //TODO extrapolate rotation
         Logger.Log(Time.time, Time.realtimeSinceStartup, entityId, "Extrapolation", updateA.time.ToString());
         lastPtr = (lastPtr + 1) % buffSize;
         serverUpdates[(currPtr + 2) % buffSize] = new StateSnapshot(updateA.time + lerpDeltaTime, updateA.position, updateA.rotation, updateA.velocity); // next snapshot is bogus , maybe this is wrong. computed interpolation delay is wrong after this (is it??)

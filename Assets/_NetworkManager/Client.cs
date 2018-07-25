@@ -254,7 +254,8 @@ public class Client : MonoBehaviour {
         if (netEntities.ContainsKey(destroyMsg.EntityID)) {
             NetworkEntity netEntityToDestroy = netEntities[destroyMsg.EntityID];
             if (netEntityToDestroy.ObjectType == (byte)NetworkEntity.ObjType.Player) {
-                gameManager.RemovePlayer(netEntityToDestroy.ClientID);
+                gameManager.RemovePlayer(destroyMsg.EntityID);
+                Debug.Log("Ship Destroyed, id: " + destroyMsg.EntityID);
             }
             netEntityToDestroy.AddRecMessage(destroyMsg);
             netEntities.Remove(destroyMsg.EntityID);

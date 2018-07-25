@@ -21,7 +21,7 @@ public abstract class PlayerShip : NetworkEntity {
     protected static LocalPlayerShip activeShip;
     
     public static LocalPlayerShip ActiveShip { get { return activeShip; } }
-    public Vector3 Velocity { get { return physics.Rigidbody.velocity; } }
+    public virtual Vector3 Velocity { get { return physics.Rigidbody.velocity; } }
     public float Throttle { get { return input.throttle; } }
     public float Boost { get; set; }
 

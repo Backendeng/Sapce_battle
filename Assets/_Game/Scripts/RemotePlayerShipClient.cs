@@ -12,12 +12,15 @@ public class RemotePlayerShipClient : PlayerShip {
     // Lerping State
     public static bool doLerp = true;
  
-
     MovementInterpolator movementInterpolator;
+
+    Vector3 velocity;
+    public override Vector3 Velocity { get { return velocity; } }
 
     public new void Start() {
         base.Start();
         movementInterpolator = new MovementInterpolator(transform, EntityID);
+        velocity = Vector3.zero;
     }
 
    
@@ -30,11 +33,9 @@ public class RemotePlayerShipClient : PlayerShip {
 
             switch (netMessage.Type) {
                 case (byte)NetMsg.MsgType.SC_MovementData:
-
                     movementInterpolator.RecUpdate((SC_MovementData)netMessage);
-
+                    velocity = ((SC_MovementData)netMessage).Velocity;
                     SetShipState((SC_MovementData)netMessage);
-
                     break;
                 case (byte)NetMsg.MsgType.SC_EntityDestroyed:
                     Destroy(gameObject);

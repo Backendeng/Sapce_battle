@@ -65,7 +65,14 @@ public class HudUI : MonoBehaviour {
         UpdateEnemyTarget();
         
         if (LockedTargetCircle.enabled) {
-            LockedTargetCircle.transform.position = shipShooting.TargetScreenPoint();
+            Vector3 screenPoint = shipShooting.TargetScreenPoint();
+            if (screenPoint == Vector3.zero) {
+                LockedTargetCircle.enabled = false;
+            }
+            else {
+                LockedTargetCircle.transform.position = screenPoint;
+            }
+            
         }
     }
 

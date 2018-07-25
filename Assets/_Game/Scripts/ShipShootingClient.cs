@@ -88,8 +88,15 @@ public class ShipShootingClient : MonoBehaviour {
         int nearest = -1;
         float minDist = playerCamera.pixelWidth;
         foreach (KeyValuePair<int, PlayerShip> kvp in clientController.gameManager.PlayerShipsDict) {
-            Vector3 playerScreenPos = playerCamera.WorldToScreenPoint(kvp.Value.transform.position);
-            float dist = Vector3.Distance((Vector2)playerScreenPos, screenCenter);
+            Vector3 worldPoint = kvp.Value.transform.position;
+            if (Vector3.Dot(transform.forward, worldPoint - transform.position) < 0) {
+                continue; // ship is behind camera
+            }
+            Vector3 screenPoint = playerCamera.WorldToScreenPoint(worldPoint);
+            if (new Rect(0, 0, Screen.width, Screen.height).Contains(screenPoint) == false) {
+                continue; // not a valid screen point
+            }
+            float dist = Vector3.Distance((Vector2)screenPoint, screenCenter);
             //Debug.Log("debug dist " + dist + " playerpos " + playerScreenPos + " center " + screenCenter + " rad " + lockRadius);///////////
             if (dist > lockRadius)
                 continue;
@@ -103,7 +110,7 @@ public class ShipShootingClient : MonoBehaviour {
         return nearest;
     }
 
-    public Vector3 TargetScreenPoint() {
+public Vector3 TargetScreenPoint() {
         if (lockTargetID == -1) {
             Debug.Log("lockTargetID == -1, can't set locking circle");
             return Vector3.zero;
@@ -114,7 +121,16 @@ public class ShipShootingClient : MonoBehaviour {
             return Vector3.zero;
         }
 
-        return playerCamera.WorldToScreenPoint(clientController.gameManager.PlayerShipsDict[lockTargetID].transform.position);
+        Vector3 worldPoint = clientController.gameManager.PlayerShipsDict[lockTargetID].transform.position;
+        if (Vector3.Dot(transform.forward, worldPoint - transform.position) < 0) {
+            return Vector3.zero; // ship is behind camera
+        }
+        Vector3 screenPoint = playerCamera.WorldToScreenPoint(worldPoint);
+        if (new Rect(0, 0, Screen.width, Screen.height).Contains(screenPoint) == false) {
+            return Vector3.zero; // not a valid screen point
+        }
+
+        return screenPoint;
     }
 
     private void ShootProjectile(Vector3 pos, Quaternion rot) {

@@ -85,7 +85,7 @@ public class MovementInterpolator {
         //    Debug.LogWarning("stallTime: "+Time.time+" No new lerp position, last valid pos: " + updateA.time + " time since last rec: "+ (Time.time - lastRecTime));
             
             stalled[(currPtr + 1) % buffSize] = 1;
-            Debug.Log("stalled");
+            //Debug.Log("stalled");
 
             bool didExtrapolation = tryToExtrapolateMovement(updateA);
             if (!didExtrapolation)
@@ -158,7 +158,7 @@ public class MovementInterpolator {
         //    if (timeB - timeA < recRate + Time.fixedDeltaTime / 2) {//slot size + fixedDelta / 2
              // Debug.Log("Catching up to interp delay " + (lastUpdateTimestamp - updateA.time)+" from "+ updateA.time + " debug " + interpolationDelay + " " + (Time.fixedDeltaTime / 2));
                 GetNextInterpolationParameters();
-                Debug.Log("CatchingUp");
+                //Debug.Log("CatchingUp");
                 return true;
           //  }
         }

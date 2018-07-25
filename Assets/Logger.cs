@@ -81,6 +81,7 @@ public class Logger {
 
         string fpath =  Path.Combine(path, fileName);
         File.WriteAllLines(fpath, lines.ToArray());
+        Debug.Log("saved log to file.");
     }
 
     public static void OutputInterpolationDEBUGToFile() {

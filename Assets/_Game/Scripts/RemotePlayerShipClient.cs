@@ -10,7 +10,7 @@ public class RemotePlayerShipClient : PlayerShip {
     //private float interpolationDelay = 0.12f; 
 
     // Lerping State
-    public bool doLerp = true;
+    public static bool doLerp = true;
  
 
     MovementInterpolator movementInterpolator;

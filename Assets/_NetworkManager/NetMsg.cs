@@ -109,7 +109,7 @@ public class SC_AllocClientID : NetMsg {
     }
 }
 // TODO: change name to request Shot
-public class CS_CreationRequest : NetMsg {
+public class CS_ProjectileRequest : NetMsg {
     protected byte objectType;
     protected Vector3 position;
     protected Quaternion rotation;
@@ -118,7 +118,7 @@ public class CS_CreationRequest : NetMsg {
     public Vector3 Position { get { return position; } }
     public Quaternion Rotation { get { return rotation; } }
 
-    public CS_CreationRequest(float timeStamp, Vector3 position, Quaternion rotation, byte objectType) : base(timeStamp) {
+    public CS_ProjectileRequest(float timeStamp, Vector3 position, Quaternion rotation, byte objectType) : base(timeStamp) {
         msgType = (byte)MsgType.CS_CreationRequest;
         this.position = position;
         this.rotation = rotation;

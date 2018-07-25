@@ -24,6 +24,7 @@ public class HudUI : MonoBehaviour {
     public Image LockedTargetCircle;
 
     private Text text;
+    public Text lockedWarningText;
 
     private ShipShootingClient shipShooting;
 
@@ -48,12 +49,15 @@ public class HudUI : MonoBehaviour {
 
     void Update()
     {
-        if (PlayerShip.ActiveShip != null && gameManager.LocalPlayerLockCounter == 0) {
+        if (PlayerShip.ActiveShip != null) {
             text.text = string.Format("SPEED: {0}\nBOOST: {1}\nDEATHS: {2}", PlayerShip.ActiveShip.Velocity.magnitude.ToString("000"), PlayerShip.ActiveShip.Boost, 0 /* TODO: get deaths here */);
         }
 
-        if(PlayerShip.ActiveShip != null && gameManager.LocalPlayerLockCounter > 0) {
-            text.text = string.Format("SPEED: {0}\nBOOST: {1}\nDEATHS: {2}\nLOCKED!", PlayerShip.ActiveShip.Velocity.magnitude.ToString("000"), PlayerShip.ActiveShip.Boost, 0 /* TODO: get deaths here */);
+        if(gameManager.LocalPlayerLockCounter > 0) {
+            lockedWarningText.enabled = true;
+        }
+        else {
+            lockedWarningText.enabled = false;
         }
 
         SetHealthBar(PlayerShip.ActiveShip.Health);

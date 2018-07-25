@@ -22,7 +22,7 @@ public class MessagesHandler {
                 bytesMessage = PackMovementMsg((SC_MovementData)message);
                 return bytesMessage;
             case (byte)NetMsg.MsgType.CS_CreationRequest:
-                bytesMessage = PackCreationRequestMsg((CS_CreationRequest)message);
+                bytesMessage = PackCreationRequestMsg((CS_ProjectileRequest)message);
                 return bytesMessage;
 			case (byte)NetMsg.MsgType.CS_MissileRequest:
 				bytesMessage = PackMissileRequestMsg((CS_MissileRequest)message);
@@ -141,7 +141,7 @@ public class MessagesHandler {
         return unpacked;
     }
 
-    private static byte[] PackCreationRequestMsg(CS_CreationRequest message) {
+    private static byte[] PackCreationRequestMsg(CS_ProjectileRequest message) {
         byte[] packedMessage = new byte[33 + headerSize];
         packedMessage[0] = message.Type;
 
@@ -213,7 +213,7 @@ public class MessagesHandler {
 		return packedMessage;
 	}
 
-	private static CS_CreationRequest UnpackCreationRequestMsg(byte[] packedMessage) {
+	private static CS_ProjectileRequest UnpackCreationRequestMsg(byte[] packedMessage) {
 
 		float timeStamp = System.BitConverter.ToSingle(packedMessage, 1);
 		float position_x = System.BitConverter.ToSingle(packedMessage, 5);
@@ -228,7 +228,7 @@ public class MessagesHandler {
 		Vector3 position = new Vector3(position_x, position_y, position_z);
 		Quaternion rotation = new Quaternion(rotation_x, rotation_y, rotation_z, rotation_w);
 
-		CS_CreationRequest unpacked = new CS_CreationRequest(timeStamp, position, rotation, objectType);
+		CS_ProjectileRequest unpacked = new CS_ProjectileRequest(timeStamp, position, rotation, objectType);
 
 		return unpacked;
 	}

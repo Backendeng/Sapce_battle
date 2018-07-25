@@ -40,9 +40,10 @@ public class ClientUI : MonoBehaviour {
         if (started == false) {
             if (clientController.PlayerAvatarCreated == false) {
                 if (Time.time > stopConnectionTime) {
-                    StartScreen.SetActive(false);
-                    escapeMenuStatusText.text = "Connection Timed Out. Please Quit And Try Again.";
-                    EscapeMenu.SetActive(true);
+                    //StartScreen.SetActive(false);
+                    //escapeMenuStatusText.text = "Connection Timed Out. Please Quit And Try Again.";
+                    //EscapeMenu.SetActive(true);
+                    Cursor.visible = true;
                 }
             }
             else {

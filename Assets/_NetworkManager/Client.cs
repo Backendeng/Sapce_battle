@@ -221,7 +221,7 @@ public class Client : MonoBehaviour {
 
     private GameObject OnReceivedProjectileCreation(SC_EntityCreated msg) {
         GameObject proj = Instantiate(projectile, msg.Position, msg.Rotation);
-        proj.GetComponent<Projectile>().ClientID = msg.ClientID; // mark the owner of the received (syned from server) projectile
+        proj.GetComponent<Projectile>().OwnerID = gameManager.GetPlayerID(msg.ClientID); // mark the owner of the received (syned from server) projectile
         int key = (int)msg.TimeStamp;
         if (clientID != msg.ClientID) {
             return proj;

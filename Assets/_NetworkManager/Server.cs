@@ -240,8 +240,7 @@ public class Server : MonoBehaviour {
 			Debug.LogError("Entity Creation failed");
 
 		entityManager.netEntities[newEntityID].GetComponent<Projectile>().OwnerID = gameManager.GetPlayerID(clientID); // mark the owner of this projectile
-
-		SC_EntityCreated mssg = new SC_EntityCreated(newEntityID, msg.TimeStamp, msg.Position, msg.Rotation, clientID/*no use*/, (byte)NetworkEntity.ObjType.Projectile);
+        SC_EntityCreated mssg = new SC_EntityCreated(newEntityID, msg.TimeStamp, msg.Position, msg.Rotation, clientID/*no use*/, (byte)NetworkEntity.ObjType.Projectile);
 		outgoingReliable.Enqueue(mssg);
 	}
 

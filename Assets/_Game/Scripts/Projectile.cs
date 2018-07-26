@@ -6,7 +6,7 @@ public class Projectile : NetworkEntity {
     public GameObject missileExplosion;
     public GameObject PT_Explosion;
 
-    public int OwnerID { get; set; }
+    public int OwnerID { get; set; } // -1 means mock projectile.
 
     public static readonly int Damage = 10;
     private static readonly float speed = 400f;
@@ -27,6 +27,9 @@ public class Projectile : NetworkEntity {
     private void Update() {
         if (isServer && Time.time > destroyTime && active) {
             serverController.DestroyEntity(EntityID);
+        }
+        if (!isServer && Time.time > destroyTime && active) {
+
         }
         if (incomingQueue.Count == 0)
             return;
@@ -57,12 +60,13 @@ public class Projectile : NetworkEntity {
             return;
         }
         hit = true;
-        /*
-        if (!isServer) { // do local effect only
-            Destroy(Instantiate(PT_Explosion, transform.position, Quaternion.identity), 1);
+        //Debug.Log("Projectile hit: = " + other.name + ", entityID = " + other.GetComponent<NetworkEntity>().EntityID + ", projectile owner = " + OwnerID);
+
+        if (!isServer && OwnerID == -1) { // do local effect only for mock projectile. server should calculate hit later
+            Destroy(Instantiate(PT_Explosion, transform.position, Quaternion.identity), 1); 
             active = false;
             return;
-        }*/
+        }
 
         // On Server:
         if (isServer) {

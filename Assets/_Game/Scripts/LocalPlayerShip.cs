@@ -139,9 +139,9 @@ public class LocalPlayerShip : PlayerShip {
         shadow.GetComponent<Transform>().SetPositionAndRotation(message.Position, message.Rotation);
     }
 
-    private void MoveInterShadow(SC_MovementData message) {
-        InterShadow.AddRecMessage(message);
-    }
+    
+
+
 
 }
 

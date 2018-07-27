@@ -112,11 +112,13 @@ public class Projectile : NetworkEntity {
 
         if (!isServer && hit && active) { // if the projectile was destroyed before it did an explosion effect on the client, do it now.
             Destroy(Instantiate(PT_Explosion, transform.position, Quaternion.identity), 1);
+        }
+
+        if (!isServer) {
             Destroy(gameObject, 1f);
-            return;
         }
         else {
-            Destroy(gameObject, 1f);
+            Destroy(gameObject);
         }
     }
 }

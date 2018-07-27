@@ -83,6 +83,7 @@ public class ShipShootingClient : MonoBehaviour {
         
         clientController.SendMissileToHost((byte)NetworkEntity.ObjType.Missile, pos, rot, targetId, netTimeStamp);
         GetComponent<AudioSource>().Play();
+        //AudioSource.PlayClipAtPoint(projectileClip, transform.position); //TODO: add this instead of play
     }
 
     private int LockOnTarget() {

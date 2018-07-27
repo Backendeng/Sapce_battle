@@ -143,5 +143,6 @@ public class LocalPlayerShip : PlayerShip {
         InterShadow.AddRecMessage(message);
     }
 
+
 }
 

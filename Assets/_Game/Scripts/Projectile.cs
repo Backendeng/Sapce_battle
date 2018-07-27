@@ -16,20 +16,34 @@ public class Projectile : NetworkEntity {
     private readonly float timeout = 2.0f;
     private float destroyTime;
 
+    [Tooltip("Sound Effect")]
+    private AudioSource projectileSound;
+    public AudioClip projectileClip;
+
     public static float Speed { get { return speed; } }
+
+    public void Awake() {
+        
+    }
 
     public new void Start() {
         base.Start();
         GetComponent<Rigidbody>().velocity = transform.forward * speed;
         destroyTime = Time.time + timeout;
+
+        if (OwnerID > 0 && PlayerShip.ActiveShip.PlayerID != OwnerID) {
+            Debug.Log("pew pew! at pos = " + transform.position);
+            projectileSound = GetComponent<AudioSource>();
+            projectileSound.clip = projectileClip;
+            projectileSound.Play();
+            //AudioSource.PlayClipAtPoint(projectileClip, transform.position);
+            //Debug.Break();
+        }
     }
 
     private void Update() {
         if (isServer && Time.time > destroyTime && active) {
             serverController.DestroyEntity(EntityID);
-        }
-        if (!isServer && Time.time > destroyTime && active) {
-
         }
         if (incomingQueue.Count == 0)
             return;
@@ -93,13 +107,16 @@ public class Projectile : NetworkEntity {
     }
 
     private void DestroyProjectile() {
+        GetComponentInChildren<TrailRenderer>().enabled = false;
+        GetComponent<SphereCollider>().enabled = false;
+
         if (!isServer && hit && active) { // if the projectile was destroyed before it did an explosion effect on the client, do it now.
             Destroy(Instantiate(PT_Explosion, transform.position, Quaternion.identity), 1);
-            Destroy(gameObject);
+            Destroy(gameObject, 1f);
             return;
         }
         else {
-            Destroy(gameObject);
+            Destroy(gameObject, 1f);
         }
     }
 }

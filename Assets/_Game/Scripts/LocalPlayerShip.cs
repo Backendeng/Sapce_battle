@@ -1,12 +1,20 @@
+using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(ShipShootingClient))]
+[RequireComponent(typeof(Kino.AnalogGlitch))]
+
 
 public class LocalPlayerShip : PlayerShip {
     public GameObject interShadowPrefab;
     public GameObject shadowPrefab;
     private Transform shadow;
     private NetworkEntity InterShadow;
+
+    public Kino.AnalogGlitch cameraGlitch;
+    private readonly float glitchDuration = 1f;
+    private float glitchEndTime;
+
 
     private ShipShootingClient shooting;
 
@@ -84,6 +92,10 @@ public class LocalPlayerShip : PlayerShip {
             Destroy(Instantiate(ShipExplosion, transform.position, Quaternion.identity), 3);
             Health = 1; // this is not the way to do this. just temp. remove later.
         }
+
+        if (cameraGlitch.enabled && Time.time > glitchEndTime) {
+            cameraGlitch.enabled = false;
+        }
     }
 
     /*
@@ -141,6 +153,11 @@ public class LocalPlayerShip : PlayerShip {
 
     private void MoveInterShadow(SC_MovementData message) {
         InterShadow.AddRecMessage(message);
+    }
+
+    public void ShakeCamera(int intensity) {
+        cameraGlitch.enabled = true;
+        glitchEndTime = Time.time + glitchDuration;        
     }
 
 

@@ -139,6 +139,11 @@ public class GameManager : MonoBehaviour {
                 return;
 
             if (PlayerShip.ActiveShip.PlayerID == playerID) {
+                // if local ship got damaged, make a shake effect
+                int delta_health = health - PlayerShip.ActiveShip.Health;
+                if (delta_health < 0) {
+                    PlayerShip.ActiveShip.ShakeCamera(-delta_health);
+                }
                 PlayerShip.ActiveShip.Health = health;
                 PlayerShip.ActiveShip.Score = score;
                 Debug.Log("Updating local player ship data: health = " + health + " , score = " + score);

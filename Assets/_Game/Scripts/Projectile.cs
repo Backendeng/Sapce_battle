@@ -31,8 +31,8 @@ public class Projectile : NetworkEntity {
         GetComponent<Rigidbody>().velocity = transform.forward * speed;
         destroyTime = Time.time + timeout;
 
-        if (OwnerID > 0 && PlayerShip.ActiveShip.PlayerID != OwnerID) {
-            Debug.Log("pew pew! at pos = " + transform.position);
+        if (!isServer && OwnerID > 0 && PlayerShip.ActiveShip && PlayerShip.ActiveShip.PlayerID != OwnerID) {
+            //Debug.Log("pew pew! at pos = " + transform.position);
             projectileSound = GetComponent<AudioSource>();
             projectileSound.clip = projectileClip;
             projectileSound.Play();

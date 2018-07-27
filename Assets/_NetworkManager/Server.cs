@@ -209,10 +209,10 @@ public class Server : MonoBehaviour {
 		byte error;
 		int newEntityID = -1;
 		float msgDelayTime = (float)NetworkTransport.GetRemoteDelayTimeMS(hostId, clientID, (int)msg.TimeStamp, out error) / 1000;
-		Vector3 position = msg.Position + (msg.Rotation * Vector3.forward * Projectile.Speed * msgDelayTime );
+		Vector3 position = msg.Position + (msg.Rotation * Vector3.forward * Missile.Speed * msgDelayTime * 5);
 		//Debug.Log("msg delay time for shot: " + msgDelayTime);
 
-		GameObject newObject = entityManager.CreateEntity(missile, position, msg.Rotation, (byte)NetworkEntity.ObjType.Missile, out newEntityID);
+        GameObject newObject = entityManager.CreateEntity(missile, position, msg.Rotation, (byte)NetworkEntity.ObjType.Missile, out newEntityID);
 
 		if (newObject == null || newEntityID == -1)
 			Debug.LogError("Entity Creation failed");
@@ -223,7 +223,7 @@ public class Server : MonoBehaviour {
             entityManager.netEntities[newEntityID].GetComponent<Missile>().Target = entityManager.netEntities[msg.TargetId].transform; // mark the target of this missile
             tergetPlayerID = msg.TargetId;
         }
-        SC_EntityCreated mssg = new SC_EntityCreated(newEntityID, msg.TimeStamp, msg.Position, msg.Rotation, tergetPlayerID, (byte)NetworkEntity.ObjType.Missile);
+        SC_EntityCreated mssg = new SC_EntityCreated(newEntityID, msg.TimeStamp, position, msg.Rotation, tergetPlayerID, (byte)NetworkEntity.ObjType.Missile);
 		outgoingReliable.Enqueue(mssg);
 	}
 

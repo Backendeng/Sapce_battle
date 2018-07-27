@@ -4,15 +4,18 @@ using UnityEngine;
 public class Missile : NetworkEntity {
 
     public GameObject missileExplosion;
-    private float explosionRadius = 35.0f;
+    private float explosionRadius = 35.0f; 
     private float explosionPower = 20.0f;
 
     private Rigidbody rigid_body;
     private Transform target;
 
-    private readonly float speed = 50f;
+    private static readonly float speed = 50f;
+    public static float Speed { get { return speed; } }
     public static readonly float timeout = 10f;
     private float destroyTime;
+    private float invisibleTime;
+    public static readonly float timetillvisible = 0.3f;
 
     public int OwnerID { get; set; }
     public Transform Target { set { target = value; } }
@@ -28,10 +31,10 @@ public class Missile : NetworkEntity {
 
     public new void Start() {
         base.Start();
-
+        rigid_body = GetComponent<Rigidbody>();
+           
         if (isServer) {
             destroyTime = Time.time + timeout;
-            rigid_body = GetComponent<Rigidbody>();
             if (target == null)
             	GetComponent<Rigidbody>().velocity = transform.forward * speed;
         } else {
@@ -43,11 +46,25 @@ public class Missile : NetworkEntity {
         if(!isServer && isTargetingPlayer) { //  lock warnning for local player 
             clientController.gameManager.LocalPlayerLockCounter++;
         }
+
+        if (!isServer && OwnerID > -1) {
+            invisibleTime = Time.time + timetillvisible;
+            GetComponentInChildren<Renderer>().enabled = false;
+            GetComponentInChildren<ParticleSystem>().Pause();
+           
+        }
     }
 
     private void Update() {
+
         if (isServer && Time.time > destroyTime) {
             Explode();
+        }
+        if (!isServer) {
+            if (Time.time > invisibleTime) {
+                GetComponentInChildren<Renderer>().enabled = true;
+                GetComponentInChildren<ParticleSystem>().Play();
+            }
         }
 
         if (incomingQueue.Count == 0)
@@ -70,6 +87,7 @@ public class Missile : NetworkEntity {
     }
 
     private void FixedUpdate() {
+
         if (isServer) {
             if (target == null) { // TODO: handle case when target is suddenly gone
                 return;
@@ -80,8 +98,9 @@ public class Missile : NetworkEntity {
           
         }
 
-        if (!isServer && doLerp)
+        if (!isServer && doLerp) {
             movementInterpolator.InterpolateMovement();
+        }
     }
 
     private void MoveProjUsingReceivedServerData(SC_MovementData message) {
@@ -100,12 +119,18 @@ public class Missile : NetworkEntity {
 
         Vector3 explosionPos = transform.position;
         Collider[] colliders = Physics.OverlapSphere(explosionPos, explosionRadius);
+        ArrayList hitPlayers = new ArrayList();
+
         //Debug.Log("Expl cnt " + colliders.Length);
         foreach (Collider hit in colliders) {
           //  Debug.Log("EXPL HIT" + hit.name);
-            if (hit.CompareTag("Player")) {// explosion may hit multiple times. do something with target here
-            //    Debug.Log("Expl hit: player with client id = " + hit.gameObject.GetComponent<PlayerShip>().ClientID);
-                hit.gameObject.GetComponent<Target>().TakeDamage(25);
+            if (hit.CompareTag("Player")) {
+                
+                if (!hitPlayers.Contains(hit.gameObject.GetComponent<PlayerShip>().ClientID)) {//prevent mult dmg to same player
+                    Debug.Log("Expl hit: player with client id = " + hit.gameObject.GetComponent<PlayerShip>().ClientID);
+                    hit.gameObject.GetComponent<Target>().TakeDamage(25);
+                }
+                hitPlayers.Add(hit.gameObject.GetComponent<PlayerShip>().ClientID);
                 continue;
             }
 
@@ -159,9 +184,7 @@ public class Missile : NetworkEntity {
         Explode();
     }
 
-    
-
-    private void DestroyMissile() {
+   public void DestroyMissile() {
         Destroy(Instantiate(missileExplosion, transform.position, Quaternion.identity), 2); // on client and server.
         Destroy(gameObject);
 

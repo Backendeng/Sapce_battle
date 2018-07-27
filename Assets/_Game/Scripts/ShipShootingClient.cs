@@ -80,6 +80,7 @@ public class ShipShootingClient : MonoBehaviour {
         int netTimeStamp = NetworkTransport.GetNetworkTimestamp();
         int targetId = lockTargetID;
         Debug.Log("Hit id: " + targetId);
+        
         clientController.SendMissileToHost((byte)NetworkEntity.ObjType.Missile, pos, rot, targetId, netTimeStamp);
         GetComponent<AudioSource>().Play();
     }

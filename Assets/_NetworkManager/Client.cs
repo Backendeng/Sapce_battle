@@ -30,6 +30,7 @@ public class Client : MonoBehaviour {
 
     private Dictionary<int, NetworkEntity> netEntities = new Dictionary<int, NetworkEntity>();
     public Dictionary<int, GameObject> mockProjectiles = new Dictionary<int, GameObject>();
+    public GameObject mockMissile;
 
     public int ClientID { get { return clientID; } }
     public static string ServerIP { get { return serverIP; } set { serverIP = value; } }
@@ -191,9 +192,7 @@ public class Client : MonoBehaviour {
                 }
                 break;
             case (byte)NetworkEntity.ObjType.Missile:
-                newObject = Instantiate(missile, createMsg.Position, createMsg.Rotation);
-                if(createMsg.ClientID == PlayerShip.ActiveShip.EntityID) // check if this player is the target of this missile NOTE: clientID is used for entity ID here
-                    newObject.GetComponent<Missile>().IsTargetingPlayer = true;
+                newObject = OnRecieveMissileCreation(createMsg);
                 break;
             case (byte)NetworkEntity.ObjType.Astroid:
                 newObject = Instantiate(astroid, createMsg.Position, createMsg.Rotation);
@@ -215,8 +214,16 @@ public class Client : MonoBehaviour {
         }
         else
             Debug.LogError("Entity Creation failed, id: " + createMsg.EntityID);
-        netEntities.Add(createMsg.EntityID, newObject.GetComponent<NetworkEntity>());
+        netEntities.Add(createMsg.EntityID, newObject.GetComponent<NetworkEntity>());//BUG: get key already exists for new player
         //Debug.Log("Entity Created, id: " + createMsg.EntityID);
+    }
+
+    private GameObject OnRecieveMissileCreation(SC_EntityCreated msg) {
+        
+        GameObject newObject = Instantiate(missile, msg.Position, msg.Rotation);
+        if (playerAvatarCreated && msg.ClientID == PlayerShip.ActiveShip.EntityID) // check if this player is the target of this missile NOTE: clientID is used for entity ID here
+            newObject.GetComponent<Missile>().IsTargetingPlayer = true;
+        return newObject;
     }
 
     private GameObject OnReceivedProjectileCreation(SC_EntityCreated msg) {

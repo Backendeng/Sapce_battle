@@ -3,12 +3,8 @@ using UnityEngine;
 
 public class Missile : NetworkEntity {
 
-    public GameObject missileExplosion;
-    private float explosionRadius = 35.0f; 
-    private float explosionPower = 20.0f;
-
+    private bool created = false;
     private Rigidbody rigid_body;
-    private Transform target;
 
     private static readonly float speed = 50f;
     public static float Speed { get { return speed; } }
@@ -16,18 +12,29 @@ public class Missile : NetworkEntity {
     private float destroyTime;
     private float invisibleTime;
     public static readonly float timetillvisible = 0.3f;
-
     public int OwnerID { get; set; }
-    public Transform Target { set { target = value; } }
 
+    [Tooltip("Missile Guidance")]
+    private Transform target;
+    public Transform Target { set { target = value; } }
     private bool isTargetingPlayer = false;
     public bool IsTargetingPlayer { set { isTargetingPlayer = value; } get { return isTargetingPlayer; }  }
 
-    // Lerping State
+    [Tooltip("Missile Explosion")]
+    public GameObject missileExplosion;
+    private float explosionRadius = 35.0f;
+    private float explosionPower = 20.0f;
+
+    [Tooltip("Lerping")]
     public static bool doLerp = true;
-    
     MovementInterpolator movementInterpolator;
-    private bool created = false;
+    
+    //[Tooltip("Shooting Sound Effect")]
+    //public AudioClip shootingSoundClip;
+
+    [Tooltip("Explosion Sound Effect")]
+    public AudioClip explosionSoundClip;
+
 
     public new void Start() {
         base.Start();
@@ -52,6 +59,11 @@ public class Missile : NetworkEntity {
             GetComponentInChildren<Renderer>().enabled = false;
             GetComponentInChildren<ParticleSystem>().Pause();
            
+        }
+        
+        // Sound for other players
+        if (!isServer /* && OwnerID > 0 && PlayerShip.ActiveShip && PlayerShip.ActiveShip.PlayerID != OwnerID*/) {
+            GetComponent<AudioSource>().Play();
         }
     }
 

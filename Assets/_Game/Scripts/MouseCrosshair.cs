@@ -14,11 +14,11 @@ public class MouseCrosshair : MonoBehaviour
 
         if (crosshair.enabled) {
             Cursor.visible = false;
-            Cursor.lockState = CursorLockMode.Confined;
+            //Cursor.lockState = CursorLockMode.Confined;
         }
         else {
             Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
+            //Cursor.lockState = CursorLockMode.None;
         }
     }
 

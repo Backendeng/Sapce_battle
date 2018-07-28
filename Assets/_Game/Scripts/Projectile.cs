@@ -10,7 +10,8 @@ public class Projectile : NetworkEntity {
 
     public static readonly int Damage = 10;
     private static readonly float speed = 400f;
-    
+    public static float Speed { get { return speed; } }
+
     private bool active = true;
     private bool hit = false;
     private readonly float timeout = 2.0f;
@@ -18,26 +19,15 @@ public class Projectile : NetworkEntity {
 
     [Tooltip("Sound Effect")]
     private AudioSource projectileSound;
-    public AudioClip projectileClip;
-
-    public static float Speed { get { return speed; } }
-
-    public void Awake() {
-        
-    }
 
     public new void Start() {
         base.Start();
         GetComponent<Rigidbody>().velocity = transform.forward * speed;
         destroyTime = Time.time + timeout;
 
+        // Sound for other players
         if (!isServer && OwnerID > 0 && PlayerShip.ActiveShip && PlayerShip.ActiveShip.PlayerID != OwnerID) {
-            //Debug.Log("pew pew! at pos = " + transform.position);
-            projectileSound = GetComponent<AudioSource>();
-            projectileSound.clip = projectileClip;
-            projectileSound.Play();
-            //AudioSource.PlayClipAtPoint(projectileClip, transform.position);
-            //Debug.Break();
+            GetComponent<AudioSource>().Play();
         }
     }
 

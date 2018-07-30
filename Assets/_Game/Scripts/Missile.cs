@@ -6,7 +6,7 @@ public class Missile : NetworkEntity {
     private bool created = false;
     private Rigidbody rigid_body;
 
-    private static readonly float speed = 50f;
+    private static readonly float speed = 80f;
     public static float Speed { get { return speed; } }
     public static readonly float timeout = 10f;
     private float destroyTime;
@@ -28,13 +28,6 @@ public class Missile : NetworkEntity {
     [Tooltip("Lerping")]
     public static bool doLerp = true;
     MovementInterpolator movementInterpolator;
-    
-    //[Tooltip("Shooting Sound Effect")]
-    //public AudioClip shootingSoundClip;
-
-    [Tooltip("Explosion Sound Effect")]
-    public AudioClip explosionSoundClip;
-
 
     public new void Start() {
         base.Start();
@@ -61,10 +54,7 @@ public class Missile : NetworkEntity {
            
         }
         
-        // Sound for other players
-        if (!isServer /* && OwnerID > 0 && PlayerShip.ActiveShip && PlayerShip.ActiveShip.PlayerID != OwnerID*/) {
-            GetComponent<AudioSource>().Play();
-        }
+
     }
 
     private void Update() {

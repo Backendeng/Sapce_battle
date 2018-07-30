@@ -39,8 +39,7 @@ public class ShipShootingClient : MonoBehaviour {
 
     
     private void Awake() {
-        audioSource = GetComponent<AudioSource>();
-        audioSource = GetComponent<AudioSource>();
+        audioSource = GetComponents<AudioSource>()[0];
         playerCamera = GetComponentInChildren<Camera>();
         lockRadius = (130f / 1080f) * Screen.height;
         screenCenter = new Vector2(Screen.width / 2, Screen.height / 2);

@@ -6,7 +6,7 @@ public class EngineEmission : MonoBehaviour {
 
     public ParticleSystem[] engines = new ParticleSystem[5];
 
-    private readonly float engineEmissionFactor = 1.2f;
+    private readonly float engineEmissionFactor = 1.3f;
     private readonly float minEmissionRate = 2f;
 
     void Update() {

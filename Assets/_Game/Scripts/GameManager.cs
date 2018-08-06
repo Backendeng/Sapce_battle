@@ -6,6 +6,7 @@ public class GameManager : MonoBehaviour {
     private GameObject networkControllerObj;
     private Client clientController;
     private Server serverController;
+    public GameObject RespawnMenu;
 
     private bool isServer;
     private readonly int initialHealth = 100;
@@ -137,7 +138,7 @@ public class GameManager : MonoBehaviour {
         if (!isServer) {
             if (!PlayerShip.ActiveShip) // Active Ship yet to be initiated.
                 return;
-
+  
             if (PlayerShip.ActiveShip.PlayerID == playerID) {
                 // if local ship got damaged, make a shake effect
                 int delta_health = health - PlayerShip.ActiveShip.Health;
@@ -160,7 +161,7 @@ public class GameManager : MonoBehaviour {
             }
         }
 
-        if (isServer && health == 0) {
+        if (health == 0) {
             KillPlayer(playerID);
         }
     }
@@ -168,8 +169,9 @@ public class GameManager : MonoBehaviour {
     // called on server only
     public void UpdatePlayerHealth(int playerID, int health) {
         if (PlayerDataDict.ContainsKey(playerID)) {
-            PlayerDataDict[playerID].Health = health;
-
+           
+            PlayerDataDict[playerID].Health = health; // player ships also hold Health
+            Debug.Log(playerID + "send health update" + PlayerDataDict[playerID].Health);
             SC_PlayerData playerDataMessage = new SC_PlayerData(playerID, Time.time, health, PlayerDataDict[playerID].Score);
             serverController.EnqueueReliable(playerDataMessage);
         }
@@ -194,10 +196,19 @@ public class GameManager : MonoBehaviour {
     public void KillPlayer(int playerID) {
         Debug.Log("Player with playerID = " + playerID + " killed.");
         if (isServer) {
-            // TODO: do not kill by destroying the player ship object. make new death logic and network message.
+            serverController.RespawnPlayer(PlayersDict[playerID]);
+            // TODO: update score
         }
-        // TODO: respawn logic
-
+        else {  // client
+            PlayerShip ship = PlayerShipsDict[playerID];
+            ship.RespawnOnClientStart();
+            if (PlayerShip.ActiveShip.PlayerID == playerID) {
+                Debug.Log("LOCAL PLAYER DIED");
+                localPlayerLockCounter = 0; //disable all lock warnnings 
+              
+                RespawnMenu.SetActive(true); // activate RespawnMenu
+            }
+        }
     }
 
 

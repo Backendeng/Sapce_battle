@@ -21,6 +21,7 @@ public class Target : MonoBehaviour {
 
     public void TakeDamage(int damage) {
         int health = playerShip.Health;
+        Debug.Log("damg " + health +  " "+damage);
         if (health > 0) {
             health = Mathf.Clamp(health - damage, 0, 100);
             playerShip.Health = health;

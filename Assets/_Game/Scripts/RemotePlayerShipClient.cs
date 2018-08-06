@@ -23,9 +23,6 @@ public class RemotePlayerShipClient : PlayerShip {
         velocity = Vector3.zero;
     }
 
-   
-
-
     private void FixedUpdate() {
 
         while (incomingQueue.Count > 0) { 
@@ -33,6 +30,12 @@ public class RemotePlayerShipClient : PlayerShip {
 
             switch (netMessage.Type) {
                 case (byte)NetMsg.MsgType.SC_MovementData:
+                    SC_MovementData msg = (SC_MovementData)netMessage;
+                    if (msg.TimeStamp == -1) { // respawn  
+                        GetComponent<Transform>().SetPositionAndRotation(msg.Position, msg.Rotation);
+                        RespawnOnClientEnd();
+                    }
+
                     movementInterpolator.RecUpdate((SC_MovementData)netMessage);
                     velocity = ((SC_MovementData)netMessage).Velocity;
                     SetShipState((SC_MovementData)netMessage);
@@ -50,10 +53,6 @@ public class RemotePlayerShipClient : PlayerShip {
         if(doLerp)
             movementInterpolator.InterpolateMovement();//lerp // NULLREF
 
-        if (Health == 0) { // TODO: TEMP.
-            Destroy(Instantiate(ShipExplosion, transform.position, Quaternion.identity), 3);
-            Health = 1; // this is not the way to do this. just temp. remove later.
-        }
     }
 
     private void SetShipState(SC_MovementData msg) {

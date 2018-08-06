@@ -62,6 +62,14 @@ public class LocalPlayerShip : PlayerShip {
 
 
     private void Update() {
+
+        if (cameraGlitch.enabled && Time.time > glitchEndTime) {
+            cameraGlitch.enabled = false;
+        }
+
+        if (IsDead)
+            return;
+
         // get player input for movement
         float throttle = input.throttle;
 
@@ -87,15 +95,6 @@ public class LocalPlayerShip : PlayerShip {
 
         // shooting
         shooting.HandleShooting();
-
-        if (Health == 0) { // TODO: TEMP!!!
-            Destroy(Instantiate(ShipExplosion, transform.position, Quaternion.identity), 3);
-            Health = 1; // this is not the way to do this. just temp. remove later.
-        }
-
-        if (cameraGlitch.enabled && Time.time > glitchEndTime) {
-            cameraGlitch.enabled = false;
-        }
     }
 
     /*
@@ -134,6 +133,12 @@ public class LocalPlayerShip : PlayerShip {
                 case (byte)NetMsg.MsgType.SC_MovementData:
                     if (showUnsmoothedShadow) MoveShadow((SC_MovementData)netMessage);
                     if (showInterpolatedShadow) MoveInterShadow((SC_MovementData)netMessage);
+
+                    SC_MovementData msg = (SC_MovementData)netMessage;
+                    if(msg.TimeStamp == -1) { // respawn
+                        GetComponent<Transform>().SetPositionAndRotation(msg.Position, msg.Rotation);
+                        RespawnOnClientEnd();
+                    }
                     break;
                 case (byte)NetMsg.MsgType.SC_EntityDestroyed:
                     Destroy(gameObject);

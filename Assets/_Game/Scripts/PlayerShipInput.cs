@@ -20,7 +20,6 @@ public class PlayerShipInput : MonoBehaviour {
     public float analogStickSensitivity = 0.5f;
 
     private int crosshairYOffset = 15;
- 
 
     [Range(-1, 1)]
     public float pitch;
@@ -34,11 +33,23 @@ public class PlayerShipInput : MonoBehaviour {
     public float throttle;
     public bool boost_pressed = false;
 
+    private bool disableInput = false;
 
+
+    public void DisableInput() {
+        disableInput = true;
+    }
+
+    public void EnableInput() {
+        disableInput = false;
+    }
 
 	// Update is called once per frame
 	private void Update ()
     {
+        if (disableInput)
+            return;
+        
         if (useAutoPilot) {
             yaw = 0.05f;
             throttle = 1.0f;

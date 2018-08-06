@@ -17,7 +17,7 @@ public class ServerUI : MonoBehaviour {
             Debug.LogWarning("ip text field wasn't found");
         }
 
-        ipAddressText.text = string.Format("Host Lan IP Address: {0}", Network.player.ipAddress.ToString() );
+        ipAddressText.text = string.Format("Host Lan IP Address: {0}", 0/*Network.player.ipAddress.ToString()*/ );
 
         EscapeMenu.SetActive(false);
     }

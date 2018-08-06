@@ -36,6 +36,11 @@ public class Client : MonoBehaviour {
     public static string ServerIP { get { return serverIP; } set { serverIP = value; } }
     public bool PlayerAvatarCreated { get { return playerAvatarCreated; } }
 
+    public struct ClientInitData {
+        public static string PlayerName { get; set; }
+        public static byte ShipType { get; set; }
+    }
+
     // Use this for initialization
     void Start() {
         Logger.AddPrefix("Client");
@@ -146,6 +151,9 @@ public class Client : MonoBehaviour {
                         case (byte)NetMsg.MsgType.SC_EntityDestroyed:
                             ProcessEntityDestroyed(msg);
                             break;
+                        case (byte)NetMsg.MsgType.MSG_ShipCreated:
+                            ProcessShipCreated(msg);
+                            break;
                     }
                     break;
                 case NetworkEventType.DisconnectEvent:
@@ -169,8 +177,8 @@ public class Client : MonoBehaviour {
         clientID = allocIdMsg.ClientID;
         Debug.Log("Client got his ID: " + clientID);
 
-        SC_AllocClientID ack = new SC_AllocClientID(-1, Time.fixedTime, clientID);
-        byte[] buffer = MessagesHandler.NetMsgPack(ack);
+        MSG_NewPlayerRequest playerRequestMsg = new MSG_NewPlayerRequest(-1, Time.fixedTime, clientID, ClientInitData.ShipType, ClientInitData.PlayerName);
+        byte[] buffer = MessagesHandler.NetMsgPack(playerRequestMsg);
         NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
         if (error != 0)
             Debug.LogError("SendConnectionAckToHost error: " + error.ToString() + " channelID: " + reliableChannelId);
@@ -184,12 +192,7 @@ public class Client : MonoBehaviour {
         //Debug.Log("Entity Created, ofType: " + type);
         switch (type) {
             case (byte)NetworkEntity.ObjType.Player:
-                if (clientID == createMsg.ClientID) { 
-                    newObject = Instantiate(localPlayer, createMsg.Position, createMsg.Rotation);//localPlayer
-                    playerAvatarCreated = true;
-                } else {
-                    newObject = Instantiate(remotePlayer, createMsg.Position, createMsg.Rotation);//remotePlayer
-                }
+                /////
                 break;
             case (byte)NetworkEntity.ObjType.Missile:
                 newObject = OnRecieveMissileCreation(createMsg);
@@ -206,20 +209,39 @@ public class Client : MonoBehaviour {
             newNetEntity.EntityID = createMsg.EntityID;
             newNetEntity.ObjectType = (byte)type;
             newNetEntity.ClientID = createMsg.ClientID;
-
-            if (type == (byte)NetworkEntity.ObjType.Player) {
-                gameManager.AddPlayerShip(newNetEntity.EntityID, newObject);
-                gameManager.AddPlayerData(newNetEntity.EntityID, createMsg.ClientID);
-            }
         }
-        else
+        else {
             Debug.LogError("Entity Creation failed, id: " + createMsg.EntityID);
-        netEntities.Add(createMsg.EntityID, newObject.GetComponent<NetworkEntity>());//BUG: get key already exists for new player
+        }
+        netEntities.Add(createMsg.EntityID, newObject.GetComponent<NetworkEntity>());
         //Debug.Log("Entity Created, id: " + createMsg.EntityID);
     }
 
+    private void ProcessShipCreated(NetMsg msg) {
+        MSG_ShipCreated createMsg = (MSG_ShipCreated)msg;
+        GameObject newShip = null;
+
+        //TODO: add switch case to create different ships
+        if (clientID == createMsg.ClientID) { 
+            newShip = Instantiate(localPlayer, createMsg.Position, createMsg.Rotation);//localPlayer
+            playerAvatarCreated = true;
+        } else {
+            newShip = Instantiate(remotePlayer, createMsg.Position, createMsg.Rotation);//remotePlayer
+        }
+
+        if (newShip == null) {
+            Debug.LogError("Ship Creation failed, id: " + createMsg.EntityID);
+            return;
+        }
+        newShip.GetComponent<PlayerShip>().SetInitShipData(createMsg.EntityID, createMsg.ClientID, createMsg.PlayerName, createMsg.ShipType);
+        netEntities.Add(createMsg.EntityID, newShip.GetComponent<NetworkEntity>());//BUG: get key already exists for new player
+        gameManager.AddPlayer(createMsg.EntityID, createMsg.ClientID, newShip, createMsg.PlayerName);
+
+        Debug.Log("Player with playerID = " + createMsg.EntityID + ", clientID = " + createMsg.ClientID + ", playerName = " + createMsg.PlayerName + ", shipType = " + createMsg.ShipType + " joined the game.");
+    }
+
     private GameObject OnRecieveMissileCreation(SC_EntityCreated msg) {
-        
+
         GameObject newMissile = Instantiate(missile, msg.Position, msg.Rotation);
         if (playerAvatarCreated && msg.ClientID == PlayerShip.ActiveShip.EntityID) // check if this player is the target of this missile NOTE: clientID is used for entity ID here
             newMissile.GetComponent<Missile>().IsTargetingPlayer = true;

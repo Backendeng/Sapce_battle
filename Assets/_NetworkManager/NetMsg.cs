@@ -15,9 +15,11 @@ public abstract class NetMsg {
         SC_MovementData,
         SC_AllocClientID, 
         CS_InputData,
-        CS_CreationRequest,
+        CS_ProjectileRequest,
 		CS_MissileRequest,
         SC_PlayerData,
+        MSG_ShipCreated,
+        MSG_NewPlayerRequest,
     }
 
     public NetMsg(float timeStamp) {
@@ -108,7 +110,7 @@ public class SC_AllocClientID : NetMsg {
         msgType = (byte)MsgType.SC_AllocClientID;
     }
 }
-// TODO: change name to request Shot
+
 public class CS_ProjectileRequest : NetMsg {
     protected byte objectType;
     protected Vector3 position;
@@ -119,7 +121,7 @@ public class CS_ProjectileRequest : NetMsg {
     public Quaternion Rotation { get { return rotation; } }
 
     public CS_ProjectileRequest(float timeStamp, Vector3 position, Quaternion rotation, byte objectType) : base(timeStamp) {
-        msgType = (byte)MsgType.CS_CreationRequest;
+        msgType = (byte)MsgType.CS_ProjectileRequest;
         this.position = position;
         this.rotation = rotation;
         this.objectType = objectType;
@@ -155,3 +157,54 @@ public class SC_PlayerData : NetMsg {
         Score = score;
     }
 }
+
+
+public class MSG_ShipCreated : NetMsg {
+    protected int entityID;
+    protected Vector3 position;
+    protected Quaternion rotation;
+    protected int clientID;
+    protected byte shipType;
+    protected string playerName;
+
+    public int EntityID { get { return entityID; } } // PlayerID
+    public Vector3 Position { get { return position; } }
+    public Quaternion Rotation { get { return rotation; } }
+    public int ClientID { get { return clientID; } }
+    public byte ShipType { get { return shipType; } }
+    public string PlayerName { get { return playerName; } }
+
+
+    public MSG_ShipCreated(int entityID, float timeStamp, Vector3 position, Quaternion rotation, int clientID, byte shipType, string playerName) : base(timeStamp) {
+        msgType = (byte)MsgType.MSG_ShipCreated;
+        this.entityID = entityID;
+        this.position = position;
+        this.rotation = rotation;
+        this.clientID = clientID;
+        this.shipType = shipType;
+        this.playerName = playerName;
+    }
+}
+
+public class MSG_NewPlayerRequest : NetMsg {
+    protected int entityID;
+    protected int clientID;
+    protected string playerName;
+    protected byte shipType;
+
+    public int EntityID { get { return entityID; } }
+    public int ClientID { get { return clientID; } }
+    public byte ShipType { get { return shipType; } } // TODO: implement usage of this value
+    public string PlayerName { get { return playerName; } }
+
+
+    public MSG_NewPlayerRequest(int entityID, float timeStamp, int clientID, byte shipType, string playerName) : base(timeStamp) {
+        msgType = (byte)MsgType.MSG_NewPlayerRequest;
+        this.entityID = entityID;
+        this.clientID = clientID;
+        this.playerName = playerName;
+        this.shipType = shipType;
+    }
+}
+
+

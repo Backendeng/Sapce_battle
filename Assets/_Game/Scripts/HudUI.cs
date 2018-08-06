@@ -23,7 +23,7 @@ public class HudUI : MonoBehaviour {
     public Text EnemyText;
     public Image LockedTargetCircle;
 
-    private Text text;
+    private Text leftPanelText;
     public Text lockedWarningText;
 
     private ShipShootingClient shipShooting;
@@ -31,7 +31,7 @@ public class HudUI : MonoBehaviour {
 
     private void Awake()
     {
-        text = GetComponent<Text>();
+        leftPanelText = GetComponent<Text>();
         
 
     }
@@ -50,7 +50,7 @@ public class HudUI : MonoBehaviour {
     void Update()
     {
         if (PlayerShip.ActiveShip != null) {
-            text.text = string.Format("SPEED: {0}\nBOOST: {1}\nDEATHS: {2}", PlayerShip.ActiveShip.Velocity.magnitude.ToString("000"), PlayerShip.ActiveShip.Boost, 0 /* TODO: get deaths here */);
+            leftPanelText.text = string.Format("SPEED: {0}\nBOOST: {1}\nDEATHS: {2}\nName: {3}", PlayerShip.ActiveShip.Velocity.magnitude.ToString("000"), PlayerShip.ActiveShip.Boost, 0 /* TODO: get deaths here */, PlayerShip.ActiveShip.PlayerName);
         }
 
         if(gameManager.LocalPlayerLockCounter > 0) {
@@ -87,15 +87,16 @@ public class HudUI : MonoBehaviour {
     }
 
     private void UpdateEnemyTarget() {
-        if (shipShooting.lockTargetID == -1) {
+        int targetPlayerID = shipShooting.lockTargetID;
+        if (targetPlayerID == -1) {
             EnemyTarget.SetActive(false);
             LockedTargetCircle.enabled = false;
             return;
         }
 
         EnemyTarget.SetActive(true);
-        EnemyHealthBarImage.fillAmount = gameManager.GetHealth(shipShooting.lockTargetID) / 100f;
-        EnemyText.text = string.Format("TARGET LOCKED:\nENEMY: {0}", "<NAME>"); // TODO: get name here from game manager
+        EnemyHealthBarImage.fillAmount = gameManager.GetHealth(targetPlayerID) / 100f;
+        EnemyText.text = string.Format("TARGET LOCKED:\nENEMY: {0}", gameManager.GetName(targetPlayerID));
 
         LockedTargetCircle.enabled = true;
 

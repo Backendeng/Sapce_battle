@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class MessagesHandler {
     public static int headerSize = 1;
+    private static int name_size = 20;
+
 
     public static byte[] NetMsgPack(NetMsg message) {
         byte[] bytesMessage;
@@ -21,7 +23,7 @@ public class MessagesHandler {
             case (byte)NetMsg.MsgType.SC_MovementData:
                 bytesMessage = PackMovementMsg((SC_MovementData)message);
                 return bytesMessage;
-            case (byte)NetMsg.MsgType.CS_CreationRequest:
+            case (byte)NetMsg.MsgType.CS_ProjectileRequest:
                 bytesMessage = PackCreationRequestMsg((CS_ProjectileRequest)message);
                 return bytesMessage;
 			case (byte)NetMsg.MsgType.CS_MissileRequest:
@@ -30,9 +32,15 @@ public class MessagesHandler {
             case (byte)NetMsg.MsgType.SC_PlayerData:
                 bytesMessage = PackPlayerDataMsg((SC_PlayerData)message);
                 return bytesMessage;
+            case (byte)NetMsg.MsgType.MSG_ShipCreated:
+                bytesMessage = PackShipCreatedMsg((MSG_ShipCreated)message);
+                return bytesMessage;
             case (byte)NetMsg.MsgType.SC_AllocClientID:
                 jsonMsg = JsonConvert.SerializeObject((SC_AllocClientID)message);
                 break;
+            case (byte)NetMsg.MsgType.MSG_NewPlayerRequest:
+                bytesMessage = PackNewPlayerRequestMsg((MSG_NewPlayerRequest)message);
+                return bytesMessage;
             default:
                 jsonMsg = "";
                 break;
@@ -63,7 +71,7 @@ public class MessagesHandler {
             case (byte)NetMsg.MsgType.SC_MovementData:
                 unpackedMessage = UnpackMovementMsg(packedMessage);
                 break;
-            case (byte)NetMsg.MsgType.CS_CreationRequest:
+            case (byte)NetMsg.MsgType.CS_ProjectileRequest:
                 unpackedMessage = UnpackCreationRequestMsg(packedMessage);
                 break;
 			case (byte)NetMsg.MsgType.CS_MissileRequest:
@@ -72,8 +80,14 @@ public class MessagesHandler {
             case (byte)NetMsg.MsgType.SC_PlayerData:
                 unpackedMessage = UnpackPlayerDataMsg(packedMessage);
                 break;
+            case (byte)NetMsg.MsgType.MSG_ShipCreated:
+                unpackedMessage = UnpackShipCreatedMsg(packedMessage);
+                break;
             case (byte)NetMsg.MsgType.SC_AllocClientID:
                 unpackedMessage = JsonConvert.DeserializeObject<SC_AllocClientID>(jsonMsg);
+                break;
+            case (byte)NetMsg.MsgType.MSG_NewPlayerRequest:
+                unpackedMessage = UnpackNewPlayerRequestMsg(packedMessage);
                 break;
             default:
                 unpackedMessage = null;
@@ -336,6 +350,98 @@ public class MessagesHandler {
         int score = System.BitConverter.ToInt32(packedMessage, 13);
 
         SC_PlayerData unpacked = new SC_PlayerData(playerID, timeStamp, health, score);
+
+        return unpacked;
+    }
+
+
+    private static byte[] PackShipCreatedMsg(MSG_ShipCreated message) {
+        byte[] packedMessage = new byte[41 + headerSize + name_size];
+        packedMessage[0] = message.Type;
+
+        byte[] timeStamp = System.BitConverter.GetBytes(message.TimeStamp);   // 1
+        byte[] position_x = System.BitConverter.GetBytes(message.Position.x); // 5
+        byte[] position_y = System.BitConverter.GetBytes(message.Position.y); // 9
+        byte[] position_z = System.BitConverter.GetBytes(message.Position.z); // 13
+        byte[] rotation_x = System.BitConverter.GetBytes(message.Rotation.x); // 17
+        byte[] rotation_y = System.BitConverter.GetBytes(message.Rotation.y); // 21
+        byte[] rotation_z = System.BitConverter.GetBytes(message.Rotation.z); // 25
+        byte[] rotation_w = System.BitConverter.GetBytes(message.Rotation.w); // 29
+        // ship type is a byte so no need to use GetBytes                     // 33
+        byte[] entityID = System.BitConverter.GetBytes(message.EntityID);     // 34
+        byte[] clientID = System.BitConverter.GetBytes(message.ClientID);     // 38
+        byte[] playerNamePadded = System.Text.Encoding.ASCII.GetBytes(message.PlayerName.PadRight(name_size, ' ')); // 42
+
+        System.Buffer.BlockCopy(timeStamp, 0, packedMessage, 1, 4);
+        System.Buffer.BlockCopy(position_x, 0, packedMessage, 5, 4);
+        System.Buffer.BlockCopy(position_y, 0, packedMessage, 9, 4);
+        System.Buffer.BlockCopy(position_z, 0, packedMessage, 13, 4);
+        System.Buffer.BlockCopy(rotation_x, 0, packedMessage, 17, 4);
+        System.Buffer.BlockCopy(rotation_y, 0, packedMessage, 21, 4);
+        System.Buffer.BlockCopy(rotation_z, 0, packedMessage, 25, 4);
+        System.Buffer.BlockCopy(rotation_w, 0, packedMessage, 29, 4);
+        packedMessage[33] = message.ShipType;
+        System.Buffer.BlockCopy(entityID, 0, packedMessage, 34, 4);
+        System.Buffer.BlockCopy(clientID, 0, packedMessage, 38, 4);
+        System.Buffer.BlockCopy(playerNamePadded, 0, packedMessage, 42, name_size);
+
+        return packedMessage;
+    }
+
+    private static MSG_ShipCreated UnpackShipCreatedMsg(byte[] packedMessage) {
+
+        float timeStamp = System.BitConverter.ToSingle(packedMessage, 1);
+        float position_x = System.BitConverter.ToSingle(packedMessage, 5);
+        float position_y = System.BitConverter.ToSingle(packedMessage, 9);
+        float position_z = System.BitConverter.ToSingle(packedMessage, 13);
+        float rotation_x = System.BitConverter.ToSingle(packedMessage, 17);
+        float rotation_y = System.BitConverter.ToSingle(packedMessage, 21);
+        float rotation_z = System.BitConverter.ToSingle(packedMessage, 25);
+        float rotation_w = System.BitConverter.ToSingle(packedMessage, 29);
+        byte shipType = packedMessage[33];
+        int entityID = System.BitConverter.ToInt32(packedMessage, 34);
+        int clientID = System.BitConverter.ToInt32(packedMessage, 38);
+        string playerNamePadded = System.Text.Encoding.ASCII.GetString(packedMessage, 42, name_size);
+        string playerName = playerNamePadded.TrimEnd();
+
+        Vector3 position = new Vector3(position_x, position_y, position_z);
+        Quaternion rotation = new Quaternion(rotation_x, rotation_y, rotation_z, rotation_w);
+
+        MSG_ShipCreated unpacked = new MSG_ShipCreated(entityID, timeStamp, position, rotation, clientID, shipType, playerName);
+
+        return unpacked;
+    }
+
+
+    private static byte[] PackNewPlayerRequestMsg(MSG_NewPlayerRequest message) {
+        byte[] packedMessage = new byte[13 + headerSize + name_size];
+        packedMessage[0] = message.Type;
+
+        byte[] timeStamp = System.BitConverter.GetBytes(message.TimeStamp);   // 1
+        // ship type is a byte so no need to use GetBytes                   // 5
+        byte[] entityID = System.BitConverter.GetBytes(message.EntityID);     // 6
+        byte[] clientID = System.BitConverter.GetBytes(message.ClientID);     // 10
+        byte[] playerNamePadded = System.Text.Encoding.ASCII.GetBytes(message.PlayerName.PadRight(name_size, ' ')); // 14
+
+        System.Buffer.BlockCopy(timeStamp, 0, packedMessage, 1, 4);
+        packedMessage[5] = message.ShipType;
+        System.Buffer.BlockCopy(entityID, 0, packedMessage, 6, 4);
+        System.Buffer.BlockCopy(clientID, 0, packedMessage, 10, 4);
+        System.Buffer.BlockCopy(playerNamePadded, 0, packedMessage, 14, name_size);
+
+        return packedMessage;
+    }
+
+    private static MSG_NewPlayerRequest UnpackNewPlayerRequestMsg(byte[] packedMessage) {
+
+        float timeStamp = System.BitConverter.ToSingle(packedMessage, 1);
+        byte shipType = packedMessage[5];
+        int entityID = System.BitConverter.ToInt32(packedMessage, 6);
+        int clientID = System.BitConverter.ToInt32(packedMessage, 10);
+        string playerNamePadded = System.Text.Encoding.ASCII.GetString(packedMessage, 14, name_size);
+        string playerName = playerNamePadded.TrimEnd();
+
+        MSG_NewPlayerRequest unpacked = new MSG_NewPlayerRequest(entityID, timeStamp, clientID, shipType, playerName);
 
         return unpacked;
     }

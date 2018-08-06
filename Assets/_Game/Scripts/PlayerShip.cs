@@ -24,10 +24,20 @@ public abstract class PlayerShip : NetworkEntity {
     public virtual Vector3 Velocity { get { return physics.Rigidbody.velocity; } }
     public float Throttle { get { return input.throttle; } }
     public float Boost { get; set; }
+    public string PlayerName { get; set; }
+    public byte ShipType { get; set; }
 
     protected void Awake() {
         input = GetComponent<PlayerShipInput>();
         physics = GetComponent<PlayerShipPhysics>();
         Health = initialHealth;
+    }
+
+    public void SetInitShipData(int entityID, int clientID, string playerName, byte shipType) {
+        ObjectType = (byte)NetworkEntity.ObjType.Player;
+        EntityID = entityID;
+        ClientID = clientID;
+        PlayerName = playerName;
+        ShipType = shipType;
     }
 }

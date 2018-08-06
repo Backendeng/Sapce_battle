@@ -9,13 +9,14 @@ public class MainMenu : MonoBehaviour {
     public GameObject MainMenuObj;
     public GameObject SettingsMenuObj;
     public InputField ipInputField;
+    public InputField nameInputField;
     public Text playMenuStatusText;
 
     private static int errorNum = 0;
     public static int ErrorNum { get { return errorNum; } set { errorNum = value; } }
 
     public void Start() {
-        if (!ipInputField || !playMenuStatusText) {
+        if (!ipInputField || !playMenuStatusText || !nameInputField) {
             Debug.LogError("required fields weren't found");
         }
 
@@ -57,6 +58,16 @@ public class MainMenu : MonoBehaviour {
         } else {
             Client.ServerIP = ipAddress;
         }
+
+        string playerName = nameInputField.text;
+        if (playerName == "") {
+            playMenuStatusText.text = "Enter a name";
+        }
+        byte shipType = 1; //TODO: implement ship type selection
+
+        Client.ClientInitData.PlayerName = playerName;
+        Client.ClientInitData.ShipType = shipType;
+
         SceneManager.LoadScene(2);
     }
 

@@ -56,6 +56,8 @@ public class Server : MonoBehaviour {
 
         entityManager = new EntityManager();
         InitializeWorld();
+
+        AudioListener.pause = true;
     }
 
     private void FixedUpdate() {
@@ -120,10 +122,10 @@ public class Server : MonoBehaviour {
                         case (byte)NetMsg.MsgType.SC_MovementData:
                             ProccessStateMessage(msg, recConnectionId);
                             break;
-                        case (byte)NetMsg.MsgType.SC_AllocClientID:
-                            ProccessAllocClientID((SC_AllocClientID)msg, recConnectionId);
+                        case (byte)NetMsg.MsgType.MSG_NewPlayerRequest:
+                            ProccessNewPlayerRequest((MSG_NewPlayerRequest)msg, recConnectionId);
                             break;
-                        case (byte)NetMsg.MsgType.CS_CreationRequest://this is a request from client to create a shot TODO: change to shot request
+                        case (byte)NetMsg.MsgType.CS_ProjectileRequest://this is a request from client to create a shot TODO: change to shot request
 							CreateRequestedProjectile((CS_ProjectileRequest)msg, recConnectionId);
                             break;
 						case (byte)NetMsg.MsgType.CS_MissileRequest://this is a request from client to create a missile
@@ -168,23 +170,25 @@ public class Server : MonoBehaviour {
         Logger.Log(Time.time, Time.realtimeSinceStartup, entity.EntityID, "rec", ((SC_MovementData)msg).TimeStamp.ToString());
     }
 
-    private void ProccessAllocClientID(SC_AllocClientID msg, int recConnectionId) {
+    private void ProccessNewPlayerRequest(MSG_NewPlayerRequest msg, int recConnectionId) {
         //send all netEntites to new player 
         SendAllEntitiesToNewClient(recConnectionId);
         gameManager.SendAllGameDataToNewClient(recConnectionId);
 
         int entityId;
-        GameObject newPlayer = entityManager.CreateEntity(remotePlayer, playerSpawn.position, playerSpawn.rotation, (byte)NetworkEntity.ObjType.Player, out entityId);
-        newPlayer.GetComponent<RemotePlayerShipServer>().ClientID = recConnectionId;
-        gameManager.AddPlayerData(entityId, recConnectionId);
+        //TODO: add switch case to create different ships
+        GameObject newShip = entityManager.CreateEntity(remotePlayer, playerSpawn.position, playerSpawn.rotation, (byte)NetworkEntity.ObjType.Player, out entityId);
+        newShip.GetComponent<PlayerShip>().SetInitShipData(entityId, recConnectionId, msg.PlayerName, msg.ShipType);
+
+        gameManager.AddPlayer(entityId, recConnectionId, newShip, msg.PlayerName);
         entityManager.netEntities[entityId].ClientID = recConnectionId;
-        connectedPlayers[recConnectionId] = newPlayer;
+        connectedPlayers[recConnectionId] = newShip;
 
         //broadcast new entity to all
-        SC_EntityCreated msg1 = new SC_EntityCreated(entityId, Time.time, playerSpawn.position, playerSpawn.rotation, recConnectionId, (byte)NetworkEntity.ObjType.Player);
+        MSG_ShipCreated msg1 = new MSG_ShipCreated(entityId, Time.time, playerSpawn.position, playerSpawn.rotation, recConnectionId, msg.ShipType, msg.PlayerName);
         outgoingReliable.Enqueue(msg1);
 
-        Debug.Log("Player with playerID = " + entityId + ", clientID = " + recConnectionId + " joined the game.");
+        Debug.Log("Player with playerID = " + newShip.GetComponent<PlayerShip>().PlayerID + ", clientID = " + recConnectionId + ", playerName = " + msg.PlayerName + ", shipType = " + msg.ShipType + " joined the game.");
     }
 
     private void ProccessDisconnection(int recConnectionId) {
@@ -202,7 +206,7 @@ public class Server : MonoBehaviour {
         connectedPlayers.Remove(recConnectionId);//end connection
         entityManager.RemoveEntity(entityIdToDestroy);
 
-        gameManager.RemovePlayer(entityIdToDestroy);
+        gameManager.RemovePlayer(entityIdToDestroy);//TODO: should we keep the player data in case he comes back? if a player connects with the same name we could copy his data to the new playerID
     }
 
 	private void CreateRequestedMissile(CS_MissileRequest msg, int clientID) {
@@ -312,13 +316,22 @@ public class Server : MonoBehaviour {
         byte error;
         //send all enteties as createMsg to new client
         foreach (KeyValuePair<int, NetworkEntity> entity in entityManager.netEntities) {
+            NetMsg msg;
             Vector3 pos = entity.Value.gameObject.GetComponent<Transform>().position;
             Quaternion rot = entity.Value.gameObject.GetComponent<Transform>().rotation;
             int clientID = -1;
             if (entity.Value.ObjectType == (byte)NetworkEntity.ObjType.Player) {
                 clientID = entity.Value.ClientID;
+                if (!connectedPlayers.ContainsKey(clientID)) {
+                    Debug.LogError("clientID = " + clientID + "does not exist in the connected players dict!");
+                    return;
+                }
+                PlayerShip ship = connectedPlayers[clientID].GetComponent<PlayerShip>();
+                msg = new MSG_ShipCreated(entity.Key, Time.time, pos, rot, clientID, ship.ShipType, ship.PlayerName);
             }
-            SC_EntityCreated msg = new SC_EntityCreated(entity.Key, Time.time, pos, rot, clientID, entity.Value.ObjectType);
+            else {
+                msg = new SC_EntityCreated(entity.Key, Time.time, pos, rot, clientID, entity.Value.ObjectType);
+            }
             byte[] buffer = MessagesHandler.NetMsgPack(msg);
             NetworkTransport.Send(hostId, connectionId, reliableChannelId, buffer, buffer.Length, out error);
         }

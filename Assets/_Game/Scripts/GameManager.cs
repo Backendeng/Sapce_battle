@@ -19,9 +19,10 @@ public class GameManager : MonoBehaviour {
     public int LocalPlayerLockCounter { set { localPlayerLockCounter = value; } get { return localPlayerLockCounter; } }
 
     private class PlayerData {
+        public string Name { get; set; }
         public int Health { get; set; }
         public int Score { get; set; }
-        public PlayerData(int health, int score) { Health = health; Score = score; }
+        public PlayerData(string name, int health, int score) { Name = name; Health = health; Score = score; }
     };
 
     void Start () {
@@ -83,16 +84,24 @@ public class GameManager : MonoBehaviour {
         }
     }
 
-    public void AddPlayerData(int playerID, int clientID) {
+    public void AddPlayer(int playerID, int clientID, GameObject shipObj, string playerName) {
         if (PlayerDataDict.ContainsKey(playerID)) {
             Debug.LogWarning("PlayerDataDict already contains player data for playerID = " + playerID);
             return;
         }
-        PlayerData playerData = new PlayerData(initialHealth, 0);
+        PlayerData playerData = new PlayerData(playerName, initialHealth, 0);
         PlayerDataDict.Add(playerID, playerData);
         ClientsDict.Add(clientID, playerID);
         PlayersDict.Add(playerID, clientID);
-        Debug.Log("Adding Player to PlayerDataDict. playerID = " + playerID + ", clientID = " + clientID);
+
+        if (PlayerShipsDict.ContainsKey(playerID)) {
+            Debug.LogWarning("PlayerShipsDict already contains player ship with playerID = " + playerID);
+            return;
+        }
+        PlayerShipsDict.Add(playerID, shipObj.GetComponent<PlayerShip>());
+        Debug.Log("ship was added to PlayerShipsDict for playerID = " + playerID);
+
+        Debug.Log("Adding Player to PlayerDataDict. playerID = " + playerID + ", clientID = " + clientID + ", name = " + playerName);
     }
 
     public void RemovePlayer(int playerID) {
@@ -106,16 +115,6 @@ public class GameManager : MonoBehaviour {
             PlayerShipsDict.Remove(playerID);
         }
         Debug.Log("Removed player with playerID = " + playerID + " from the Game Manager.");
-    }
-
-    public void AddPlayerShip(int playerID, GameObject shipObj) {
-        // Called On Client Only
-        if (PlayerShipsDict.ContainsKey(playerID)) {
-            Debug.LogWarning("PlayerShipsDict already contains player ship with playerID = " + playerID);
-            return;
-        }
-        PlayerShipsDict.Add(playerID, shipObj.GetComponent<PlayerShip>());
-        Debug.Log("ship was added to PlayerShipsDict for playerID = " + playerID);
     }
 
     // called on server when updating, and on client when receiving SC_PlayerData message from server
@@ -200,5 +199,12 @@ public class GameManager : MonoBehaviour {
 
     }
 
-
+    public string GetName(int playerID) {
+        if (!PlayerShipsDict.ContainsKey(playerID)) {
+            Debug.LogError("playerID = " + playerID + " does not exist in PlayerShipsDict");
+        }
+        return PlayerShipsDict[playerID].PlayerName;
     }
+
+
+}

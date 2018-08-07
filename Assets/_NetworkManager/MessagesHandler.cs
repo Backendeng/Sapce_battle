@@ -1,12 +1,9 @@
-using Newtonsoft.Json;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 public class MessagesHandler {
     public static int headerSize = 1;
-    private static int name_size = 20;
+    private static int playerNameSize = 20;
 
 
     public static byte[] NetMsgPack(NetMsg message) {
@@ -36,8 +33,8 @@ public class MessagesHandler {
                 bytesMessage = PackShipCreatedMsg((MSG_ShipCreated)message);
                 return bytesMessage;
             case (byte)NetMsg.MsgType.SC_AllocClientID:
-                jsonMsg = JsonConvert.SerializeObject((SC_AllocClientID)message);
-                break;
+                bytesMessage = PackAllocClientIDMsg((SC_AllocClientID)message);
+                return bytesMessage;
             case (byte)NetMsg.MsgType.MSG_NewPlayerRequest:
                 bytesMessage = PackNewPlayerRequestMsg((MSG_NewPlayerRequest)message);
                 return bytesMessage;
@@ -84,7 +81,7 @@ public class MessagesHandler {
                 unpackedMessage = UnpackShipCreatedMsg(packedMessage);
                 break;
             case (byte)NetMsg.MsgType.SC_AllocClientID:
-                unpackedMessage = JsonConvert.DeserializeObject<SC_AllocClientID>(jsonMsg);
+                unpackedMessage = UnpackAllocClientIDMsg(packedMessage);
                 break;
             case (byte)NetMsg.MsgType.MSG_NewPlayerRequest:
                 unpackedMessage = UnpackNewPlayerRequestMsg(packedMessage);
@@ -356,7 +353,7 @@ public class MessagesHandler {
 
 
     private static byte[] PackShipCreatedMsg(MSG_ShipCreated message) {
-        byte[] packedMessage = new byte[41 + headerSize + name_size];
+        byte[] packedMessage = new byte[41 + headerSize + playerNameSize];
         packedMessage[0] = message.Type;
 
         byte[] timeStamp = System.BitConverter.GetBytes(message.TimeStamp);   // 1
@@ -370,7 +367,7 @@ public class MessagesHandler {
         // ship type is a byte so no need to use GetBytes                     // 33
         byte[] entityID = System.BitConverter.GetBytes(message.EntityID);     // 34
         byte[] clientID = System.BitConverter.GetBytes(message.ClientID);     // 38
-        byte[] playerNamePadded = System.Text.Encoding.ASCII.GetBytes(message.PlayerName.PadRight(name_size, ' ')); // 42
+        byte[] playerNamePadded = System.Text.Encoding.ASCII.GetBytes(message.PlayerName.PadRight(playerNameSize, ' ')); // 42
 
         System.Buffer.BlockCopy(timeStamp, 0, packedMessage, 1, 4);
         System.Buffer.BlockCopy(position_x, 0, packedMessage, 5, 4);
@@ -383,7 +380,7 @@ public class MessagesHandler {
         packedMessage[33] = message.ShipType;
         System.Buffer.BlockCopy(entityID, 0, packedMessage, 34, 4);
         System.Buffer.BlockCopy(clientID, 0, packedMessage, 38, 4);
-        System.Buffer.BlockCopy(playerNamePadded, 0, packedMessage, 42, name_size);
+        System.Buffer.BlockCopy(playerNamePadded, 0, packedMessage, 42, playerNameSize);
 
         return packedMessage;
     }
@@ -401,7 +398,7 @@ public class MessagesHandler {
         byte shipType = packedMessage[33];
         int entityID = System.BitConverter.ToInt32(packedMessage, 34);
         int clientID = System.BitConverter.ToInt32(packedMessage, 38);
-        string playerNamePadded = System.Text.Encoding.ASCII.GetString(packedMessage, 42, name_size);
+        string playerNamePadded = System.Text.Encoding.ASCII.GetString(packedMessage, 42, playerNameSize);
         string playerName = playerNamePadded.TrimEnd();
 
         Vector3 position = new Vector3(position_x, position_y, position_z);
@@ -414,20 +411,20 @@ public class MessagesHandler {
 
 
     private static byte[] PackNewPlayerRequestMsg(MSG_NewPlayerRequest message) {
-        byte[] packedMessage = new byte[13 + headerSize + name_size];
+        byte[] packedMessage = new byte[13 + headerSize + playerNameSize];
         packedMessage[0] = message.Type;
 
         byte[] timeStamp = System.BitConverter.GetBytes(message.TimeStamp);   // 1
         // ship type is a byte so no need to use GetBytes                   // 5
         byte[] entityID = System.BitConverter.GetBytes(message.EntityID);     // 6
         byte[] clientID = System.BitConverter.GetBytes(message.ClientID);     // 10
-        byte[] playerNamePadded = System.Text.Encoding.ASCII.GetBytes(message.PlayerName.PadRight(name_size, ' ')); // 14
+        byte[] playerNamePadded = System.Text.Encoding.ASCII.GetBytes(message.PlayerName.PadRight(playerNameSize, ' ')); // 14
 
         System.Buffer.BlockCopy(timeStamp, 0, packedMessage, 1, 4);
         packedMessage[5] = message.ShipType;
         System.Buffer.BlockCopy(entityID, 0, packedMessage, 6, 4);
         System.Buffer.BlockCopy(clientID, 0, packedMessage, 10, 4);
-        System.Buffer.BlockCopy(playerNamePadded, 0, packedMessage, 14, name_size);
+        System.Buffer.BlockCopy(playerNamePadded, 0, packedMessage, 14, playerNameSize);
 
         return packedMessage;
     }
@@ -438,10 +435,37 @@ public class MessagesHandler {
         byte shipType = packedMessage[5];
         int entityID = System.BitConverter.ToInt32(packedMessage, 6);
         int clientID = System.BitConverter.ToInt32(packedMessage, 10);
-        string playerNamePadded = System.Text.Encoding.ASCII.GetString(packedMessage, 14, name_size);
+        string playerNamePadded = System.Text.Encoding.ASCII.GetString(packedMessage, 14, playerNameSize);
         string playerName = playerNamePadded.TrimEnd();
 
         MSG_NewPlayerRequest unpacked = new MSG_NewPlayerRequest(entityID, timeStamp, clientID, shipType, playerName);
+
+        return unpacked;
+    }
+
+
+    private static byte[] PackAllocClientIDMsg(SC_AllocClientID message) {
+        byte[] packedMessage = new byte[12 + headerSize];
+        packedMessage[0] = message.Type;
+
+        byte[] timeStamp = System.BitConverter.GetBytes(message.TimeStamp);   // 1
+        byte[] entityID = System.BitConverter.GetBytes(message.EntityID);     // 5
+        byte[] clientID = System.BitConverter.GetBytes(message.ClientID);     // 9
+
+        System.Buffer.BlockCopy(timeStamp, 0, packedMessage, 1, 4);
+        System.Buffer.BlockCopy(entityID, 0, packedMessage, 5, 4);
+        System.Buffer.BlockCopy(clientID, 0, packedMessage, 9, 4);
+
+        return packedMessage;
+    }
+
+    private static SC_AllocClientID UnpackAllocClientIDMsg(byte[] packedMessage) {
+
+        float timeStamp = System.BitConverter.ToSingle(packedMessage, 1);
+        int entityID = System.BitConverter.ToInt32(packedMessage, 5);
+        int clientID = System.BitConverter.ToInt32(packedMessage, 9);
+
+        SC_AllocClientID unpacked = new SC_AllocClientID(entityID, timeStamp, clientID);
 
         return unpacked;
     }

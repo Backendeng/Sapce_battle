@@ -22,7 +22,6 @@ public class Server : MonoBehaviour {
     Queue<NetMsg> outgoingReliable = new Queue<NetMsg>();
     Queue<NetMsg> outgoingUnReliable = new Queue<NetMsg>();
 
-
     //move these to some kind of dict by object type  FACTOR THIS OUT
     public GameObject remotePlayer;   // player prefab                  TODO: spawner
     public Transform playerSpawn;     // player spawn location
@@ -225,6 +224,7 @@ public class Server : MonoBehaviour {
         int tergetPlayerID = -1;
         if (msg.TargetId > 0) {////more proofing needed
             entityManager.netEntities[newEntityID].GetComponent<Missile>().Target = entityManager.netEntities[msg.TargetId].transform; // mark the target of this missile
+            entityManager.netEntities[newEntityID].GetComponent<Missile>().TargetScript = entityManager.netEntities[msg.TargetId].GetComponent<PlayerShip>();
             tergetPlayerID = msg.TargetId;
         }
         SC_EntityCreated mssg = new SC_EntityCreated(newEntityID, msg.TimeStamp, position, msg.Rotation, tergetPlayerID, (byte)NetworkEntity.ObjType.Missile);
@@ -350,6 +350,25 @@ public class Server : MonoBehaviour {
         byte[] buffer = MessagesHandler.NetMsgPack(msg);
         NetworkTransport.Send(hostId, clientID, reliableChannelId, buffer, buffer.Length, out error);
     }
+
+
+    public void RespawnPlayer(int clientID) {
+        connectedPlayers[clientID].GetComponent<RemotePlayerShipServer>().Respawn();
+    }
+
+    public float GetNearestDistFrom(Transform p, int self) {
+        float minDist = -1;
+        foreach (KeyValuePair<int, GameObject> client in connectedPlayers) {
+            if (client.Key == self)
+                continue;
+            float d = Vector3.Distance(client.Value.transform.position, p.position);
+            if (d < minDist || minDist == -1) {
+                minDist = d;
+            }
+        }
+        return minDist;
+    }
+
 }
 
  

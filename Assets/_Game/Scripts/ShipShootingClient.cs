@@ -92,6 +92,8 @@ public class ShipShootingClient : MonoBehaviour {
         int nearest = -1;
         float minDist = playerCamera.pixelWidth;
         foreach (KeyValuePair<int, PlayerShip> kvp in clientController.gameManager.PlayerShipsDict) {
+            if (kvp.Value.IsDead) // dead players remain on the same spot with renderers and colliders disabled, so we swhould ignore them
+                continue;
             Vector3 worldPoint = kvp.Value.transform.position;
             if (Vector3.Dot(transform.forward, worldPoint - transform.position) < 0) {
                 continue; // ship is behind camera

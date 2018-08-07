@@ -1,10 +1,77 @@
 using UnityEngine;
-
+using System.Collections;
 
 public class RemotePlayerShipServer : PlayerShip {
 
     Vector3 velocity;
     public override Vector3 Velocity { get { return velocity; } }
+
+    private float respawnCooldown = 7f;
+    private float respawnTimer;
+    public GameObject spawnPoints;
+
+    private void Update() {
+        if (isDead && Time.time > respawnTimer) {
+            RespawnEnd();
+        }
+    }
+
+    private void RespawnEnd() {
+        isDead = false;
+        serverController.gameManager.UpdatePlayerHealth(PlayerID, initialHealth);
+        Health = initialHealth;
+
+        Transform[] points = spawnPoints.GetComponentsInChildren<Transform>(); // why we get spawn in a not existent point? 
+
+        // pick point with max dist from nearest player
+        Transform chosenPoint = points[0];
+        float maxNearestDist = -1f;
+        foreach(Transform point in points) {
+            float nearestDist = serverController.GetNearestDistFrom(point, ClientID);
+            Debug.Log("Point " + point.position+" nearestDis "+ nearestDist);
+            if (maxNearestDist == -1f || nearestDist > maxNearestDist) {
+                maxNearestDist = nearestDist;
+                chosenPoint = point;
+                Debug.Log("Point chosen: " + point.position);
+            }
+
+        }
+       
+
+        GetComponent<Transform>().SetPositionAndRotation(chosenPoint.position, chosenPoint.rotation);
+
+        Vector3 velocity = new Vector3(0, 0, 0);
+        AddSnapshotToQueue(-1, points[0].position, points[0].rotation, velocity);
+        StartCoroutine("RespawnEndDelayed");
+    }
+
+    IEnumerator RespawnEndDelayed() {
+       
+        Debug.Log("respawn end before");
+        yield return new WaitForSeconds(1.0f);
+        Debug.Log("respawn end after");
+        
+        foreach(Collider c in GetComponents<Collider>()) {
+            c.enabled = true;
+        }
+        Renderer[] renderers = GetComponentsInChildren<Renderer>();
+        foreach (Renderer r in renderers) {
+            r.enabled = true;
+        }
+        yield return null;
+    }
+
+    public void Respawn() {
+        isDead = true;
+        respawnTimer = Time.time + respawnCooldown;
+        foreach (Collider c in GetComponents<Collider>()) {
+            c.enabled = false;
+        }
+        Renderer[] renderers = GetComponentsInChildren<Renderer>();
+        foreach (Renderer r in renderers) {
+            r.enabled = false;
+        }
+    }
 
     private void FixedUpdate() {
         HandleIncomingMessages();

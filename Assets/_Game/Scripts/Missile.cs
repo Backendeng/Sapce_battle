@@ -16,7 +16,9 @@ public class Missile : NetworkEntity {
 
     [Tooltip("Missile Guidance")]
     private Transform target;
+    private PlayerShip targetScript;
     public Transform Target { set { target = value; } }
+    public PlayerShip TargetScript { set { targetScript = value; } }
     private bool isTargetingPlayer = false;
     public bool IsTargetingPlayer { set { isTargetingPlayer = value; } get { return isTargetingPlayer; }  }
 
@@ -93,6 +95,11 @@ public class Missile : NetworkEntity {
         if (isServer) {
             if (target == null) { // TODO: handle case when target is suddenly gone
                 return;
+            }
+            if (targetScript.IsDead) { //target died,  remove lock
+                GetComponent<Rigidbody>().velocity = transform.forward * speed;
+                isTargetingPlayer = false; 
+                target = null;
             }
             transform.LookAt(target);
          
@@ -190,7 +197,7 @@ public class Missile : NetworkEntity {
         Destroy(Instantiate(missileExplosion, transform.position, Quaternion.identity), 2); // on client and server.
         Destroy(gameObject);
 
-        if (!isServer && isTargetingPlayer) { //  lock warnning for local player 
+        if (!isServer && isTargetingPlayer && clientController.gameManager.LocalPlayerLockCounter > 0) { //  lock warnning for local player 
             clientController.gameManager.LocalPlayerLockCounter--;
         }
 

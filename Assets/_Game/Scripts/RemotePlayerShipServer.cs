@@ -3,6 +3,9 @@ using System.Collections;
 
 public class RemotePlayerShipServer : PlayerShip {
 
+    Vector3 velocity;
+    public override Vector3 Velocity { get { return velocity; } }
+
     private float respawnCooldown = 7f;
     private float respawnTimer;
     public GameObject spawnPoints;
@@ -70,8 +73,6 @@ public class RemotePlayerShipServer : PlayerShip {
         }
     }
 
-
-
     private void FixedUpdate() {
         HandleIncomingMessages();
     }
@@ -89,6 +90,7 @@ public class RemotePlayerShipServer : PlayerShip {
         switch (netMessage.Type) {
             case (byte)NetMsg.MsgType.SC_MovementData:
                 MoveShipUsingReceivedClientData((SC_MovementData)netMessage);
+                velocity = ((SC_MovementData)netMessage).Velocity;
                 break;
             case (byte)NetMsg.MsgType.SC_EntityDestroyed:
                 Destroy(gameObject);

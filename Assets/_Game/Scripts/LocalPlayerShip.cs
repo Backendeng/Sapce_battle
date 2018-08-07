@@ -29,6 +29,9 @@ public class LocalPlayerShip : PlayerShip {
     private float boost_per_sec = 15f;
     public bool boosting = false;
 
+    private AudioSource enginesSound;
+    private float enginesSoundVolume = 0.08f;
+
     private new void Awake() {
         base.Awake();
     }
@@ -49,7 +52,8 @@ public class LocalPlayerShip : PlayerShip {
         // shooting init
         shooting = GetComponent<ShipShootingClient>();
         shooting.Init(clientController, EntityID);
-        
+
+        enginesSound = GetComponents<AudioSource>()[1];
     }
 
     private void FixedUpdate() {
@@ -95,6 +99,13 @@ public class LocalPlayerShip : PlayerShip {
 
         // shooting
         shooting.HandleShooting();
+
+        if (Throttle > 0 && enginesSound.volume < enginesSoundVolume) {
+            enginesSound.volume += Time.deltaTime * 0.05f;
+        }
+        else if (enginesSound.volume > 0) {
+            enginesSound.volume -= Time.deltaTime * 0.1f;
+        }
     }
 
     /*

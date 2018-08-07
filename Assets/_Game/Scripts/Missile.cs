@@ -3,33 +3,33 @@ using UnityEngine;
 
 public class Missile : NetworkEntity {
 
-    public GameObject missileExplosion;
-    private float explosionRadius = 35.0f; 
-    private float explosionPower = 20.0f;
-
+    private bool created = false;
     private Rigidbody rigid_body;
-    private Transform target;
-    private PlayerShip targetScript;
 
-    private static readonly float speed = 50f;
+    private static readonly float speed = 80f;
     public static float Speed { get { return speed; } }
     public static readonly float timeout = 10f;
     private float destroyTime;
     private float invisibleTime;
     public static readonly float timetillvisible = 0.3f;
-
     public int OwnerID { get; set; }
+
+    [Tooltip("Missile Guidance")]
+    private Transform target;
+    private PlayerShip targetScript;
     public Transform Target { set { target = value; } }
     public PlayerShip TargetScript { set { targetScript = value; } }
-
     private bool isTargetingPlayer = false;
     public bool IsTargetingPlayer { set { isTargetingPlayer = value; } get { return isTargetingPlayer; }  }
 
-    // Lerping State
+    [Tooltip("Missile Explosion")]
+    public GameObject missileExplosion;
+    private float explosionRadius = 35.0f;
+    private float explosionPower = 20.0f;
+
+    [Tooltip("Lerping")]
     public static bool doLerp = true;
-    
     MovementInterpolator movementInterpolator;
-    private bool created = false;
 
     public new void Start() {
         base.Start();
@@ -55,6 +55,8 @@ public class Missile : NetworkEntity {
             GetComponentInChildren<ParticleSystem>().Pause();
            
         }
+        
+
     }
 
     private void Update() {

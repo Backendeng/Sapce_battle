@@ -47,7 +47,7 @@ public abstract class PlayerShip : NetworkEntity {
             return;
         Debug.Log("respawn start");
         input.DisableInput();
-        Destroy(Instantiate(ShipExplosion, transform.position, Quaternion.identity), 3);/// dosnt work?>
+        Destroy(Instantiate(ShipExplosion, transform.position, Quaternion.identity), 5);/// dosnt work?>
        
         Renderer[] renderers = GetComponentsInChildren<Renderer>();
         foreach (Renderer r in renderers){

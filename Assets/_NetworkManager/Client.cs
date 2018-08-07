@@ -220,10 +220,10 @@ public class Client : MonoBehaviour {
 
     private GameObject OnRecieveMissileCreation(SC_EntityCreated msg) {
         
-        GameObject newObject = Instantiate(missile, msg.Position, msg.Rotation);
+        GameObject newMissile = Instantiate(missile, msg.Position, msg.Rotation);
         if (playerAvatarCreated && msg.ClientID == PlayerShip.ActiveShip.EntityID) // check if this player is the target of this missile NOTE: clientID is used for entity ID here
-            newObject.GetComponent<Missile>().IsTargetingPlayer = true;
-        return newObject;
+            newMissile.GetComponent<Missile>().IsTargetingPlayer = true;
+        return newMissile;
     }
 
     private GameObject OnReceivedProjectileCreation(SC_EntityCreated msg) {

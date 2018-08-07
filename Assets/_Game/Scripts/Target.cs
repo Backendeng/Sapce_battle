@@ -6,6 +6,10 @@ public class Target : MonoBehaviour {
     private PlayerShip playerShip;
     private int clientID = -1; // default value for non-client network entities with a target script
     private int playerID;
+    private readonly float collisionDamageFactor = 1f;
+    private float collisionCooldown = 1f;
+    private float nextCollisionDamage;
+    private float minCollisionSpeed = 20f;
 
     public void Start() {
         playerShip = GetComponentInParent<PlayerShip>();
@@ -36,6 +40,14 @@ public class Target : MonoBehaviour {
             TakeDamage(Projectile.Damage);
             return;
         }
-        Debug.Log("Target was hit " + other.name + ", tag: " + other.tag);/////TODO: error
+
+        if (other.CompareTag("SpaceStructure") && playerShip.Velocity.magnitude > minCollisionSpeed && Time.time > nextCollisionDamage) {
+            TakeDamage((int)(playerShip.Velocity.magnitude * collisionDamageFactor));
+            nextCollisionDamage = Time.time + collisionCooldown;
+            Debug.Log("the ship hit a structure:" + other.name + ", tag: " + other.tag + " speed = " + playerShip.Velocity.magnitude + ", damage: " + (int)(playerShip.Velocity.magnitude * collisionDamageFactor));
+            return;
+        }
+
+        //Debug.Log("Target was hit " + other.name + ", tag: " + other.tag);
     }
 }

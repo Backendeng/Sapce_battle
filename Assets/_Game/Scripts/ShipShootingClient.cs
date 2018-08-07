@@ -6,10 +6,13 @@ public class ShipShootingClient : MonoBehaviour {
 
     protected Client clientController;
 
-    private AudioSource projectileSound;
+    private AudioSource audioSource;
+    public AudioClip projectileSoundClip;
+    public AudioClip missileSoundClip;
+    
     private Camera playerCamera;
 
-    public AudioClip projectileClip;
+    //public AudioClip projectileClip;
     public GameObject projectile;   // projectile prefab
     public GameObject missile;      // missile prefab
     public Transform shotSpawn;     // shooting spawn location
@@ -36,8 +39,7 @@ public class ShipShootingClient : MonoBehaviour {
 
     
     private void Awake() {
-        projectileSound = GetComponent<AudioSource>();
-        projectileSound.clip = projectileClip;
+        audioSource = GetComponents<AudioSource>()[0];
         playerCamera = GetComponentInChildren<Camera>();
         lockRadius = (130f / 1080f) * Screen.height;
         screenCenter = new Vector2(Screen.width / 2, Screen.height / 2);
@@ -82,8 +84,8 @@ public class ShipShootingClient : MonoBehaviour {
         Debug.Log("Hit id: " + targetId);
         
         clientController.SendMissileToHost((byte)NetworkEntity.ObjType.Missile, pos, rot, targetId, netTimeStamp);
-        GetComponent<AudioSource>().Play();
-        //AudioSource.PlayClipAtPoint(projectileClip, transform.position); //TODO: add this instead of play
+        //audioSource.clip = missileSoundClip;
+        //audioSource.Play();
     }
 
     private int LockOnTarget() {
@@ -140,7 +142,8 @@ public Vector3 TargetScreenPoint() {
     private void ShootProjectile(Vector3 pos, Quaternion rot) {
         float netTimeStamp = NetworkTransport.GetNetworkTimestamp(); // NetworkTimeStamp is int, but we use float because NetMsg uses float for time stamps.
         GameObject mockProjectile = Instantiate(projectile, pos, rot); // destroyed when the real projectile from the server is instantiated.
-        projectileSound.Play();
+        audioSource.clip = projectileSoundClip;
+        audioSource.Play();
         mockProjectile.GetComponent<Projectile>().OwnerID = -1; // // mark as mock projectile (locally simulated untill the real projectile is instantiated)
         clientController.mockProjectiles.Add((int)netTimeStamp, mockProjectile);
         clientController.SendShotToHost((byte)NetworkEntity.ObjType.Projectile, pos, rot, (byte)NetworkEntity.ObjType.Projectile, (int)netTimeStamp);

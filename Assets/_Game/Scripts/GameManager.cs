@@ -19,6 +19,9 @@ public class GameManager : MonoBehaviour {
     private Dictionary<int, int> ClientsDict = new Dictionary<int, int>(); // (ClientID, PlayerID)
     private Dictionary<int, int> PlayersDict = new Dictionary<int, int>(); // (PlayerID, ClientID)
 
+    private Queue<string> killList = new Queue<string>();
+    public string localPlayersKiller = "";
+
     private int localPlayerLockCounter = 0;
     public int LocalPlayerLockCounter { set { localPlayerLockCounter = value; } get { return localPlayerLockCounter; } }
 
@@ -176,6 +179,14 @@ public class GameManager : MonoBehaviour {
 
         if (health == 0) {
             KillPlayer(playerID);
+        }
+    }
+
+    public void AddKillCredit(int victim, int killer) {
+        killList.Enqueue(string.Format("{0} killed {1}", GetName(killer), GetName(victim)));
+
+        if (PlayerShip.ActiveShip.PlayerID == victim) {
+            localPlayersKiller = GetName(killer);
         }
     }
 

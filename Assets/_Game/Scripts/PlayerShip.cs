@@ -10,6 +10,7 @@ using UnityEngine;
 public abstract class PlayerShip : NetworkEntity {
 
     public GameObject ShipExplosion;
+    private GameObject ShipModel;
 
     protected PlayerShipInput input;
     protected PlayerShipPhysics physics;
@@ -36,6 +37,11 @@ public abstract class PlayerShip : NetworkEntity {
         input = GetComponent<PlayerShipInput>();
         physics = GetComponent<PlayerShipPhysics>();
         Health = initialHealth;
+
+        ShipModel = transform.GetChild(0).gameObject;
+        if (!ShipModel) {
+            Debug.LogError("Couldn't get ShipModel game object");
+        }
     }
 
     public void SetInitShipData(int entityID, int clientID, string playerName, byte shipType) {
@@ -60,17 +66,12 @@ public abstract class PlayerShip : NetworkEntity {
         Debug.Log("respawn start");
         input.DisableInput();
         Destroy(Instantiate(ShipExplosion, transform.position, Quaternion.identity), 5);/// dosnt work?>
-       
-        Renderer[] renderers = GetComponentsInChildren<Renderer>();
-        foreach (Renderer r in renderers){
-            r.enabled = false; 
-        }
-        
+
         foreach (Collider c in GetComponentsInChildren<Collider>()) { // BUG: with this adde we see engine particles after ship explodes??
             c.enabled = false;
         }
-
-        GetComponentInChildren<ParticleSystem>().Pause(); //BUG: this does not work....
+                
+        ShipModel.SetActive(false);
 
         isDead = true;
   }
@@ -93,16 +94,11 @@ public abstract class PlayerShip : NetworkEntity {
 
         clientController.gameManager.clientUI.DisableRespawnScreen();
 
-        GetComponentInChildren<ParticleSystem>().Play();
-
-        Renderer[] renderers = GetComponentsInChildren<Renderer>();
-        foreach (Renderer r in renderers) {
-            r.enabled = true;
-        }
-      
         foreach (Collider c in GetComponentsInChildren<Collider>()) {
             c.enabled = true;
         }
+
+        ShipModel.SetActive(true);
 
         isDead = false;
         yield return null;

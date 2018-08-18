@@ -11,6 +11,7 @@ public class MainMenu : MonoBehaviour {
     public InputField ipInputField;
     public InputField nameInputField;
     public Text playMenuStatusText;
+    public Text mainMenuStatusText;
 
     private static int errorNum = 0;
     public static int ErrorNum { get { return errorNum; } set { errorNum = value; } }
@@ -18,9 +19,10 @@ public class MainMenu : MonoBehaviour {
 
     public void Start() {
         Cursor.visible = true;
-        if (!ipInputField || !playMenuStatusText || !nameInputField) {
+        if (!ipInputField || !playMenuStatusText || !nameInputField || !mainMenuStatusText) {
             Debug.LogError("required fields weren't found");
         }
+        mainMenuStatusText.text = "";
 
         if (errorNum == 0) {
             MainMenuObj.SetActive(true);
@@ -34,6 +36,10 @@ public class MainMenu : MonoBehaviour {
             playMenuStatusText.text = "Connection Timed Out";
             errorNum = 0;
             //Cursor.lockState = CursorLockMode.None;
+        }
+
+        else if (errorNum == 666) { // can't start host, probably port is taken
+            mainMenuStatusText.text = string.Format("Cannot open socket. Please check your network,\n most probably port is occupied.");
         }
     }
 
@@ -53,7 +59,6 @@ public class MainMenu : MonoBehaviour {
             playMenuStatusText.text = "Invalid IP Address";
             return;
         }
-        PlayMenuObj.SetActive(false);
         if (ipAddress == "") {
             Client.ServerIP = "127.0.0.1";
         } else {
@@ -63,15 +68,17 @@ public class MainMenu : MonoBehaviour {
         string playerName = nameInputField.text;
         if (playerName == "") {
             playMenuStatusText.text = "Enter a name";
+            return;
         }
         if (playerName.Length > maxNameLen) {
-            playMenuStatusText.text = "Name length should not exceed 15 characters";
+            playMenuStatusText.text = "Maximum name length is " + maxNameLen + " characters";
+            return;
         }
         byte shipType = 1; //TODO: implement ship type selection
 
         Client.ClientInitData.PlayerName = playerName;
         Client.ClientInitData.ShipType = shipType;
-
+        PlayMenuObj.SetActive(false);
         SceneManager.LoadScene(2);
     }
 

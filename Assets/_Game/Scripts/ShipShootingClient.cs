@@ -125,15 +125,16 @@ public Vector3 TargetScreenPoint() {
             return Vector3.zero;
         }
 
-        if (!clientController.gameManager.PlayerShipsDict.ContainsKey(lockTargetID)) {
-            Debug.LogWarning("locked target wasn't found in PlayerShipDict. locked PlayerID = " + lockTargetID);
+        if (!clientController.gameManager.IsValidPlayerID(lockTargetID)) {
+            Debug.LogWarning("locked target wasn't found in Game Manager. locked PlayerID = " + lockTargetID);
             return Vector3.zero;
         }
 
-        Vector3 worldPoint = clientController.gameManager.PlayerShipsDict[lockTargetID].transform.position;
+        Vector3 worldPoint = clientController.gameManager.GetShip(lockTargetID).transform.position;
         if (Vector3.Dot(transform.forward, worldPoint - transform.position) < 0) {
             return Vector3.zero; // ship is behind camera
         }
+
         Vector3 screenPoint = playerCamera.WorldToScreenPoint(worldPoint);
         if (new Rect(0, 0, Screen.width, Screen.height).Contains(screenPoint) == false) {
             return Vector3.zero; // not a valid screen point

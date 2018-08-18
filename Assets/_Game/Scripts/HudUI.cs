@@ -32,11 +32,8 @@ public class HudUI : MonoBehaviour {
     private ShipShootingClient shipShooting;
 
 
-    private void Awake()
-    {
+    private void Awake() {
         leftPanelText = GetComponent<Text>();
-        
-
     }
 
     private void Start() {

@@ -12,7 +12,7 @@ public class Server : MonoBehaviour {
     int unreliableChannelId;
     int reliableChannelId;
     int hostId;
-    static int inPort = 8888;
+    public static int inPort = 8888;
     int connectionId;
     static int bufferSize = 1024;
     int dataSize;
@@ -49,7 +49,11 @@ public class Server : MonoBehaviour {
         int maxConnections = 20;
         HostTopology topology = new HostTopology(config, maxConnections);
 
-        hostId = NetworkTransport.AddHost(topology, inPort); // TODO: add proofing. gives error if port is occupied.
+        hostId = NetworkTransport.AddHost(topology, inPort);
+        if (hostId == -1) {
+            MainMenu.ErrorNum = 666;
+            MainMenu.LoadScene(0);
+        }
         Debug.Log("Socket Open. SocketId is: " + hostId);
 
 

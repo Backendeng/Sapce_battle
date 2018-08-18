@@ -149,12 +149,14 @@ public class SC_PlayerData : NetMsg {
     public int PlayerID { get; private set; }
     public int Health { get; private set; }
     public int Score { get; private set; }
+    public int Deaths { get; private set; }
 
-    public SC_PlayerData(int playerID, float timeStamp, int health, int score) : base(timeStamp) {
+    public SC_PlayerData(int playerID, float timeStamp, int health, int score, int deaths) : base(timeStamp) {
         msgType = (byte)MsgType.SC_PlayerData;
         PlayerID = playerID;
         Health = health;
         Score = score;
+        Deaths = deaths;
     }
 }
 

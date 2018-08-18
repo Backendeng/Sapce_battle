@@ -188,6 +188,8 @@ public class Server : MonoBehaviour {
         outgoingReliable.Enqueue(msg1);
 
         Debug.Log("Player with playerID = " + newShip.GetComponent<PlayerShip>().PlayerID + ", clientID = " + recConnectionId + ", playerName = " + msg.PlayerName + ", shipType = " + msg.ShipType + " joined the game.");
+
+        gameManager.scoreBoard.RefreshScoreBoard();
     }
 
     private void ProccessDisconnection(int recConnectionId) {
@@ -367,6 +369,25 @@ public class Server : MonoBehaviour {
             }
         }
         return minDist;
+    }
+
+    // returns null if can't get a ship for the given playerID
+    public PlayerShip GetShipOnServer(int playerID) {
+        if (!gameManager.IsValidPlayerID(playerID)) {
+            Debug.Log("playerID = " + playerID + "is not a valid player ID");
+            return null;
+        }
+        int clientID = gameManager.GetClientID(playerID);
+
+        if (!connectedPlayers.ContainsKey(clientID)) {
+            Debug.LogError("clientID = " + clientID + "does not exist in the connected players dict!");
+            return null;
+        }
+        if (connectedPlayers[clientID] == null) {
+            Debug.Log("ship of clientID = " + clientID + " is not ready yet");
+            return null;
+        }
+        return connectedPlayers[clientID].GetComponent<PlayerShip>(); //nullref
     }
 
 }

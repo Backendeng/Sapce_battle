@@ -11,8 +11,8 @@ public class ClientUI : MonoBehaviour {
     public HudUI hudUI;
     public Text escapeMenuStatusText;
     public GameManager gameManager;
+    public GameObject ScoreBoardView;
     
-
     private bool started = false;
     private float stopConnectionTime;
 
@@ -36,6 +36,17 @@ public class ClientUI : MonoBehaviour {
                 Cursor.visible = true;
             }
         }
+        if (!Input.GetKeyDown(KeyCode.Escape)) {
+            if (Input.GetKey(KeyCode.Tab)) {
+                ScoreBoardView.SetActive(true);
+                Cursor.visible = true;
+            }
+            else {
+                ScoreBoardView.SetActive(false);
+                Cursor.visible = false;
+            }
+        }
+
         
         if (started == false) {
             if (clientController.PlayerAvatarCreated == false) {

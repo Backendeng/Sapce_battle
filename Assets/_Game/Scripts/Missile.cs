@@ -137,7 +137,7 @@ public class Missile : NetworkEntity {
                 
                 if (!hitPlayers.Contains(hit.gameObject.GetComponent<PlayerShip>().ClientID)) {//prevent mult dmg to same player
                     Debug.Log("Expl hit: player with client id = " + hit.gameObject.GetComponent<PlayerShip>().ClientID);
-                    hit.gameObject.GetComponent<Target>().TakeDamage(25);
+                    hit.gameObject.GetComponent<Target>().TakeDamage(25, OwnerID);
                 }
                 hitPlayers.Add(hit.gameObject.GetComponent<PlayerShip>().ClientID);
                 continue;

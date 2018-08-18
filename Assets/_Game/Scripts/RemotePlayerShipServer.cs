@@ -67,6 +67,7 @@ public class RemotePlayerShipServer : PlayerShip {
         foreach (Collider c in GetComponents<Collider>()) {
             c.enabled = false;
         }
+        // TODO: change this way of hiding the ship
         Renderer[] renderers = GetComponentsInChildren<Renderer>();
         foreach (Renderer r in renderers) {
             r.enabled = false;

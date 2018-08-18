@@ -16,8 +16,10 @@ public abstract class PlayerShip : NetworkEntity {
 
     public int PlayerID { get { return EntityID; } }
     public int Health { get; set; }
-    protected readonly int initialHealth = 100;
+    public static readonly int initialHealth = 100;
     public int Score { get; set; }
+    public int Deaths { get; set; }
+
     protected static LocalPlayerShip activeShip;
     
     public static LocalPlayerShip ActiveShip { get { return activeShip; } }

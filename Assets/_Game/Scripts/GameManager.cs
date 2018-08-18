@@ -7,12 +7,14 @@ public class GameManager : MonoBehaviour {
     private Client clientController;
     private Server serverController;
     public GameObject RespawnMenu;
+    public ScoreBoard scoreBoard;
 
     private bool isServer;
     private readonly int initialHealth = 100;
+    private readonly int killScorePoints = 10;
 
     private Dictionary<int, PlayerData> PlayerDataDict = new Dictionary<int, PlayerData>();
-    public Dictionary<int, PlayerShip> PlayerShipsDict = new Dictionary<int, PlayerShip>(); // For Client Use Only
+    public Dictionary<int, PlayerShip> PlayerShipsDict = new Dictionary<int, PlayerShip>();
     private Dictionary<int, int> ClientsDict = new Dictionary<int, int>(); // (ClientID, PlayerID)
     private Dictionary<int, int> PlayersDict = new Dictionary<int, int>(); // (PlayerID, ClientID)
 
@@ -23,7 +25,8 @@ public class GameManager : MonoBehaviour {
         public string Name { get; set; }
         public int Health { get; set; }
         public int Score { get; set; }
-        public PlayerData(string name, int health, int score) { Name = name; Health = health; Score = score; }
+        public int Deaths { get; set; }
+        public PlayerData(string name, int health, int score, int deaths) { Name = name; Health = health; Score = score; Deaths = deaths; }
     };
 
     void Start () {
@@ -49,6 +52,7 @@ public class GameManager : MonoBehaviour {
                 Debug.LogWarning("ERROR! networkController not found for the Game Manager");
             }
         }
+        scoreBoard.RefreshScoreBoard();
     }
 
     public int GetClientID(int playerID) {
@@ -90,7 +94,7 @@ public class GameManager : MonoBehaviour {
             Debug.LogWarning("PlayerDataDict already contains player data for playerID = " + playerID);
             return;
         }
-        PlayerData playerData = new PlayerData(playerName, initialHealth, 0);
+        PlayerData playerData = new PlayerData(playerName, initialHealth, 0, 0);
         PlayerDataDict.Add(playerID, playerData);
         ClientsDict.Add(clientID, playerID);
         PlayersDict.Add(playerID, clientID);
@@ -103,35 +107,28 @@ public class GameManager : MonoBehaviour {
         Debug.Log("ship was added to PlayerShipsDict for playerID = " + playerID);
 
         Debug.Log("Adding Player to PlayerDataDict. playerID = " + playerID + ", clientID = " + clientID + ", name = " + playerName);
+
+        scoreBoard.RefreshScoreBoard();
     }
 
     public void RemovePlayer(int playerID) {
         ClientsDict.Remove(GetClientID(playerID));
         PlayersDict.Remove(playerID);
-        if (isServer) {
-            PlayerDataDict.Remove(playerID);
-        }
-        else {
-            PlayerDataDict.Remove(playerID);
-            PlayerShipsDict.Remove(playerID);
-        }
+        PlayerDataDict.Remove(playerID);
+        PlayerShipsDict.Remove(playerID);
         Debug.Log("Removed player with playerID = " + playerID + " from the Game Manager.");
     }
 
     // called on server when updating, and on client when receiving SC_PlayerData message from server
-    public void UpdatePlayerData(int playerID, int health, int score) {
+    public void UpdatePlayerData(int playerID, int health, int score, int deaths) {
         // Update PlayerDataDict
         if (PlayerDataDict.ContainsKey(playerID)) {
             PlayerDataDict[playerID].Health = health;
             PlayerDataDict[playerID].Score = score;
+            PlayerDataDict[playerID].Deaths = deaths;
         }
         else {
             Debug.LogError("UpdatePlayerData: playerID = " + playerID + " does not exist in PlayerDataDict");
-            /*
-            PlayerData playerData = new PlayerData(health, score);
-            PlayerDataDict.Add(playerID, playerData);
-            Debug.Log("UpdatePlayerData: Adding Player to PlayerDataDict. playerID = " + playerID);
-            */
         }
         // Update PlayerShip Fields
         if (!isServer) {
@@ -146,16 +143,14 @@ public class GameManager : MonoBehaviour {
                 }
                 PlayerShip.ActiveShip.Health = health;
                 PlayerShip.ActiveShip.Score = score;
+                PlayerShip.ActiveShip.Deaths = deaths;
                 Debug.Log("Updating local player ship data: health = " + health + " , score = " + score);
             }
             else {
-                if (!PlayerShipsDict.ContainsKey(playerID)) {
-                    Debug.LogWarning("PlayerShipsDict doesn't contain the ship of playerID = " + playerID);
-                    return;
-                }
-                PlayerShip ship = PlayerShipsDict[playerID];
+                PlayerShip ship = GetShip(playerID);
                 ship.Health = health;
                 ship.Score = score;
+                ship.Deaths = deaths;
                 Debug.Log("Updating remote player ship data: health = " + health + " , score = " + score);
             }
         }
@@ -163,16 +158,16 @@ public class GameManager : MonoBehaviour {
         if (health == 0) {
             KillPlayer(playerID);
         }
+        scoreBoard.RefreshScoreBoard();
     }
 
     // called on server only
     public void UpdatePlayerHealth(int playerID, int health) {
         if (PlayerDataDict.ContainsKey(playerID)) {
-           
-            PlayerDataDict[playerID].Health = health; // player ships also hold Health
-            Debug.Log(playerID + "send health update" + PlayerDataDict[playerID].Health);
-            SC_PlayerData playerDataMessage = new SC_PlayerData(playerID, Time.time, health, PlayerDataDict[playerID].Score);
-            serverController.EnqueueReliable(playerDataMessage);
+            GetShip(playerID).Health = health;
+            PlayerDataDict[playerID].Health = health;
+            SendPlayerDataToClients(playerID);
+            Debug.Log("player: " + playerID + " health update:" + PlayerDataDict[playerID].Health);
         }
         else {
             Debug.LogError("playerID = " + playerID + " does not exist in PlayerDataDict");
@@ -183,39 +178,91 @@ public class GameManager : MonoBehaviour {
         }
     }
 
+    // called on server only
+    public void AddScore(int playerID) {
+        if (PlayerDataDict.ContainsKey(playerID)) {
+            GetShip(playerID).Score += killScorePoints;
+            PlayerDataDict[playerID].Score += killScorePoints;
+            Debug.Log("player: " + playerID + " got " + killScorePoints + " score points, now has: " + PlayerDataDict[playerID].Score);
+            SendPlayerDataToClients(playerID);
+        }
+        else {
+            Debug.LogError("playerID = " + playerID + " does not exist in PlayerDataDict");
+        }
+        scoreBoard.RefreshScoreBoard();
+    }
+
     public void SendAllGameDataToNewClient(int clientID) {
 
         foreach (KeyValuePair<int, PlayerData> kvp in PlayerDataDict) {
-            SC_PlayerData playerDataMessage = new SC_PlayerData(kvp.Key, Time.time, kvp.Value.Health, kvp.Value.Score);
+            SC_PlayerData playerDataMessage = new SC_PlayerData(kvp.Key, Time.time, kvp.Value.Health, kvp.Value.Score, kvp.Value.Deaths);
             serverController.SendMsgToClient(clientID, playerDataMessage);
             //Debug.Log("SendAllGameDataToNewClient: sending data of clientID = " + clientID);
         }
     }
 
     public void KillPlayer(int playerID) {
+        PlayerShip ship = GetShip(playerID);
+        if (!ship) {
+            Debug.LogError("can't get ship of playerID = " + playerID);
+        }
+
         Debug.Log("Player with playerID = " + playerID + " killed.");
         if (isServer) {
-            serverController.RespawnPlayer(PlayersDict[playerID]);
-            // TODO: update score
+            serverController.RespawnPlayer(GetClientID(playerID));
+            // Score is added where the hit is detected (target script and missile script)
+            PlayerDataDict[playerID].Deaths++;
+            ship.Deaths = PlayerDataDict[playerID].Deaths;
+            SendPlayerDataToClients(playerID);
         }
         else {  // client
-            PlayerShip ship = PlayerShipsDict[playerID];
             ship.RespawnOnClientStart();
             if (PlayerShip.ActiveShip.PlayerID == playerID) {
                 Debug.Log("LOCAL PLAYER DIED");
                 localPlayerLockCounter = 0; //disable all lock warnnings 
-              
                 RespawnMenu.SetActive(true); // activate RespawnMenu
             }
         }
+        scoreBoard.RefreshScoreBoard();
     }
 
     public string GetName(int playerID) {
-        if (!PlayerShipsDict.ContainsKey(playerID)) {
-            Debug.LogError("playerID = " + playerID + " does not exist in PlayerShipsDict");
-        }
-        return PlayerShipsDict[playerID].PlayerName;
+        return GetShip(playerID).PlayerName;
     }
 
+    public PlayerShip GetShip(int playerID) {
+        if (!PlayerShipsDict.ContainsKey(playerID)) {
+            return null;
+        }
+
+        if (isServer) {
+            return serverController.GetShipOnServer(playerID);
+        }
+        else { // Client
+            if (!PlayerShipsDict.ContainsKey(playerID)) {
+                Debug.LogError("playerID = " + playerID + " does not exist in PlayerShipsDict");
+                return null;
+            }
+            return PlayerShipsDict[playerID];
+        }
+    }
+
+    public bool IsValidPlayerID(int playerID) {
+        if (PlayersDict.ContainsKey(playerID)) {
+            return true;
+        }
+        return false;
+    }
+
+    // Called on server only
+    private void SendPlayerDataToClients(int playerID) {
+        if (!isServer) {
+            Debug.LogError("this should not be called from client");
+            return;
+        }
+
+        SC_PlayerData playerDataMessage = new SC_PlayerData(playerID, Time.time, PlayerDataDict[playerID].Health, PlayerDataDict[playerID].Score, PlayerDataDict[playerID].Deaths);
+        serverController.EnqueueReliable(playerDataMessage);
+    }
 
 }

@@ -14,8 +14,10 @@ public class MainMenu : MonoBehaviour {
 
     private static int errorNum = 0;
     public static int ErrorNum { get { return errorNum; } set { errorNum = value; } }
+    private readonly int maxNameLen = 15;
 
     public void Start() {
+        Cursor.visible = true;
         if (!ipInputField || !playMenuStatusText || !nameInputField) {
             Debug.LogError("required fields weren't found");
         }
@@ -31,7 +33,6 @@ public class MainMenu : MonoBehaviour {
             PlayMenuObj.SetActive(true);
             playMenuStatusText.text = "Connection Timed Out";
             errorNum = 0;
-            Cursor.visible = true;
             //Cursor.lockState = CursorLockMode.None;
         }
     }
@@ -62,6 +63,9 @@ public class MainMenu : MonoBehaviour {
         string playerName = nameInputField.text;
         if (playerName == "") {
             playMenuStatusText.text = "Enter a name";
+        }
+        if (playerName.Length > maxNameLen) {
+            playMenuStatusText.text = "Name length should not exceed 15 characters";
         }
         byte shipType = 1; //TODO: implement ship type selection
 

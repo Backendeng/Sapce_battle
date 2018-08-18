@@ -11,7 +11,7 @@ public class MouseCrosshair : MonoBehaviour
         crosshair = GetComponent<Image>();
 
         crosshair.enabled = PlayerShipInput.useMouseInput;
-
+        
         if (crosshair.enabled) {
             Cursor.visible = false;
             //Cursor.lockState = CursorLockMode.Confined;

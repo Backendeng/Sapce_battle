@@ -322,19 +322,21 @@ public class MessagesHandler {
     }
 
     private static byte[] PackPlayerDataMsg(SC_PlayerData message) {
-        byte[] packedMessage = new byte[16 + headerSize];
+        byte[] packedMessage = new byte[20 + headerSize];
         packedMessage[0] = message.Type;
 
-        byte[] timeStamp = System.BitConverter.GetBytes(message.TimeStamp);   // 1
-        byte[] playerID = System.BitConverter.GetBytes(message.PlayerID);     // 5
-        byte[] health = System.BitConverter.GetBytes(message.Health);     // 9
-        byte[] score = System.BitConverter.GetBytes(message.Score);     // 13
+        byte[] timeStamp = System.BitConverter.GetBytes(message.TimeStamp);  // 1
+        byte[] playerID = System.BitConverter.GetBytes(message.PlayerID);    // 5
+        byte[] health = System.BitConverter.GetBytes(message.Health);        // 9
+        byte[] score = System.BitConverter.GetBytes(message.Score);          // 13
+        byte[] deaths = System.BitConverter.GetBytes(message.Deaths);         // 17
 
 
         System.Buffer.BlockCopy(timeStamp, 0, packedMessage, 1, 4);
         System.Buffer.BlockCopy(playerID, 0, packedMessage, 5, 4);
         System.Buffer.BlockCopy(health, 0, packedMessage, 9, 4);
         System.Buffer.BlockCopy(score, 0, packedMessage, 13, 4);
+        System.Buffer.BlockCopy(deaths, 0, packedMessage, 17, 4);
 
         return packedMessage;
     }
@@ -345,8 +347,9 @@ public class MessagesHandler {
         int playerID = System.BitConverter.ToInt32(packedMessage, 5);
         int health = System.BitConverter.ToInt32(packedMessage, 9);
         int score = System.BitConverter.ToInt32(packedMessage, 13);
+        int deaths = System.BitConverter.ToInt32(packedMessage, 17);
 
-        SC_PlayerData unpacked = new SC_PlayerData(playerID, timeStamp, health, score);
+        SC_PlayerData unpacked = new SC_PlayerData(playerID, timeStamp, health, score, deaths);
 
         return unpacked;
     }

@@ -26,6 +26,9 @@ public class HudUI : MonoBehaviour {
     private Text leftPanelText;
     public Text lockedWarningText;
 
+    public Image FixedCrosshair;
+    public Image LockingCircle;
+
     private ShipShootingClient shipShooting;
 
 
@@ -49,8 +52,12 @@ public class HudUI : MonoBehaviour {
 
     void Update()
     {
-        if (PlayerShip.ActiveShip != null) {
-            leftPanelText.text = string.Format("SPEED: {0}\nBOOST: {1}\nDEATHS: {2}\nName: {3}", PlayerShip.ActiveShip.Velocity.magnitude.ToString("000"), PlayerShip.ActiveShip.Boost, 0 /* TODO: get deaths here */, PlayerShip.ActiveShip.PlayerName);
+        PlayerShip ship = PlayerShip.ActiveShip;
+        if (ship != null) {
+            leftPanelText.text = string.Format("SPEED: {0}\nBOOST: {1}\nDEATHS: {2}\nName: {3}", ship.Velocity.magnitude.ToString("000"), ship.Boost, ship.Deaths, ship.PlayerName);
+            SetHealthBar(ship.Health);
+            SetEnergyBar(ship.GetComponent<ShipShootingClient>().Energy);
+            ScoreText.text = string.Format("SCORE: {0}", ship.Score);
         }
 
         if(gameManager.LocalPlayerLockCounter > 0) {
@@ -60,8 +67,6 @@ public class HudUI : MonoBehaviour {
             lockedWarningText.enabled = false;
         }
 
-        SetHealthBar(PlayerShip.ActiveShip.Health);
-        SetEnergyBar(PlayerShip.ActiveShip.GetComponent<ShipShootingClient>().Energy);
         UpdateEnemyTarget();
         
         if (LockedTargetCircle.enabled) {
@@ -100,5 +105,15 @@ public class HudUI : MonoBehaviour {
 
         LockedTargetCircle.enabled = true;
 
+    }
+
+    public void EnableCrossharis() {
+        FixedCrosshair.enabled = true;
+        LockingCircle.enabled = true;
+    }
+
+    public void DisableCrosshairs() {
+        FixedCrosshair.enabled = false;
+        LockingCircle.enabled = false;
     }
 }

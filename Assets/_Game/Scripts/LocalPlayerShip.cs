@@ -71,9 +71,6 @@ public class LocalPlayerShip : PlayerShip {
             cameraGlitch.enabled = false;
         }
 
-       /* if (IsDead)
-           return;*/                  // removed, check that this removal does not introduce bugs
-
         // get player input for movement
         float throttle = input.throttle;
 
@@ -97,18 +94,26 @@ public class LocalPlayerShip : PlayerShip {
         // apply movement physics using player input
         physics.SetPhysicsInput(linearInput, angularInput);
 
-        // shooting
-        shooting.HandleShooting();
-
         if (Throttle > 0 && enginesSound.volume < enginesSoundVolume) {
             enginesSound.volume += Time.deltaTime * 0.05f;
         }
         else if (enginesSound.volume > 0) {
             enginesSound.volume -= Time.deltaTime * 0.1f;
         }
+
+        if (IsDead) {
+            shooting.ResetEnergy();
+            boost_energy = 100f;
+
+            return;
+        }
+          
+
+        // shooting
+        shooting.HandleShooting();
     }
 
-    
+
     float rate = 0.06f;
     float nextSendTime = 0;
     float lastSent = -1;

@@ -37,7 +37,6 @@ public class ShipShootingClient : MonoBehaviour {
 
     public int Energy { get { return energy; } }
 
-    
     private void Awake() {
         audioSource = GetComponents<AudioSource>()[0];
         playerCamera = GetComponentInChildren<Camera>();
@@ -58,6 +57,10 @@ public class ShipShootingClient : MonoBehaviour {
 
     public void Init(Client clientController, int entityID) {
         this.clientController = clientController;
+    }
+
+    public void ResetEnergy() {
+        energy = 100;
     }
 
     public void HandleShooting() {

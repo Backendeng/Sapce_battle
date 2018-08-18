@@ -21,27 +21,28 @@ public class RemotePlayerShipServer : PlayerShip {
         serverController.gameManager.UpdatePlayerHealth(PlayerID, initialHealth);
         Health = initialHealth;
 
-        Transform[] points = spawnPoints.GetComponentsInChildren<Transform>(); // why we get spawn in a not existent point? 
+        Transform[] points = spawnPoints.GetComponentsInChildren<RectTransform>();
 
         // pick point with max dist from nearest player
-        Transform chosenPoint = points[0];
+        Transform chosenPoint = points[1];
         float maxNearestDist = -1f;
         foreach(Transform point in points) {
+            if (point.position == Vector3.zero)
+                continue; // ignore pos of the root gameboject containing the spawn points
             float nearestDist = serverController.GetNearestDistFrom(point, ClientID);
-            Debug.Log("Point " + point.position+" nearestDis "+ nearestDist);
+            //Debug.Log("Point " + point.position+" nearestDis "+ nearestDist);
             if (maxNearestDist == -1f || nearestDist > maxNearestDist) {
                 maxNearestDist = nearestDist;
                 chosenPoint = point;
-                Debug.Log("Point chosen: " + point.position);
+                //Debug.Log("Point chosen: " + point.position);
             }
 
         }
-       
 
         GetComponent<Transform>().SetPositionAndRotation(chosenPoint.position, chosenPoint.rotation);
-
+        Debug.Log("Point set for spawn: " + chosenPoint.position);
         Vector3 velocity = new Vector3(0, 0, 0);
-        AddSnapshotToQueue(-1, points[0].position, points[0].rotation, velocity);
+        AddSnapshotToQueue(-1, chosenPoint.position, chosenPoint.rotation, velocity);
         StartCoroutine("RespawnEndDelayed");
     }
 
@@ -54,10 +55,8 @@ public class RemotePlayerShipServer : PlayerShip {
         foreach(Collider c in GetComponents<Collider>()) {
             c.enabled = true;
         }
-        Renderer[] renderers = GetComponentsInChildren<Renderer>();
-        foreach (Renderer r in renderers) {
-            r.enabled = true;
-        }
+        ShipModel.SetActive(true);
+
         yield return null;
     }
 
@@ -67,11 +66,7 @@ public class RemotePlayerShipServer : PlayerShip {
         foreach (Collider c in GetComponents<Collider>()) {
             c.enabled = false;
         }
-        // TODO: change this way of hiding the ship
-        Renderer[] renderers = GetComponentsInChildren<Renderer>();
-        foreach (Renderer r in renderers) {
-            r.enabled = false;
-        }
+        ShipModel.SetActive(false);
     }
 
     private void FixedUpdate() {

@@ -10,7 +10,7 @@ using UnityEngine;
 public abstract class PlayerShip : NetworkEntity {
 
     public GameObject ShipExplosion;
-    private GameObject ShipModel;
+    protected GameObject ShipModel;
 
     protected PlayerShipInput input;
     protected PlayerShipPhysics physics;

@@ -36,6 +36,7 @@ public class Target : MonoBehaviour {
 
         if (playerShip.Health == 0 && hitterID != playerShip.PlayerID && gameManager.IsValidPlayerID(hitterID)) {
             gameManager.AddScore(hitterID);
+            gameManager.AddKillCredit(playerShip.PlayerID, hitterID);
         }
     }
 

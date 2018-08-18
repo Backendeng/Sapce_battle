@@ -13,7 +13,8 @@ public class ClientUI : MonoBehaviour {
     public Text escapeMenuStatusText;
     public GameManager gameManager;
     public GameObject ScoreBoardView;
-    
+    public Text RespawnScreeKilledByText;
+
     private bool started = false;
     private float stopConnectionTime;
 
@@ -75,6 +76,13 @@ public class ClientUI : MonoBehaviour {
     public void EnableRespawnScreen() {
         RespawnScreen.SetActive(true);
         ScoreBoardView.SetActive(true);
+        if(gameManager.localPlayersKiller != "") {
+            RespawnScreeKilledByText.text = string.Format("You Were Blasted By {0}", gameManager.localPlayersKiller);
+        }
+        else {
+            RespawnScreeKilledByText.text = "WASTED!";
+        }
+        gameManager.localPlayersKiller = "";
     }
 
     public void DisableRespawnScreen() {

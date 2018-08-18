@@ -37,6 +37,10 @@ public class PlayerShipInput : MonoBehaviour {
 
 
     public void DisableInput() {
+        yaw = 0f;
+        throttle = 0f;
+        roll = 0;
+        pitch = 0;
         disableInput = true;
     }
 

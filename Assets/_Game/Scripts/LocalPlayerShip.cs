@@ -71,8 +71,8 @@ public class LocalPlayerShip : PlayerShip {
             cameraGlitch.enabled = false;
         }
 
-        if (IsDead)
-            return;
+       /* if (IsDead)
+           return;*/                  // removed, check that this removal does not introduce bugs
 
         // get player input for movement
         float throttle = input.throttle;
@@ -108,22 +108,7 @@ public class LocalPlayerShip : PlayerShip {
         }
     }
 
-    /*
-        int timeStep = 0;
-        int rate = 2;//2 for 0.06f 
-        private void SendStateToServer(Vector3 pos, Quaternion rot, Vector3 vel) {
-            if (timeStep < rate) {
-                timeStep++;
-                return;
-            }
-            timeStep = 0;
-
-            Debug.Log("DDDD sent " + Time.time);///////////////////
-
-            clientController.SendStateToHost(entityID, pos, rot, vel);
-
-        }
-        */
+    
     float rate = 0.06f;
     float nextSendTime = 0;
     float lastSent = -1;

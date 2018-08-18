@@ -19,6 +19,7 @@ public class MainMenu : MonoBehaviour {
 
     public void Start() {
         Cursor.visible = true;
+        AudioListener.pause = false;
         if (!ipInputField || !playMenuStatusText || !nameInputField || !mainMenuStatusText) {
             Debug.LogError("required fields weren't found");
         }

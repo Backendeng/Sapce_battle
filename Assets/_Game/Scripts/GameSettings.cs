@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameSettings : MonoBehaviour {
     private bool loggingEnabled = false;
@@ -9,7 +10,12 @@ public class GameSettings : MonoBehaviour {
     private bool shipLerp = true;
     private bool missileLerp = true;
 
+    public Text statusText;
+    public InputField portInputField;
+    private int defaultPort = 8888;
+
     public void Start() {
+        statusText.text = "";
         Logger.LogEnabled = loggingEnabled;
         PlayerShipInput.useAutoPilot = useAutoPilot;
         LocalPlayerShip.showUnsmoothedShadow = showUnsmoothedShadowEnabled;
@@ -17,6 +23,21 @@ public class GameSettings : MonoBehaviour {
         PlayerShipInput.useMouseInput = !useXboxController;
         RemotePlayerShipClient.doLerp = shipLerp;
         Missile.doLerp = missileLerp;
+    }
+
+    private void Update() {
+        if (portInputField.text != "" && Server.inPort != System.Convert.ToInt32(portInputField.text)) {
+            int port = System.Convert.ToInt32(portInputField.text);
+            if (port <= 1023 || port > 99999) {
+                statusText.text = "Invalid Port";
+            }
+            else {
+                Server.inPort = port;
+                Client.outPort = port;
+                Debug.Log("port set to " + port);
+                statusText.text = "";
+            }
+        }
     }
 
     public void ToggleSaveLogs() {
@@ -65,5 +86,12 @@ public class GameSettings : MonoBehaviour {
         Debug.Log("missile lerp is: " + missileLerp);
     }
 
+    public void SetSettings() {
+        if (portInputField.text == "") {
+            Server.inPort = defaultPort;
+            Client.outPort = defaultPort;
+            Debug.Log("port set to " + defaultPort);
+        }
+    }
 
 }

@@ -55,8 +55,6 @@ public class MessagesHandler {
         NetMsg unpackedMessage = null;
         byte[] bytesMessage = packedMessage.Skip(headerSize).ToArray();
 
-        string jsonMsg = System.Text.ASCIIEncoding.ASCII.GetString(bytesMessage);
-
         byte msgType = packedMessage[0];
         switch (msgType) {
             case (byte)NetMsg.MsgType.SC_EntityCreated:

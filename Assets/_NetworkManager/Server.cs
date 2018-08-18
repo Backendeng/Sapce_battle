@@ -53,6 +53,7 @@ public class Server : MonoBehaviour {
         if (hostId == -1) {
             MainMenu.ErrorNum = 666;
             MainMenu.LoadScene(0);
+            return;
         }
         Debug.Log("Socket Open. SocketId is: " + hostId);
 

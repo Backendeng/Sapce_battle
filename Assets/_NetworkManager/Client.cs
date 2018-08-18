@@ -16,7 +16,7 @@ public class Client : MonoBehaviour {
     public GameObject projectile;
 
     private static string serverIP = "127.0.0.1";
-    private static int outPort = 8888;
+    public static int outPort = 8888;
     private byte error;
     private int unreliableChannelId;
     private int reliableChannelId;

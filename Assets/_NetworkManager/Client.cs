@@ -64,7 +64,7 @@ public class Client : MonoBehaviour {
         unreliableChannelId = config.AddChannel(QosType.Unreliable);
         Debug.Log("unreliableChannelId open id: " + unreliableChannelId);
 
-        int maxConnections = 10;
+        int maxConnections = 20;
         HostTopology topology = new HostTopology(config, maxConnections);
 
         hostId = NetworkTransport.AddHost(topology, 0);

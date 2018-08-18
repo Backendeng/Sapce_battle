@@ -6,11 +6,11 @@ public class Target : MonoBehaviour {
     private PlayerShip playerShip;
     private int clientID = -1; // default value for non-client network entities with a target script
     private int playerID;
-    private readonly float collisionDamageFactor = 1.5f;
+    private readonly float collisionDamageFactor = 2f;
     private float collisionCooldown = 1f;
     private float nextCollisionDamage;
     private float minCollisionSpeed = 20f;
-    private readonly int CollisionDeathThreshold = 50;
+    //private readonly int CollisionDeathThreshold = 50;
 
     public void Start() {
         playerShip = GetComponentInParent<PlayerShip>();
@@ -35,7 +35,6 @@ public class Target : MonoBehaviour {
         gameManager.UpdatePlayerHealth(playerID, health);
 
         if (playerShip.Health == 0 && hitterID != playerShip.PlayerID && gameManager.IsValidPlayerID(hitterID)) {
-
             gameManager.AddScore(hitterID);
         }
     }
@@ -51,12 +50,7 @@ public class Target : MonoBehaviour {
         if (other.CompareTag("SpaceStructure") && Time.time > nextCollisionDamage) {
             float speed = playerShip.Velocity.magnitude;
             if (speed > minCollisionSpeed) {
-                if (speed > CollisionDeathThreshold) {
-                    TakeDamage((int)(PlayerShip.initialHealth));
-                }
-                else {
-                    TakeDamage((int)(speed * collisionDamageFactor));
-                }
+                TakeDamage((int)(speed * collisionDamageFactor));
                 nextCollisionDamage = Time.time + collisionCooldown;
                 Debug.Log("the ship hit a structure:" + other.name + ", tag: " + other.tag + " speed = " + playerShip.Velocity.magnitude + ", damage: " + (int)(playerShip.Velocity.magnitude * collisionDamageFactor));
                 return;

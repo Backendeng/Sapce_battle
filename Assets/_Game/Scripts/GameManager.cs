@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour {
     private Server serverController;
     public GameObject RespawnMenu;
     public ScoreBoard scoreBoard;
+    public ClientUI clientUI;
 
     private bool isServer;
     private readonly int initialHealth = 100;
@@ -220,7 +221,7 @@ public class GameManager : MonoBehaviour {
             if (PlayerShip.ActiveShip.PlayerID == playerID) {
                 Debug.Log("LOCAL PLAYER DIED");
                 localPlayerLockCounter = 0; //disable all lock warnnings 
-                RespawnMenu.SetActive(true); // activate RespawnMenu
+                clientUI.EnableRespawnScreen();
             }
         }
         scoreBoard.RefreshScoreBoard();

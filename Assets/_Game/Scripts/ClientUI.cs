@@ -7,6 +7,7 @@ public class ClientUI : MonoBehaviour {
     public Client clientController;
     public GameObject StartScreen;
     public GameObject EscapeMenu;
+    public GameObject RespawnScreen;
     public GameObject HUD;
     public HudUI hudUI;
     public Text escapeMenuStatusText;
@@ -41,7 +42,7 @@ public class ClientUI : MonoBehaviour {
                 ScoreBoardView.SetActive(true);
                 Cursor.visible = true;
             }
-            else {
+            else if (RespawnScreen.activeSelf == false) {
                 ScoreBoardView.SetActive(false);
                 Cursor.visible = false;
             }
@@ -69,5 +70,15 @@ public class ClientUI : MonoBehaviour {
     public void QuitGame() {
         // do some stuff before closing client instance
         SceneManager.LoadScene(0);
+    }
+
+    public void EnableRespawnScreen() {
+        RespawnScreen.SetActive(true);
+        ScoreBoardView.SetActive(true);
+    }
+
+    public void DisableRespawnScreen() {
+        RespawnScreen.SetActive(false);
+        ScoreBoardView.SetActive(false);
     }
 }

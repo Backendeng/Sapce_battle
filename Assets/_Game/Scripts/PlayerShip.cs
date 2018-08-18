@@ -91,9 +91,7 @@ public abstract class PlayerShip : NetworkEntity {
         Debug.Log("respawn end after");
         input.EnableInput();
 
-        if (clientController.gameManager.RespawnMenu.activeSelf) { // remove RespawnMenu
-            clientController.gameManager.RespawnMenu.SetActive(false);
-        }
+        clientController.gameManager.clientUI.DisableRespawnScreen();
 
         GetComponentInChildren<ParticleSystem>().Play();
 

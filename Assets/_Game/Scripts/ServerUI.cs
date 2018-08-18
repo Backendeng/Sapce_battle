@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System.Net;
 
 public class ServerUI : MonoBehaviour {
 
@@ -17,7 +18,16 @@ public class ServerUI : MonoBehaviour {
             Debug.LogWarning("ip text field wasn't found");
         }
 
-        ipAddressText.text = string.Format("Host Lan IP Address: {0}", 0 /*Network.player.ipAddress.ToString()*/ );
+        string hostName = Dns.GetHostName();
+
+        string ip = "";
+        foreach (IPAddress i in Dns.GetHostEntry(hostName).AddressList) {
+            if (i.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) {
+                ip = i.ToString();
+            }
+        }
+        
+        ipAddressText.text = string.Format("Host Lan IP Address: {0}", ip);
 
         EscapeMenu.SetActive(false);
     }

@@ -139,10 +139,10 @@ public class GameManager : MonoBehaviour {
         }
         // Update PlayerShip Fields
         if (!isServer) {
-            if (!PlayerShip.ActiveShip) // Active Ship yet to be initiated.
-                return;
+//            if (!PlayerShip.ActiveShip) // Active Ship yet to be initiated.
+//                return;
   
-            if (PlayerShip.ActiveShip.PlayerID == playerID) {
+            if (PlayerShip.ActiveShip && PlayerShip.ActiveShip.PlayerID == playerID) {
                 // if local ship got damaged, make a shake effect
                 int delta_health = health - PlayerShip.ActiveShip.Health;
                 if (delta_health < 0) {
@@ -154,10 +154,9 @@ public class GameManager : MonoBehaviour {
                 Debug.Log("Updating local player ship data: health = " + health + " , score = " + score);
             }
             else {
-                PlayerShip ship = GetShip(playerID);
-                ship.Health = health;
-                ship.Score = score;
-                ship.Deaths = deaths;
+                PlayerShipsDict[playerID].Health = health;
+                PlayerShipsDict[playerID].Score = score;
+                PlayerShipsDict[playerID].Deaths = deaths;
                 Debug.Log("Updating remote player ship data: health = " + health + " , score = " + score);
             }
         }

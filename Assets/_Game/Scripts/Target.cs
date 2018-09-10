@@ -35,11 +35,11 @@ public class Target : MonoBehaviour {
 
         if (playerShip.Health == 0) {
             if (gameManager.IsValidPlayerID(hitterID)) {
-                gameManager.SendPlayerKilledMsg(hitterID, playerShip.PlayerID, 1); // TODO: change 1 to weapon type
-                gameManager.AddKillCredit(hitterID, playerShip.PlayerID, 1);
                 if (hitterID != playerShip.PlayerID) {
                     gameManager.AddScore(hitterID);
                 }
+                gameManager.SendPlayerKilledMsg(hitterID, playerShip.PlayerID, 1); // TODO: change 1 to weapon type
+                gameManager.AddKillCredit(hitterID, playerShip.PlayerID, 1);
             }
             if (hitterID == 0) { // player crashed
                 gameManager.SendPlayerKilledMsg(0, playerShip.PlayerID, 0);

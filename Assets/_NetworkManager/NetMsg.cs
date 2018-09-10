@@ -20,6 +20,7 @@ public abstract class NetMsg {
         SC_PlayerData,
         MSG_ShipCreated,
         MSG_NewPlayerRequest,
+        MSG_PlayerKilled,
     }
 
     public NetMsg(float timeStamp) {
@@ -206,6 +207,23 @@ public class MSG_NewPlayerRequest : NetMsg {
         this.clientID = clientID;
         this.playerName = playerName;
         this.shipType = shipType;
+    }
+}
+
+public class MSG_PlayerKilled : NetMsg {
+    protected int killerID;
+    protected int victimID;
+    protected byte weapon; // 1 = projectile, 2 = missile
+
+    public int KillerID { get { return killerID; } }
+    public int VictimID { get { return victimID; } }
+    public byte Weapon { get { return weapon; } }
+
+    public MSG_PlayerKilled(int killerID, int victimID, byte weapon, float timeStamp) : base(timeStamp) {
+        msgType = (byte)MsgType.MSG_PlayerKilled;
+        this.killerID = killerID;
+        this.victimID = victimID;
+        this.weapon = weapon;
     }
 }
 

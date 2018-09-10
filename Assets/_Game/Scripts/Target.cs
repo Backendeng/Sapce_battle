@@ -10,7 +10,6 @@ public class Target : MonoBehaviour {
     private float collisionCooldown = 1f;
     private float nextCollisionDamage;
     private float minCollisionSpeed = 20f;
-    //private readonly int CollisionDeathThreshold = 50;
 
     public void Start() {
         playerShip = GetComponentInParent<PlayerShip>();
@@ -36,7 +35,9 @@ public class Target : MonoBehaviour {
 
         if (playerShip.Health == 0 && hitterID != playerShip.PlayerID && gameManager.IsValidPlayerID(hitterID)) {
             gameManager.AddScore(hitterID);
-            gameManager.AddKillCredit(playerShip.PlayerID, hitterID);
+            // TODO: send kill message to clients
+            gameManager.SendPlayerKilledMsg(hitterID, playerShip.PlayerID, 1); // TODO: change 1 to weapon type
+            gameManager.AddKillCredit(hitterID, playerShip.PlayerID, 1);
         }
     }
 

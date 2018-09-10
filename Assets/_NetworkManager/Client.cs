@@ -157,6 +157,9 @@ public class Client : MonoBehaviour {
                         case (byte)NetMsg.MsgType.MSG_ShipCreated:
                             ProcessShipCreated(msg);
                             break;
+                        case (byte)NetMsg.MsgType.MSG_PlayerKilled:
+                            ProcessPlayerKilled(msg);
+                            break;
                     }
                     break;
                 case NetworkEventType.DisconnectEvent:
@@ -298,6 +301,12 @@ public class Client : MonoBehaviour {
     private void ProcessPlayerData(NetMsg msg) {
         SC_PlayerData playerDataMsg = (SC_PlayerData)msg;
         gameManager.UpdatePlayerData(playerDataMsg.PlayerID, playerDataMsg.Health, playerDataMsg.Score, playerDataMsg.Deaths);
+    }
+
+    private void ProcessPlayerKilled(NetMsg msg) {
+        MSG_PlayerKilled playerKilledMsg = (MSG_PlayerKilled)msg;
+        gameManager.AddKillCredit(playerKilledMsg.KillerID, playerKilledMsg.VictimID, playerKilledMsg.Weapon);
+        gameManager.KillPlayer(playerKilledMsg.VictimID);
     }
 
     public int GetShipClientID(int entityID) {

@@ -8,7 +8,6 @@ public class MessagesHandler {
 
     public static byte[] NetMsgPack(NetMsg message) {
         byte[] bytesMessage;
-        string jsonMsg;
 
         switch (message.Type) {
             case (byte)NetMsg.MsgType.SC_EntityCreated:
@@ -38,17 +37,15 @@ public class MessagesHandler {
             case (byte)NetMsg.MsgType.MSG_NewPlayerRequest:
                 bytesMessage = PackNewPlayerRequestMsg((MSG_NewPlayerRequest)message);
                 return bytesMessage;
+            case (byte)NetMsg.MsgType.MSG_PlayerKilled:
+                bytesMessage = PackPlayerKilledMsg((MSG_PlayerKilled)message);
+                return bytesMessage;
             default:
-                jsonMsg = "";
+                bytesMessage = new byte[1];
                 break;
         }
-        bytesMessage = System.Text.Encoding.ASCII.GetBytes(jsonMsg);
-        byte[] packedMessage = new byte[headerSize + bytesMessage.Length];
-        packedMessage[0] = message.Type;
-        // copy bytesMessage to packedMessage from index = headerSize
-        bytesMessage.CopyTo(packedMessage, headerSize);
 
-        return packedMessage;
+        return bytesMessage;
     }
 
     public static NetMsg NetMsgUnpack(byte[] packedMessage) {
@@ -83,6 +80,9 @@ public class MessagesHandler {
                 break;
             case (byte)NetMsg.MsgType.MSG_NewPlayerRequest:
                 unpackedMessage = UnpackNewPlayerRequestMsg(packedMessage);
+                break;
+            case (byte)NetMsg.MsgType.MSG_PlayerKilled:
+                unpackedMessage = UnpackPlayerKilledMsg(packedMessage);
                 break;
             default:
                 unpackedMessage = null;
@@ -467,6 +467,35 @@ public class MessagesHandler {
         int clientID = System.BitConverter.ToInt32(packedMessage, 9);
 
         SC_AllocClientID unpacked = new SC_AllocClientID(entityID, timeStamp, clientID);
+
+        return unpacked;
+    }
+
+    private static byte[] PackPlayerKilledMsg(MSG_PlayerKilled message) {
+        byte[] packedMessage = new byte[13 + headerSize];
+        packedMessage[0] = message.Type;
+
+        byte[] timeStamp = System.BitConverter.GetBytes(message.TimeStamp);   // 1
+        byte[] killerID = System.BitConverter.GetBytes(message.KillerID);     // 5
+        byte[] victimID = System.BitConverter.GetBytes(message.VictimID);     // 9
+        // weapon type is a byte so no need to use GetBytes                   // 13
+
+        System.Buffer.BlockCopy(timeStamp, 0, packedMessage, 1, 4);
+        System.Buffer.BlockCopy(killerID, 0, packedMessage, 5, 4);
+        System.Buffer.BlockCopy(victimID, 0, packedMessage, 9, 4);
+        packedMessage[13] = message.Weapon;
+
+        return packedMessage;
+    }
+
+    private static MSG_PlayerKilled UnpackPlayerKilledMsg(byte[] packedMessage) {
+
+        float timeStamp = System.BitConverter.ToSingle(packedMessage, 1);
+        int killerID = System.BitConverter.ToInt32(packedMessage, 5);
+        int victimID = System.BitConverter.ToInt32(packedMessage, 9);
+        byte weapon = packedMessage[10];
+
+        MSG_PlayerKilled unpacked = new MSG_PlayerKilled(killerID, victimID, weapon, timeStamp);
 
         return unpacked;
     }

@@ -29,6 +29,8 @@ public class HudUI : MonoBehaviour {
     public Image FixedCrosshair;
     public Image LockingCircle;
 
+    public Text KillCreditText;
+
     private ShipShootingClient shipShooting;
 
 
@@ -76,6 +78,9 @@ public class HudUI : MonoBehaviour {
             }
             
         }
+
+        // TODO: update killed messages on HUD here
+        KillCreditText.text = gameManager.GetKillCreditText();
     }
 
     private void SetHealthBar(int health) {

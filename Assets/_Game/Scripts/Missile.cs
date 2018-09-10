@@ -26,6 +26,7 @@ public class Missile : NetworkEntity {
     public GameObject missileExplosion;
     private float explosionRadius = 35.0f;
     private float explosionPower = 20.0f;
+    private int missileDamage = 25;
 
     [Tooltip("Lerping")]
     public static bool doLerp = true;
@@ -137,7 +138,7 @@ public class Missile : NetworkEntity {
                 
                 if (!hitPlayers.Contains(hit.gameObject.GetComponent<PlayerShip>().ClientID)) {//prevent mult dmg to same player
                     Debug.Log("Expl hit: player with client id = " + hit.gameObject.GetComponent<PlayerShip>().ClientID);
-                    hit.gameObject.GetComponent<Target>().TakeDamage(25, OwnerID);
+                    hit.gameObject.GetComponent<Target>().TakeDamage(missileDamage, OwnerID);
                 }
                 hitPlayers.Add(hit.gameObject.GetComponent<PlayerShip>().ClientID);
                 continue;

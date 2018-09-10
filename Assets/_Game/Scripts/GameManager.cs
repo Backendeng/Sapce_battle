@@ -19,8 +19,10 @@ public class GameManager : MonoBehaviour {
     private Dictionary<int, int> ClientsDict = new Dictionary<int, int>(); // (ClientID, PlayerID)
     private Dictionary<int, int> PlayersDict = new Dictionary<int, int>(); // (PlayerID, ClientID)
 
-    private Queue<string> killList = new Queue<string>();
+    private string lastKillCredit = "";
     public string localPlayersKiller = "";
+    private readonly float killCreditTimeout = 5f;
+    private float lastKillCreditTime;
 
     private int localPlayerLockCounter = 0;
     public int LocalPlayerLockCounter { set { localPlayerLockCounter = value; } get { return localPlayerLockCounter; } }
@@ -124,6 +126,7 @@ public class GameManager : MonoBehaviour {
     }
 
     // called on server when updating, and on client when receiving SC_PlayerData message from server
+    // currently used from client only. (server uses more specific functions)
     public void UpdatePlayerData(int playerID, int health, int score, int deaths) {
         // Update PlayerDataDict
         if (PlayerDataDict.ContainsKey(playerID)) {
@@ -158,11 +161,10 @@ public class GameManager : MonoBehaviour {
                 Debug.Log("Updating remote player ship data: health = " + health + " , score = " + score);
             }
         }
-
-        if (health == 0) {
-            KillPlayer(playerID);
+        else { // Server
+            SendPlayerDataToClients(playerID);
         }
-        scoreBoard.RefreshScoreBoard();
+
     }
 
     // called on server only
@@ -182,12 +184,22 @@ public class GameManager : MonoBehaviour {
         }
     }
 
-    public void AddKillCredit(int victim, int killer) {
-        killList.Enqueue(string.Format("{0} killed {1}", GetName(killer), GetName(victim)));
+    public void AddKillCredit(int killerID, int victimID, byte weapon) {
+        lastKillCredit = string.Format("{0}  killed  {1}", GetName(killerID), GetName(victimID));
+        lastKillCreditTime = Time.time;
 
-        if (PlayerShip.ActiveShip.PlayerID == victim) {
-            localPlayersKiller = GetName(killer);
+        if (PlayerShip.ActiveShip.PlayerID == victimID) {
+            localPlayersKiller = GetName(killerID); // for the death\respawn screen of the killed player
         }
+
+        //TODO: use the weapon type info to show a matching icon in the kill message
+    }
+
+    public string GetKillCreditText() {
+        if (Time.time < lastKillCreditTime + killCreditTimeout) {
+            return lastKillCredit;
+        }
+        return "";
     }
 
     // called on server only
@@ -226,6 +238,7 @@ public class GameManager : MonoBehaviour {
             PlayerDataDict[playerID].Deaths++;
             ship.Deaths = PlayerDataDict[playerID].Deaths;
             SendPlayerDataToClients(playerID);
+            // kill msg is sent through the TakeDamage func
         }
         else {  // client
             ship.RespawnOnClientStart();
@@ -239,7 +252,11 @@ public class GameManager : MonoBehaviour {
     }
 
     public string GetName(int playerID) {
-        return GetShip(playerID).PlayerName;
+        if (GetShip(playerID)) {
+            return GetShip(playerID).PlayerName;
+        }
+        Debug.LogError("playerID " + playerID + " wasn't found in GetName()");
+        return "";
     }
 
     public PlayerShip GetShip(int playerID) {
@@ -268,13 +285,14 @@ public class GameManager : MonoBehaviour {
 
     // Called on server only
     private void SendPlayerDataToClients(int playerID) {
-        if (!isServer) {
-            Debug.LogError("this should not be called from client");
-            return;
-        }
-
         SC_PlayerData playerDataMessage = new SC_PlayerData(playerID, Time.time, PlayerDataDict[playerID].Health, PlayerDataDict[playerID].Score, PlayerDataDict[playerID].Deaths);
         serverController.EnqueueReliable(playerDataMessage);
+    }
+
+    // Called on server only
+    public void SendPlayerKilledMsg(int killerID, int victimID, byte weapon) {
+        MSG_PlayerKilled playerKilledMsg = new MSG_PlayerKilled(killerID, victimID, weapon, Time.time);
+        serverController.EnqueueReliable(playerKilledMsg);
     }
 
 }

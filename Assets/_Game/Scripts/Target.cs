@@ -33,12 +33,23 @@ public class Target : MonoBehaviour {
         playerShip.Health = health;
         gameManager.UpdatePlayerHealth(playerID, health);
 
-        if (playerShip.Health == 0 && hitterID != playerShip.PlayerID && gameManager.IsValidPlayerID(hitterID)) {
-            gameManager.AddScore(hitterID);
-            // TODO: send kill message to clients
-            gameManager.SendPlayerKilledMsg(hitterID, playerShip.PlayerID, 1); // TODO: change 1 to weapon type
-            gameManager.AddKillCredit(hitterID, playerShip.PlayerID, 1);
+        if (playerShip.Health == 0) {
+            if (gameManager.IsValidPlayerID(hitterID)) {
+                gameManager.SendPlayerKilledMsg(hitterID, playerShip.PlayerID, 1); // TODO: change 1 to weapon type
+                gameManager.AddKillCredit(hitterID, playerShip.PlayerID, 1);
+                if (hitterID != playerShip.PlayerID) {
+                    gameManager.AddScore(hitterID);
+                }
+            }
+            if (hitterID == 0) { // player crashed
+                gameManager.SendPlayerKilledMsg(0, playerShip.PlayerID, 0);
+                gameManager.AddKillCredit(0, playerShip.PlayerID, 0);
+            }
         }
+
+
+
+
     }
 
     void OnTriggerEnter(Collider other) {

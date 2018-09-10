@@ -185,7 +185,16 @@ public class GameManager : MonoBehaviour {
     }
 
     public void AddKillCredit(int killerID, int victimID, byte weapon) {
-        lastKillCredit = string.Format("{0}  killed  {1}", GetName(killerID), GetName(victimID));
+        if (killerID > 0 && killerID != victimID) {
+            lastKillCredit = string.Format("{0} killed {1}", GetName(killerID), GetName(victimID));
+        }
+        else if (killerID == victimID) {
+            lastKillCredit = string.Format("{0} killed himself", GetName(victimID));
+        }
+        else if (killerID <= 0) {
+            lastKillCredit = string.Format("{0} crashed", GetName(victimID));
+        }
+
         lastKillCreditTime = Time.time;
 
         if (PlayerShip.ActiveShip.PlayerID == victimID) {

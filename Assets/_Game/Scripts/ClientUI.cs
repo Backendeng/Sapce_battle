@@ -76,7 +76,8 @@ public class ClientUI : MonoBehaviour {
     public void EnableRespawnScreen() {
         RespawnScreen.SetActive(true);
         ScoreBoardView.SetActive(true);
-        if(gameManager.localPlayersKiller != "") {
+        //Debug.Log("getting the name of your killer: " + gameManager.localPlayersKiller);
+        if (gameManager.localPlayersKiller != "") {
             RespawnScreenKilledByText.text = string.Format("You Were Blasted By {0}", gameManager.localPlayersKiller);
         }
         else {

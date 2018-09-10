@@ -198,6 +198,7 @@ public class GameManager : MonoBehaviour {
 
         if (!isServer && PlayerShip.ActiveShip.PlayerID == victimID) {
             localPlayersKiller = GetName(killerID); // for the death\respawn screen of the killed player
+            //Debug.Log("updaing the name of your killer: " + localPlayersKiller);
         }
 
         //TODO: use the weapon type info to show a matching icon in the kill message
@@ -267,6 +268,7 @@ public class GameManager : MonoBehaviour {
         return "";
     }
 
+    // Note: On Client: this gets a copy of the ship! not a reference
     public PlayerShip GetShip(int playerID) {
         if (!PlayerShipsDict.ContainsKey(playerID)) {
             return null;

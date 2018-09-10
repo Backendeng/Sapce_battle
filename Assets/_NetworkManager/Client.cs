@@ -305,8 +305,8 @@ public class Client : MonoBehaviour {
 
     private void ProcessPlayerKilled(NetMsg msg) {
         MSG_PlayerKilled playerKilledMsg = (MSG_PlayerKilled)msg;
-        gameManager.KillPlayer(playerKilledMsg.VictimID);
         gameManager.AddKillCredit(playerKilledMsg.KillerID, playerKilledMsg.VictimID, playerKilledMsg.Weapon);
+        gameManager.KillPlayer(playerKilledMsg.VictimID);
     }
 
     public int GetShipClientID(int entityID) {

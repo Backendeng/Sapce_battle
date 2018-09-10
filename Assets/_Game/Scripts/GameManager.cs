@@ -197,7 +197,7 @@ public class GameManager : MonoBehaviour {
 
         lastKillCreditTime = Time.time;
 
-        if (PlayerShip.ActiveShip.PlayerID == victimID) {
+        if (!isServer && PlayerShip.ActiveShip.PlayerID == victimID) {
             localPlayersKiller = GetName(killerID); // for the death\respawn screen of the killed player
         }
 

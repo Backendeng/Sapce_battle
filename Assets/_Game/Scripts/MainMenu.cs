@@ -17,6 +17,8 @@ public class MainMenu : MonoBehaviour {
     public static int ErrorNum { get { return errorNum; } set { errorNum = value; } }
     private readonly int maxNameLen = 15;
 
+    byte shipType = 1;
+
     public void Start() {
         Cursor.visible = true;
         AudioListener.pause = false;
@@ -75,7 +77,6 @@ public class MainMenu : MonoBehaviour {
             playMenuStatusText.text = "Maximum name length is " + maxNameLen + " characters";
             return;
         }
-        byte shipType = 1; //TODO: implement ship type selection
 
         Client.ClientInitData.PlayerName = playerName;
         Client.ClientInitData.ShipType = shipType;
@@ -101,6 +102,21 @@ public class MainMenu : MonoBehaviour {
 
     public void HostGame() {
         SceneManager.LoadScene(1);
+    }
+
+    public void SetShipType1() {
+        shipType = 1;
+        Debug.Log("set ship type to 1");
+    }
+
+    public void SetShipType2() {
+        shipType = 2;
+        Debug.Log("set ship type to 2");
+    }
+
+    public void SetShipType3() {
+        shipType = 3;
+        Debug.Log("set ship type to 3");
     }
 
 }

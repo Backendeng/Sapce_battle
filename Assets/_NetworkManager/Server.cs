@@ -23,7 +23,9 @@ public class Server : MonoBehaviour {
     Queue<NetMsg> outgoingUnReliable = new Queue<NetMsg>();
 
     //move these to some kind of dict by object type  FACTOR THIS OUT
-    public GameObject remotePlayer;   // player prefab                  TODO: spawner
+    public GameObject remotePlayer1;   // player prefab                  TODO: spawner
+    public GameObject remotePlayer2;   // player prefab
+    public GameObject remotePlayer3;   // player prefab
     public Transform playerSpawn;     // player spawn location
     public GameObject missile;
     public GameObject projectile;
@@ -180,7 +182,23 @@ public class Server : MonoBehaviour {
         gameManager.SendAllGameDataToNewClient(recConnectionId);
 
         int entityId;
-        //TODO: add switch case to create different ships
+      
+        GameObject remotePlayer;
+        switch (msg.ShipType) {
+            case 1:
+                remotePlayer = remotePlayer1;
+                break;
+            case 2:
+                remotePlayer = remotePlayer2;
+                break;
+            case 3:
+                remotePlayer = remotePlayer3;
+                break;
+            default:
+                remotePlayer = remotePlayer1;
+                break;
+        }
+
         GameObject newShip = entityManager.CreateEntity(remotePlayer, playerSpawn.position, playerSpawn.rotation, (byte)NetworkEntity.ObjType.Player, out entityId);
         newShip.GetComponent<PlayerShip>().SetInitShipData(entityId, recConnectionId, msg.PlayerName, msg.ShipType);
 

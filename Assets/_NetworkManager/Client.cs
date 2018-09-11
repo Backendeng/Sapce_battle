@@ -9,8 +9,12 @@ public class Client : MonoBehaviour {
     public GameManager gameManager;
 
     //PUT THIS INTO A DICT AND THEN processEntityCreated can use it instead of a switch clause
-    public GameObject localPlayer;         // player prefab
-    public GameObject remotePlayer;
+    public GameObject localPlayer1;         // player prefab
+    public GameObject localPlayer2;
+    public GameObject localPlayer3;
+    public GameObject remotePlayer1;
+    public GameObject remotePlayer2;
+    public GameObject remotePlayer3;
     public GameObject missile;
     public GameObject astroid;
     public GameObject projectile;
@@ -225,7 +229,29 @@ public class Client : MonoBehaviour {
         MSG_ShipCreated createMsg = (MSG_ShipCreated)msg;
         GameObject newShip = null;
 
-        //TODO: add switch case to create different ships
+        GameObject remotePlayer;
+        GameObject localPlayer;
+
+        switch (createMsg.ShipType) {
+            case 1:
+                remotePlayer = remotePlayer1;
+                localPlayer = localPlayer1;
+                break;
+            case 2:
+                remotePlayer = remotePlayer2;
+                localPlayer = localPlayer2;
+                break;
+            case 3:
+                remotePlayer = remotePlayer3;
+                localPlayer = localPlayer3;
+                break;
+            default:
+                remotePlayer = remotePlayer1;
+                localPlayer = localPlayer1;
+                break;
+        }
+
+       
         if (clientID == createMsg.ClientID) { 
             newShip = Instantiate(localPlayer, createMsg.Position, createMsg.Rotation);//localPlayer
             playerAvatarCreated = true;

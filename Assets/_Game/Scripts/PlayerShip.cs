@@ -58,12 +58,9 @@ public abstract class PlayerShip : NetworkEntity {
             return;
         }
         ShipShootingClient shipShooting = ActiveShip.GetComponent<ShipShootingClient>();
-        shipShooting.lockTargetID = -1;
-        /*
-        if (shipShooting.lockTargetID == PlayerID) { // disable locking in hud
+        if (shipShooting.lockTargetID == PlayerID || ActiveShip.PlayerID == PlayerID) { // disable locking in hud for local player that is locked on this ship, or for local ship
             shipShooting.lockTargetID = -1;
         }
-        */
 
         if (isDead)
             return;

@@ -21,7 +21,7 @@ public class GameManager : MonoBehaviour {
 
     private string lastKillCredit = "";
     public string localPlayersKiller = "";
-    private readonly float killCreditTimeout = 5f;
+    private readonly float killCreditTimeout = 10f;
     private float lastKillCreditTime;
 
     private int localPlayerLockCounter = 0;

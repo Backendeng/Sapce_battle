@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[RequireComponent(typeof(PlayerShip))]
+
 
 public class EngineEmission : MonoBehaviour {
 

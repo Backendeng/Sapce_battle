@@ -20,8 +20,8 @@ public class ShipShootingClient : MonoBehaviour {
     private float lockRadius;
     private Vector2 screenCenter;
     public int lockTargetID = -1;
-    private float lockTime = 5f;
-    private float unlockTime = 0f;
+    //private float lockTime = 5f;
+    //private float unlockTime = 0f;
 
     [Header("Shooting")]
     private readonly float fireRate1 = 0.1f;
@@ -51,9 +51,11 @@ public class ShipShootingClient : MonoBehaviour {
             nextEnergyCharge = Time.time + energyChargeRate;
             energy++;
         }
+        /*
         if (Time.time > unlockTime) {
             lockTargetID = -1;
         }
+        */
     }
 
     public void Init(Client clientController, int entityID) {
@@ -68,12 +70,12 @@ public class ShipShootingClient : MonoBehaviour {
         // Secondary Shot - Missiles
         if ((Input.GetButtonDown("LeftTrigger") || Input.GetMouseButtonDown(1))) {
             lockTargetID = LockOnTarget();
-            unlockTime = Time.time + lockTime;
+            //unlockTime = Time.time + lockTime;
         }
         if (Time.time > nextFire2 && (Input.GetButtonUp("LeftTrigger") || Input.GetMouseButtonUp(1))) {
             nextFire2 = Time.time + fireRate2;
             ShootMissile(shotSpawn.position, shotSpawn.rotation);
-            unlockTime = Time.time + Missile.timeout + 2f;
+            //unlockTime = Time.time + Missile.timeout + 2f;
         }
         // Primary Shot - Projectile
         if (Time.time > nextFire1 && energy > energyDrain && (Input.GetButton("RightTrigger") || Input.GetMouseButton(0))) {

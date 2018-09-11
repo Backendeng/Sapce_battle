@@ -65,9 +65,9 @@ public abstract class PlayerShip : NetworkEntity {
             return;
         Debug.Log("respawn start");
         input.DisableInput();
-        Destroy(Instantiate(ShipExplosion, transform.position, Quaternion.identity), 5);/// dosnt work?>
+        Destroy(Instantiate(ShipExplosion, transform.position, Quaternion.identity), 10);
 
-        foreach (Collider c in GetComponentsInChildren<Collider>()) { // BUG: with this adde we see engine particles after ship explodes??
+        foreach (Collider c in GetComponentsInChildren<Collider>()) {
             c.enabled = false;
         }
                 

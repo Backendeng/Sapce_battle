@@ -65,10 +65,10 @@ public class PlayerShipInput : MonoBehaviour {
 		if (useMouseInput)
         {
             SetStickCommandsUsingMouse();
-            throttle = Input.GetAxis("Vertical");
+            throttle = Mathf.Clamp(Input.GetAxis("Vertical"), -0.3f, 1f); // restricting max backwards speed
             roll = -Input.GetAxis("Horizontal");
         }
-        else // controller with analog stick
+        else // controller with analog stick //TODO: work on xbox controller input
         {
             pitch = Input.GetAxis("Vertical") * analogStickSensitivity;
             if (addRoll)

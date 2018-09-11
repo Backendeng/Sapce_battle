@@ -16,14 +16,18 @@ public class HudUI : MonoBehaviour {
     public Image EnergyBarImage;
     public Text EnergyBarText;
 
+    public Image SpeedBarImage;
+    public Image BoostBarImage;
+
     public Text ScoreText;
+    public Text DeathsText;
+    public Text NameText;
 
     public GameObject EnemyTarget;
     public Image EnemyHealthBarImage;
     public Text EnemyText;
     public Image LockedTargetCircle;
 
-    private Text leftPanelText;
     public Text lockedWarningText;
 
     public Image FixedCrosshair;
@@ -34,10 +38,6 @@ public class HudUI : MonoBehaviour {
     private ShipShootingClient shipShooting;
 
 
-    private void Awake() {
-        leftPanelText = GetComponent<Text>();
-    }
-
     private void Start() {
         
         shipShooting = PlayerShip.ActiveShip.GetComponent<ShipShootingClient>();
@@ -47,16 +47,21 @@ public class HudUI : MonoBehaviour {
         }
         LockedTargetCircle.enabled = false;
         EnemyTarget.SetActive(false);
+
+        NameText.text = PlayerShip.ActiveShip.PlayerName;
     }
 
     void Update()
     {
         PlayerShip ship = PlayerShip.ActiveShip;
         if (ship != null) {
-            leftPanelText.text = string.Format("SPEED: {0}\nBOOST: {1}\nDEATHS: {2}\nName: {3}", ship.Velocity.magnitude.ToString("000"), ship.Boost, ship.Deaths, ship.PlayerName);
             SetHealthBar(ship.Health);
             SetEnergyBar(ship.GetComponent<ShipShootingClient>().Energy);
-            ScoreText.text = string.Format("SCORE: {0}", ship.Score);
+            ScoreText.text = ship.Score.ToString();
+            DeathsText.text = ship.Deaths.ToString();
+            SetSpeedBar(ship.Velocity.magnitude);
+            SetBoostBar(ship.Boost);
+
         }
 
         if(gameManager.LocalPlayerLockCounter > 0) {
@@ -85,12 +90,20 @@ public class HudUI : MonoBehaviour {
 
     private void SetHealthBar(int health) {
         HealthBarImage.fillAmount = health / 100f;
-        HealthBarText.text = string.Format("HEALTH: {0}", health);
+        HealthBarText.text = health.ToString();
     }
 
     private void SetEnergyBar(int energy) {
         EnergyBarImage.fillAmount = energy / 100f;
-        EnergyBarText.text = string.Format("ENERGY: {0}", energy);
+        EnergyBarText.text = energy.ToString();
+    }
+
+    private void SetSpeedBar(float speed) {
+        SpeedBarImage.fillAmount = speed / 100f;
+    }
+
+    private void SetBoostBar(float boost) {
+        BoostBarImage.fillAmount = boost / 100f;
     }
 
     private void UpdateEnemyTarget() {
@@ -103,7 +116,7 @@ public class HudUI : MonoBehaviour {
 
         EnemyTarget.SetActive(true);
         EnemyHealthBarImage.fillAmount = gameManager.GetHealth(targetPlayerID) / 100f;
-        EnemyText.text = string.Format("TARGET LOCKED:\nENEMY: {0}", gameManager.GetName(targetPlayerID));
+        EnemyText.text = gameManager.GetName(targetPlayerID);
 
         LockedTargetCircle.enabled = true;
 

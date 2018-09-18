@@ -185,18 +185,18 @@ public class GameManager : MonoBehaviour {
 
     public void AddKillCredit(int killerID, int victimID, byte weapon) {
         if (killerID > 0 && killerID != victimID) {
-            lastKillCredit = string.Format("{0} killed {1}", GetName(killerID), GetName(victimID));
+            lastKillCredit = string.Format("{0} Killed {1}", GetName(killerID), GetName(victimID));
         }
         else if (killerID == victimID) {
-            lastKillCredit = string.Format("{0} killed himself", GetName(victimID));
+            lastKillCredit = string.Format("{0} Killed Himself", GetName(victimID));
         }
         else if (killerID <= 0) {
-            lastKillCredit = string.Format("{0} crashed", GetName(victimID));
+            lastKillCredit = string.Format("{0} Crashed", GetName(victimID));
         }
 
         lastKillCreditTime = Time.time;
 
-        if (!isServer && PlayerShip.ActiveShip.PlayerID == victimID) {
+        if (!isServer && killerID > 0 && PlayerShip.ActiveShip.PlayerID == victimID) {
             localPlayersKiller = GetName(killerID); // for the death\respawn screen of the killed player
             //Debug.Log("updaing the name of your killer: " + localPlayersKiller);
         }
@@ -270,10 +270,6 @@ public class GameManager : MonoBehaviour {
 
     // Note: On Client: this gets a copy of the ship! not a reference
     public PlayerShip GetShip(int playerID) {
-        if (!PlayerShipsDict.ContainsKey(playerID)) {
-            return null;
-        }
-
         if (isServer) {
             return serverController.GetShipOnServer(playerID);
         }

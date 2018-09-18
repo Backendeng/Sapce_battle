@@ -30,10 +30,11 @@ public class ShipShootingClient : MonoBehaviour {
     private float nextFire2;
     private readonly float rayRange = 1000f;
     private int energy = 100;
-    private int maxEnergy = 100;
+    private readonly int maxEnergy = 100;
     private readonly float energyChargeRate = 0.1f;
     private float nextEnergyCharge;
-    private int energyDrain = 5;
+    private readonly int energyDrain = 5;
+    private readonly int missileEnergyDrain = 75;
 
     public int Energy { get { return energy; } }
 
@@ -63,16 +64,16 @@ public class ShipShootingClient : MonoBehaviour {
     }
 
     public void ResetEnergy() {
-        energy = 100;
+        energy = maxEnergy;
     }
 
     public void HandleShooting() {
         // Secondary Shot - Missiles
-        if ((Input.GetButtonDown("LeftTrigger") || Input.GetMouseButtonDown(1))) {
+        if ((Input.GetButtonDown("LeftTrigger") || Input.GetMouseButtonDown(1)) || Input.GetKeyDown(KeyCode.LeftShift)) {
             lockTargetID = LockOnTarget();
             //unlockTime = Time.time + lockTime;
         }
-        if (Time.time > nextFire2 && (Input.GetButtonUp("LeftTrigger") || Input.GetMouseButtonUp(1))) {
+        if (Time.time > nextFire2 && energy > missileEnergyDrain && (Input.GetButtonUp("LeftTrigger") || Input.GetMouseButtonUp(1) || Input.GetKeyDown(KeyCode.R)) ) {
             nextFire2 = Time.time + fireRate2;
             ShootMissile(shotSpawn.position, shotSpawn.rotation);
             //unlockTime = Time.time + Missile.timeout + 2f;
@@ -90,6 +91,7 @@ public class ShipShootingClient : MonoBehaviour {
         Debug.Log("Hit id: " + targetId);
         
         clientController.SendMissileToHost((byte)NetworkEntity.ObjType.Missile, pos, rot, targetId, netTimeStamp);
+        energy -= missileEnergyDrain;
         //audioSource.clip = missileSoundClip;
         //audioSource.Play();
     }

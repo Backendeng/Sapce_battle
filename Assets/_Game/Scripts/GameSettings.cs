@@ -10,9 +10,26 @@ public class GameSettings : MonoBehaviour {
     private bool shipLerp = true;
     private bool missileLerp = true;
 
+    public struct Controls {
+        public static float mouseStickSensitivity = 0.5f;
+        public static float analogStickSensitivity = 0.15f;
+        public static float mouseRollMul = 1f;
+        public static float analogStickRollMul = 6f;
+    }
+
     public Text statusText;
     public InputField portInputField;
     private int defaultPort = 8888;
+
+    public Text MouseStickSensitivityText;
+    public Text AnalogStickSensitivityText;
+    public Text MouseRollMulText;
+    public Text AnalogStickRollMulText;
+
+    public Slider MouseStickSensitivitySlider;
+    public Slider AnalogStickSensitivitySlider;
+    public Slider MouseRollMulSlider;
+    public Slider AnalogStickRollMulSlider;
 
     public void Start() {
         statusText.text = "";
@@ -20,9 +37,9 @@ public class GameSettings : MonoBehaviour {
         PlayerShipInput.useAutoPilot = useAutoPilot;
         LocalPlayerShip.showUnsmoothedShadow = showUnsmoothedShadowEnabled;
         LocalPlayerShip.showInterpolatedShadow = showInterpolatedShadowEnabled;
-        PlayerShipInput.useMouseInput = !useXboxController;
         RemotePlayerShipClient.doLerp = shipLerp;
         Missile.doLerp = missileLerp;
+        ResetControlsSettings();
     }
 
     private void Update() {
@@ -38,6 +55,16 @@ public class GameSettings : MonoBehaviour {
                 statusText.text = "";
             }
         }
+    }
+
+    public void ResetControlsSettings() {
+        SetMouseStickSensitivity(0.5f);
+        SetAnalogStickSensitivity(0.15f);
+        SetMouseRollMul(1f);
+        SetAnalogStickRollMul(6f);
+        
+        useXboxController = false;
+        PlayerShipInput.useMouseInput = !useXboxController;
     }
 
     public void ToggleSaveLogs() {
@@ -92,6 +119,30 @@ public class GameSettings : MonoBehaviour {
             Client.outPort = defaultPort;
             Debug.Log("port set to " + defaultPort);
         }
+    }
+
+    public void SetMouseStickSensitivity(float value) {
+        Controls.mouseStickSensitivity = value;
+        MouseStickSensitivitySlider.value = value;
+        MouseStickSensitivityText.text = value.ToString("F2");
+    }
+
+    public void SetAnalogStickSensitivity(float value) {
+        Controls.analogStickSensitivity = value;
+        AnalogStickSensitivitySlider.value = value;
+        AnalogStickSensitivityText.text = value.ToString("F2");
+    }
+
+    public void SetMouseRollMul(float value) {
+        Controls.mouseRollMul = value;
+        MouseRollMulSlider.value = value;
+        MouseRollMulText.text = value.ToString("F2");
+    }
+
+    public void SetAnalogStickRollMul(float value) {
+        Controls.analogStickRollMul = value;
+        AnalogStickRollMulSlider.value = value;
+        AnalogStickRollMulText.text = value.ToString("F2");
     }
 
 }

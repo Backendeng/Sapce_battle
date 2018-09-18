@@ -69,7 +69,7 @@ public class ShipShootingClient : MonoBehaviour {
 
     public void HandleShooting() {
         // Secondary Shot - Missiles
-        if ((Input.GetButtonDown("LeftTrigger") || Input.GetMouseButtonDown(1)) || Input.GetKeyDown(KeyCode.LeftShift)) {
+        if ((Input.GetButton("LeftTrigger") || Input.GetMouseButtonDown(1)) || Input.GetKeyDown(KeyCode.LeftShift)) {
             lockTargetID = LockOnTarget();
             //unlockTime = Time.time + lockTime;
         }

@@ -10,7 +10,7 @@ public class MouseCrosshair : MonoBehaviour
     {
         crosshair = GetComponent<Image>();
 
-        crosshair.enabled = PlayerShipInput.useMouseInput;
+        crosshair.enabled = true; // PlayerShipInput.useMouseInput;
         
         if (crosshair.enabled) {
             Cursor.visible = false;

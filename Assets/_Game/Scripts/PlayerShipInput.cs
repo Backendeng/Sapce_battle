@@ -11,13 +11,16 @@ public class PlayerShipInput : MonoBehaviour {
     public static bool useAutoPilot = false;
 
     [Tooltip("add roll when using yaw")]
-    public bool addRoll = true;
-    [Tooltip("amount of roll added when using yaw")]
-    public float rollMul = 0.5f;
-    [Tooltip("set mouse stick sensitivity")]
-    public float mouseStickSensitivity = 0.5f;
+    public bool addRoll = false;
 
-    public float analogStickSensitivity = 0.5f;
+    [Tooltip("amount of roll")]
+    private float mouseRollMul = GameSettings.Controls.mouseRollMul;
+    private float analogStickRollMul = GameSettings.Controls.analogStickRollMul;
+
+    [Tooltip("set mouse stick sensitivity")]
+    private float mouseStickSensitivity = GameSettings.Controls.mouseStickSensitivity;
+    [Tooltip("set analog stick sensitivity")]
+    private float analogStickSensitivity = GameSettings.Controls.analogStickSensitivity;
 
     private int crosshairYOffset = 15;
 
@@ -66,19 +69,19 @@ public class PlayerShipInput : MonoBehaviour {
         {
             SetStickCommandsUsingMouse();
             throttle = Mathf.Clamp(Input.GetAxis("Vertical"), -0.3f, 1f); // restricting max backwards speed
-            roll = -Input.GetAxis("Horizontal");
+            roll = -Input.GetAxis("Horizontal") * mouseRollMul;
         }
         else // controller with analog stick //TODO: work on xbox controller input
         {
-            pitch = Input.GetAxis("Vertical") * analogStickSensitivity;
+            pitch = -Input.GetAxis("Vertical") * analogStickSensitivity;
             if (addRoll)
-                roll = -Input.GetAxis("Horizontal") * rollMul;
+                roll = -Input.GetAxis("Horizontal") * analogStickRollMul;
             if (Input.GetButton("X"))
                 throttle = 1;
             else
                 throttle = 0;
             if (Input.GetAxis("LeftTrigger") > 0)
-                roll = -Input.GetAxis("Horizontal") * analogStickSensitivity;
+                roll = -Input.GetAxis("Horizontal") * analogStickSensitivity * analogStickRollMul;
             else
             {
                 yaw = Input.GetAxis("Horizontal") * analogStickSensitivity;
@@ -86,7 +89,7 @@ public class PlayerShipInput : MonoBehaviour {
             }
         }
 
-        if (Input.GetKey(KeyCode.Space)) {
+        if (Input.GetKey(KeyCode.Space) || Input.GetButton("A")) {
             boost_pressed = true;
         } else {
             boost_pressed = false;

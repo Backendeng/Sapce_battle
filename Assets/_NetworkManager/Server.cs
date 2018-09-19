@@ -38,6 +38,8 @@ public class Server : MonoBehaviour {
     // Use this for initialization
     void Start ()
     {
+        Application.targetFrameRate = 60;
+
         Logger.AddPrefix("Server");
         NetworkTransport.Init();
 

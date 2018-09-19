@@ -47,6 +47,8 @@ public class Client : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
+        Application.targetFrameRate = -1;
+
         Logger.AddPrefix("Client");
         NetworkTransport.Init();
         Connect();

@@ -69,17 +69,17 @@ public class ShipShootingClient : MonoBehaviour {
 
     public void HandleShooting() {
         // Secondary Shot - Missiles
-        if ((Input.GetButton("LeftTrigger") || Input.GetMouseButtonDown(1)) || Input.GetKeyDown(KeyCode.LeftShift)) {
+        if ((Input.GetButtonDown("RightBumper") || Input.GetMouseButtonDown(1)) || Input.GetKey(KeyCode.LeftShift) || Input.GetButton("LeftBumper")) {
             lockTargetID = LockOnTarget();
             //unlockTime = Time.time + lockTime;
         }
-        if (Time.time > nextFire2 && energy > missileEnergyDrain && (Input.GetButtonUp("LeftTrigger") || Input.GetMouseButtonUp(1) || Input.GetKeyDown(KeyCode.R)) ) {
+        if (Time.time > nextFire2 && energy > missileEnergyDrain && (Input.GetButtonUp("RightBumper") || Input.GetButton("Y") || Input.GetMouseButtonUp(1) || Input.GetKey(KeyCode.R)) ) {
             nextFire2 = Time.time + fireRate2;
             ShootMissile(shotSpawn.position, shotSpawn.rotation);
             //unlockTime = Time.time + Missile.timeout + 2f;
         }
         // Primary Shot - Projectile
-        if (Time.time > nextFire1 && energy > energyDrain && (Input.GetButton("RightTrigger") || Input.GetMouseButton(0))) {
+        if (Time.time > nextFire1 && energy > energyDrain && (Input.GetAxis("RightTrigger") > 0 || Input.GetMouseButton(0))) {
             nextFire1 = Time.time + fireRate1;
             ShootProjectile(shotSpawn.position, shotSpawn.rotation);
         }

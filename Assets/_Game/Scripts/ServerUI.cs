@@ -27,7 +27,7 @@ public class ServerUI : MonoBehaviour {
             }
         }
         
-        ipAddressText.text = string.Format("Host Lan IP Address: {0}", ip);
+        ipAddressText.text = string.Format("Host Lan IP: {0}", ip);
 
         EscapeMenu.SetActive(false);
     }

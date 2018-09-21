@@ -69,6 +69,7 @@ public class Projectile : NetworkEntity {
         if (!isServer && OwnerID == -1) { // do local effect only for mock projectile. server should calculate hit later
             Destroy(Instantiate(PT_Explosion, transform.position, Quaternion.identity), 1); 
             active = false;
+            Explode();
             return;
         }
 

@@ -32,6 +32,9 @@ public class Missile : NetworkEntity {
     public static bool doLerp = true;
     MovementInterpolator movementInterpolator;
 
+    private bool explodeOnInit = false;
+    public bool ExplodeOnInit { set { explodeOnInit = value; } }
+
     public new void Start() {
         base.Start();
         rigid_body = GetComponent<Rigidbody>();
@@ -45,6 +48,10 @@ public class Missile : NetworkEntity {
             //  GetComponent<CapsuleCollider>().enabled = false;
         }
         created = true;
+
+        if (isServer && explodeOnInit) {
+            Explode();
+        }
 
         if(!isServer && isTargetingPlayer) { //  lock warnning for local player 
             clientController.gameManager.LocalPlayerLockCounter++;
@@ -122,7 +129,7 @@ public class Missile : NetworkEntity {
     }
 
     private bool exploaded = false;
-    void Explode() {
+    public void Explode() {
         if (exploaded || !created)
             return;
         exploaded = true;
@@ -203,5 +210,6 @@ public class Missile : NetworkEntity {
         }
 
     }
+
 
 }

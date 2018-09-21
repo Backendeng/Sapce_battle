@@ -244,28 +244,47 @@ public class Server : MonoBehaviour {
 
         GameObject newObject = entityManager.CreateEntity(missile, position, msg.Rotation, (byte)NetworkEntity.ObjType.Missile, out newEntityID);
 
-		if (newObject == null || newEntityID == -1)
+        if (newObject == null || newEntityID == -1)
 			Debug.LogError("Entity Creation failed");
 
-        entityManager.netEntities[newEntityID].GetComponent<Missile>().OwnerID = gameManager.GetPlayerID(clientID);// mark the owner of this missile
+        Missile newMissile = entityManager.netEntities[newEntityID].GetComponent<Missile>();
+
+        newMissile.OwnerID = gameManager.GetPlayerID(clientID);// mark the owner of this missile
         int tergetPlayerID = -1;
         if (msg.TargetId > 0) {////more proofing needed
-            entityManager.netEntities[newEntityID].GetComponent<Missile>().Target = entityManager.netEntities[msg.TargetId].transform; // mark the target of this missile
-            entityManager.netEntities[newEntityID].GetComponent<Missile>().TargetScript = entityManager.netEntities[msg.TargetId].GetComponent<PlayerShip>();
+            newMissile.Target = entityManager.netEntities[msg.TargetId].transform; // mark the target of this missile
+            newMissile.TargetScript = entityManager.netEntities[msg.TargetId].GetComponent<PlayerShip>();
             tergetPlayerID = msg.TargetId;
         }
         SC_EntityCreated mssg = new SC_EntityCreated(newEntityID, msg.TimeStamp, position, msg.Rotation, tergetPlayerID, (byte)NetworkEntity.ObjType.Missile);
 		outgoingReliable.Enqueue(mssg);
-	}
+
+        // point blank raycast: if hit anything explode
+        Transform hit = ShootRay(msg.Position, msg.Rotation * Vector3.forward, Vector3.Magnitude(position - msg.Position));
+        if (hit && !hit.CompareTag("Missile")) {
+            newMissile.ExplodeOnInit = true;
+        }
+    }
 
 	private void CreateRequestedProjectile(CS_ProjectileRequest msg, int clientID) {
 		byte error;
 		int newEntityID = -1;
 		float msgDelayTime = (float)NetworkTransport.GetRemoteDelayTimeMS(hostId, clientID, (int)msg.TimeStamp, out error) / 1000;
 		Vector3 position = msg.Position + (msg.Rotation * Vector3.forward * Projectile.Speed * msgDelayTime );
-		//Debug.Log("msg delay time for shot: " + msgDelayTime);
+        //Debug.Log("msg delay time for shot: " + msgDelayTime);
 
-		GameObject newObject = entityManager.CreateEntity(projectile, position, msg.Rotation, (byte)NetworkEntity.ObjType.Projectile, out newEntityID);
+        // point blank raycast if hit return after interaction
+        Transform hit = ShootRay(msg.Position, msg.Rotation * Vector3.forward, Vector3.Magnitude(position - msg.Position));
+        if (hit) {
+            if (hit.CompareTag("Player")) {
+                hit.gameObject.GetComponent<Target>().TakeDamage(Projectile.Damage, gameManager.GetPlayerID(clientID));
+            } else if (hit.CompareTag("Missile")){
+                hit.gameObject.GetComponent<Missile>().Explode();
+            }
+            return;
+        }
+
+        GameObject newObject = entityManager.CreateEntity(projectile, position, msg.Rotation, (byte)NetworkEntity.ObjType.Projectile, out newEntityID);
 
 		if (newObject == null || newEntityID == -1)
 			Debug.LogError("Entity Creation failed");
@@ -413,6 +432,19 @@ public class Server : MonoBehaviour {
             return null;
         }
         return connectedPlayers[clientID].GetComponent<PlayerShip>(); //nullref
+    }
+
+    private Transform ShootRay(Vector3 origin, Vector3 direction, float range) { // used for point blank shooting on server.
+
+        RaycastHit hit;
+
+        if (Physics.Raycast(origin, direction, out hit, range)) {
+
+            Debug.Log("Hit: " + hit.transform.name);
+            return hit.transform;
+ 
+        }
+        return null;
     }
 
 }

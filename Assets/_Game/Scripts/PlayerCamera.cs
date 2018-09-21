@@ -16,22 +16,22 @@ public class PlayerCamera : MonoBehaviour {
     private float dec_cam_travel = 0;
     private bool decelerating = false;
 
-    private void Start ()
-    {
-        target = transform.parent;
-
-        if (!target)
-            Debug.LogWarning(name + ": PlayerCamera has no target");
-        if (!transform.parent)
-            Debug.LogWarning(name + ": PlayerCamera has no parent to derive the initial offset from.");
-
-        startOffset = transform.localPosition;
-        transform.SetParent(null);
-
-	}
+    private LocalPlayerShip localShip;
   
     private void FixedUpdate() {
-        bool isBoosting = target.GetComponent<LocalPlayerShip>().boosting;
+        if (!localShip)
+        {
+            localShip = FindObjectOfType<LocalPlayerShip>();
+            if (!localShip)
+                return;
+
+            target = localShip.transform;
+            transform.SetParent(target);
+            startOffset = new Vector3(0f, 8f, -24.6f);
+            Debug.Log("camera found ship");
+        }
+
+        bool isBoosting = localShip.boosting;
 
         if (target && !isBoosting) {
             cam_travel = 0f;

@@ -32,6 +32,7 @@ public class LocalPlayerShip : PlayerShip {
     private AudioSource enginesSound;
     private float enginesSoundVolume = 0.08f;
 
+
     private new void Awake() {
         base.Awake();
     }
@@ -66,6 +67,10 @@ public class LocalPlayerShip : PlayerShip {
 
 
     private void Update() {
+
+        if (!cameraGlitch) {
+            cameraGlitch = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Kino.AnalogGlitch>();
+        }
 
         if (cameraGlitch.enabled && Time.time > glitchEndTime) {
             cameraGlitch.enabled = false;

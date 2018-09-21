@@ -9,7 +9,7 @@ public class Projectile : NetworkEntity {
     public int OwnerID { get; set; } // -1 means mock projectile.
 
     public static readonly int Damage = 10;
-    private static readonly float speed = 400f;
+    private static readonly float speed = 800f;
     public static float Speed { get { return speed; } }
 
     private bool active = true;
@@ -69,7 +69,9 @@ public class Projectile : NetworkEntity {
         if (!isServer && OwnerID == -1) { // do local effect only for mock projectile. server should calculate hit later
             Destroy(Instantiate(PT_Explosion, transform.position, Quaternion.identity), 1); 
             active = false;
-            Explode();
+            ////
+            DestroyProjectile();
+            
             return;
         }
 

@@ -11,7 +11,7 @@ public class PlayerCamera : MonoBehaviour {
     private Vector3 startOffset;
 
     private Vector3 additional_offset = new Vector3(0, 0, -10); // when boosting
-    private int boost_cam_speed = 3;
+    private int boost_cam_speed = 2;
     private float cam_travel = 0;
     private float dec_cam_travel = 0;
     private bool decelerating = false;
@@ -32,6 +32,9 @@ public class PlayerCamera : MonoBehaviour {
         }
 
         bool isBoosting = localShip.boosting;
+        ParticleSystem.MainModule ptmm = localShip.ParticleFollow.main;
+        ParticleSystem.EmissionModule emission = localShip.ParticleFollow.emission;
+        //ptmm.startSize3D = true;
 
         if (target && !isBoosting) {
             cam_travel = 0f;
@@ -47,6 +50,9 @@ public class PlayerCamera : MonoBehaviour {
                     dec_cam_travel = 0f;
                 }
             }
+            // particle effect
+            //ptmm.startSizeZ = new ParticleSystem.MinMaxCurve(2f);
+            
         }
   
         if (target && isBoosting) {
@@ -54,6 +60,8 @@ public class PlayerCamera : MonoBehaviour {
             transform.position = target.TransformPoint(Vector3.Lerp(startOffset, startOffset + additional_offset, cam_travel));
             transform.rotation = Quaternion.Slerp(transform.rotation, target.rotation, rotateSpeed * Time.deltaTime);
             decelerating = true; // used when done boosting
+            // particle effect
+            //ptmm.startSizeZ = new ParticleSystem.MinMaxCurve(1000f);
         } 
 
         

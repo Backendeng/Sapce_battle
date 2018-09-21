@@ -25,13 +25,15 @@ public class LocalPlayerShip : PlayerShip {
     public static bool showUnsmoothedShadow = false;
     public static bool showInterpolatedShadow = false;
 
+    private float boost_factor = 1.5f;
     public float boost_energy;
-    private float boost_per_sec = 15f;
+    private float boost_per_sec = 30f;
     public bool boosting = false;
 
     private AudioSource enginesSound;
     private float enginesSoundVolume = 0.08f;
 
+    public ParticleSystem ParticleFollow;
 
     private new void Awake() {
         base.Awake();
@@ -81,7 +83,7 @@ public class LocalPlayerShip : PlayerShip {
 
         if (input.boost_pressed && boost_energy > 0) {
             boosting = true;
-            throttle *= 1.5f;
+            throttle *= boost_factor;
             boost_energy -= Time.deltaTime * boost_per_sec;
         } else {
             boosting = false;

@@ -6,7 +6,7 @@ public class Missile : NetworkEntity {
     private bool created = false;
     private Rigidbody rigid_body;
 
-    private static readonly float speed = 80f;
+    private static readonly float speed = 160f;
     public static float Speed { get { return speed; } }
     public static readonly float timeout = 10f;
     private float destroyTime;

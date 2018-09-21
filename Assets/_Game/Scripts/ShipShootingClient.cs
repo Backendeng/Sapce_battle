@@ -33,7 +33,7 @@ public class ShipShootingClient : MonoBehaviour {
     private readonly int maxEnergy = 100;
     private readonly float energyChargeRate = 0.1f;
     private float nextEnergyCharge;
-    private readonly int energyDrain = 5;
+    private readonly int energyDrain = 2;
     private readonly int missileEnergyDrain = 75;
 
     public int Energy { get { return energy; } }

@@ -32,6 +32,7 @@ public class HudUI : MonoBehaviour {
 
     public Image FixedCrosshair;
     public Image LockingCircle;
+    public Transform defaultEnemyTargetPosition;
 
     public Text KillCreditText;
 
@@ -77,9 +78,11 @@ public class HudUI : MonoBehaviour {
             Vector3 screenPoint = shipShooting.TargetScreenPoint();
             if (screenPoint == Vector3.zero) {
                 LockedTargetCircle.enabled = false;
+                EnemyTarget.transform.position = defaultEnemyTargetPosition.position;
             }
             else {
                 LockedTargetCircle.transform.position = screenPoint;
+                EnemyTarget.transform.position = screenPoint + new Vector3(0, 0.05f*Screen.height, 0);
             }
             
         }
@@ -99,7 +102,7 @@ public class HudUI : MonoBehaviour {
     }
 
     private void SetSpeedBar(float speed) {
-        SpeedBarImage.fillAmount = speed / 100f;
+        SpeedBarImage.fillAmount =  speed / 150f;
     }
 
     private void SetBoostBar(float boost) {

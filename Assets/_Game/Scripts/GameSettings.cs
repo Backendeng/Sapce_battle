@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR;
 
 public class GameSettings : MonoBehaviour {
     private bool loggingEnabled = false;
@@ -9,6 +10,7 @@ public class GameSettings : MonoBehaviour {
     private bool useAutoPilot = false;
     private bool shipLerp = true;
     private bool missileLerp = true;
+    private bool enabledVR = false;
 
     public struct Controls {
         public static float mouseStickSensitivity = 0.5f;
@@ -145,4 +147,24 @@ public class GameSettings : MonoBehaviour {
         AnalogStickRollMulText.text = value.ToString("F2");
     }
 
+
+    public void ToggleVR() {
+        enabledVR = !enabledVR;
+        if (enabledVR) {
+            StartCoroutine(LoadDevice("OpenVR"));
+        }
+        else {
+            XRSettings.enabled = false;
+        }
+    }
+
+    private System.Collections.IEnumerator LoadDevice(string newDevice) {
+        XRSettings.LoadDeviceByName(newDevice);
+        yield return null;
+        XRSettings.enabled = true;
+    }
+
 }
+
+
+

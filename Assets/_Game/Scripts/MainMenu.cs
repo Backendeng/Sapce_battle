@@ -55,7 +55,7 @@ public class MainMenu : MonoBehaviour {
     }
 
     public void StartGame() {
-        
+
         playMenuStatusText.text = "";
         string ipAddress = ipInputField.text;
         if (ipAddress != "" && ValidateIPv4(ipAddress) == false) {
@@ -81,7 +81,13 @@ public class MainMenu : MonoBehaviour {
         Client.ClientInitData.PlayerName = playerName;
         Client.ClientInitData.ShipType = shipType;
         PlayMenuObj.SetActive(false);
-        SceneManager.LoadScene(2);
+
+        if (GameSettings.VR_Enabled) {
+            SceneManager.LoadScene(3);
+        }
+        else {
+            SceneManager.LoadScene(2);
+        }
     }
 
     public void OnOpenPlayMenu() {

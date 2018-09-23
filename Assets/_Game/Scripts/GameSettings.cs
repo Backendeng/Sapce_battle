@@ -10,7 +10,7 @@ public class GameSettings : MonoBehaviour {
     private bool useAutoPilot = false;
     private bool shipLerp = true;
     private bool missileLerp = true;
-    private bool enabledVR = false;
+    public static bool VR_Enabled = false;
 
     public struct Controls {
         public static float mouseStickSensitivity = 0.5f;
@@ -149,8 +149,8 @@ public class GameSettings : MonoBehaviour {
 
 
     public void ToggleVR() {
-        enabledVR = !enabledVR;
-        if (enabledVR) {
+        VR_Enabled = !VR_Enabled;
+        if (VR_Enabled) {
             StartCoroutine(LoadDevice("OpenVR"));
         }
         else {
@@ -159,6 +159,7 @@ public class GameSettings : MonoBehaviour {
     }
 
     private System.Collections.IEnumerator LoadDevice(string newDevice) {
+        InputTracking.disablePositionalTracking = true;
         XRSettings.LoadDeviceByName(newDevice);
         yield return null;
         XRSettings.enabled = true;

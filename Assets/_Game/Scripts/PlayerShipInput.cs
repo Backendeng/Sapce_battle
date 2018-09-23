@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR;
 
 public class PlayerShipInput : MonoBehaviour {
 
@@ -71,7 +72,7 @@ public class PlayerShipInput : MonoBehaviour {
             throttle = Mathf.Clamp(Input.GetAxis("Vertical"), -0.3f, 1f); // restricting max backwards speed
             roll = -Input.GetAxis("Horizontal") * mouseRollMul;
         }
-        else // controller with analog stick //TODO: work on xbox controller input
+        else
         {
             pitch = -Input.GetAxis("Vertical") * analogStickSensitivity;
             if (addRoll)
@@ -93,6 +94,10 @@ public class PlayerShipInput : MonoBehaviour {
             boost_pressed = true;
         } else {
             boost_pressed = false;
+        }
+
+        if (GameSettings.VR_Enabled && Input.GetKey(KeyCode.LeftControl)) {
+            //InputTracking.Recenter();
         }
 
 	}

@@ -10,6 +10,8 @@ public class HudUI : MonoBehaviour {
     public GameManager gameManager;
     public Client clientController;
 
+    public Transform HUD_Transform;
+
     public Image HealthBarImage;
     public Text HealthBarText;
 
@@ -56,6 +58,12 @@ public class HudUI : MonoBehaviour {
     {
         PlayerShip ship = PlayerShip.ActiveShip;
         if (ship != null) {
+
+            if (GameSettings.VR_Enabled) {
+                HUD_Transform.position = ship.transform.position;
+                HUD_Transform.rotation = ship.transform.rotation;
+            }
+
             SetHealthBar(ship.Health);
             SetEnergyBar(ship.GetComponent<ShipShootingClient>().Energy);
             ScoreText.text = ship.Score.ToString();

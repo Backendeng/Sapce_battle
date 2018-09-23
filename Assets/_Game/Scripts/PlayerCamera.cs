@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.XR;
 
 [RequireComponent(typeof(Camera))]
 
@@ -17,7 +18,7 @@ public class PlayerCamera : MonoBehaviour {
     private bool decelerating = false;
 
     private LocalPlayerShip localShip;
-  
+
     private void FixedUpdate() {
         if (!localShip)
         {

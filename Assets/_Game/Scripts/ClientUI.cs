@@ -17,9 +17,10 @@ public class ClientUI : MonoBehaviour {
 
     private bool started = false;
     private float stopConnectionTime;
+    private readonly float connectionMaxTime = 5f;
 
     public void Start() {
-        stopConnectionTime = Time.time + 10f;
+        stopConnectionTime = Time.time + connectionMaxTime;
 
         EscapeMenu.SetActive(false);
         HUD.SetActive(false);
@@ -57,6 +58,8 @@ public class ClientUI : MonoBehaviour {
                     //escapeMenuStatusText.text = "Connection Timed Out. Please Quit And Try Again.";
                     //EscapeMenu.SetActive(true);
                     Cursor.visible = true;
+                    MainMenu.ErrorNum = 6;
+                    QuitGame();
                 }
             }
             else {
@@ -78,7 +81,12 @@ public class ClientUI : MonoBehaviour {
         ScoreBoardView.SetActive(true);
         //Debug.Log("getting the name of your killer: " + gameManager.localPlayersKiller);
         if (gameManager.localPlayersKiller != "") {
-            RespawnScreenKilledByText.text = string.Format("You Were Blasted By {0}", gameManager.localPlayersKiller);
+            if (gameManager.localPlayersKiller != PlayerShip.ActiveShip.PlayerName) {
+                RespawnScreenKilledByText.text = string.Format("You Were Killed By {0}", gameManager.localPlayersKiller);
+            }
+            else {
+                RespawnScreenKilledByText.text = string.Format("You Killed Yourself!");
+            }
         }
         else {
             RespawnScreenKilledByText.text = "WASTED!";
